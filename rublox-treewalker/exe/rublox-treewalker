@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift("#{__dir__}/../lib")
+
+require "rublox/treewalker"
+
+if ARGV.length > 1
+  puts "Usage: rublox-treewalker [script]"
+  exit 64
+elsif ARGV.length == 1
+  file_path = ARGV[0]
+  contents = File.read(file_path)
+  puts contents
+else
+  Rublox::TreeWalker::Repl.new($stdin).run
+end
