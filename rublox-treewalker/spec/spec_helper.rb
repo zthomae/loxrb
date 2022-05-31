@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "rublox/tree/walker"
+require "rublox/treewalker"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
