@@ -5,13 +5,14 @@ require_relative "lib/rublox/treewalker/version"
 Gem::Specification.new do |spec|
   spec.name = "rublox-treewalker"
   spec.version = Rublox::TreeWalker::VERSION
+  spec.platform = "java"
   spec.authors = ["Zach Thomae"]
   spec.email = ["zach@thomae.co"]
 
   spec.summary = "A tree-walking interpreter for the Lox language"
   spec.homepage = "https://github.com/zthomae/rublox"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.0"
+  spec.required_ruby_version = ">= 2.5"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/zthomae/rublox"
