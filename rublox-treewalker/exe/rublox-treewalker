@@ -10,7 +10,7 @@ if ARGV.length > 1
 elsif ARGV.length == 1
   file_path = ARGV[0]
   contents = File.read(file_path)
-  puts contents
+  Rublox::TreeWalker::Interpreter.run(contents)
 else
-  Rublox::TreeWalker::Repl.new($stdin).run
+  Rublox::TreeWalker::Repl.new($stdin, Rublox::TreeWalker::Interpreter).run
 end

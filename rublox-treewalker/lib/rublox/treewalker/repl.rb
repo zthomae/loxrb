@@ -1,8 +1,9 @@
 module Rublox
   module TreeWalker
     class Repl
-      def initialize(input)
+      def initialize(input, interpreter)
         @input = input
+        @interpreter = interpreter
       end
 
       def run
@@ -10,7 +11,7 @@ module Rublox
           print "> "
           line = @input.gets&.strip
           break if line.nil?
-          puts line
+          @interpreter.run(line)
         end
       end
     end
