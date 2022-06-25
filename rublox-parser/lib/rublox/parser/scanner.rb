@@ -183,11 +183,15 @@ module Rublox
       end
 
       def is_digit?(c)
+        return false if c.nil?
+
         c = c[0]
         c >= "0" && c <= "9"
       end
 
       def is_alpha?(c)
+        return false if c.nil?
+
         c = c[0]
         (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || (c == "_")
       end
