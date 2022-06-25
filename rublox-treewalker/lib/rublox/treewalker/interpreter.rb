@@ -1,9 +1,11 @@
+require "rublox/parser"
+
 module Rublox
   module TreeWalker
     class Interpreter
       class << self
         def run(source)
-          scanner = Scanner.new(source)
+          scanner = Rublox::Parser::Scanner.new(source)
           tokens = scanner.scan_tokens
 
           tokens.each do |token|

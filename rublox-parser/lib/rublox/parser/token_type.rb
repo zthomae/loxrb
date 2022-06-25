@@ -1,5 +1,5 @@
 module Rublox
-  module TreeWalker
+  module Parser
     module TokenType
       @token_types = []
 

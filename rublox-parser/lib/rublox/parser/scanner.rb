@@ -1,5 +1,5 @@
 module Rublox
-  module TreeWalker
+  module Parser
     class Scanner
       KEYWORDS = {
         "and" => TokenType::AND,

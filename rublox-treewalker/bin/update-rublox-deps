@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+pushd ../rublox-parser
+rm -rf pkg
+rake build
+popd
+
+for gem in ../rublox-parser/pkg/*.gem; do
+  gem install "$gem"
+done
