@@ -72,8 +72,15 @@ module Rublox
         when "\n"
           @line += 1
 
+        when "\""
+          scan_string
+
         else
-          Interpreter.error(@line, "Unexpected character.")
+          if is_digit?(c)
+            scan_number
+          else
+            Interpreter.error(@line, "Unexpected character.")
+          end
         end
       end
 
@@ -97,9 +104,55 @@ module Rublox
         @source[@current]
       end
 
+      def peek_next
+        return if @current + 1 >= @source.length
+        @source[@current + 1]
+      end
+
       def add_token(type, literal = nil)
         text = @source[@start...@current]
         @tokens << Token.new(type: type, lexeme: text, literal: literal, line: @line)
+      end
+
+      def scan_string
+        while peek != '"' && !is_at_end?
+          @line += 1 if peek == "\n"
+          advance
+        end
+
+        if is_at_end?
+          Interpreter.error("Unterminated string.")
+          return
+        end
+
+        # The closing "
+        advance
+
+        # Trim surrounding quotes
+        value = @source[@start+1...@current-1]
+        add_token(TokenType::STRING, value)
+      end
+
+      def scan_number
+        while is_digit?(peek)
+          advance
+        end
+
+        # Look for a fractional part
+        if peek == "." && is_digit?(peek_next)
+          # Consume the .
+          advance
+
+          while is_digit?(peek)
+            advance
+          end
+        end
+
+        add_token(TokenType::NUMBER, Float(@source[@start...@current]))
+      end
+
+      def is_digit?(c)
+        c[0] >= "0" && c[0] <= "9"
       end
     end
   end
