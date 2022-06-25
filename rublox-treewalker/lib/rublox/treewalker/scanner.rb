@@ -1,6 +1,25 @@
 module Rublox
   module TreeWalker
     class Scanner
+      KEYWORDS = {
+        "and" => TokenType::AND,
+        "class" => TokenType::CLASS,
+        "else" => TokenType::ELSE,
+        "false" => TokenType::FALSE,
+        "for" => TokenType::FOR,
+        "fun" => TokenType::FUN,
+        "if" => TokenType::IF,
+        "nil" => TokenType::NIL,
+        "or" => TokenType::OR,
+        "print" => TokenType::PRINT,
+        "return" => TokenType::RETURN,
+        "super" => TokenType::SUPER,
+        "this" => TokenType::THIS,
+        "true" => TokenType::TRUE,
+        "var" => TokenType::VAR,
+        "while" => TokenType::WHILE,
+      }
+
       def initialize(source)
         @source = source
         @tokens = []
@@ -78,6 +97,8 @@ module Rublox
         else
           if is_digit?(c)
             scan_number
+          elsif is_alpha?(c)
+            scan_identifier
           else
             Interpreter.error(@line, "Unexpected character.")
           end
@@ -151,8 +172,28 @@ module Rublox
         add_token(TokenType::NUMBER, Float(@source[@start...@current]))
       end
 
+      def scan_identifier
+        while is_alpha_numeric?(peek)
+          advance
+        end
+
+        text = @source[@start...@current]
+        token_type = KEYWORDS[text] || TokenType::IDENTIFIER
+        add_token(token_type)
+      end
+
       def is_digit?(c)
-        c[0] >= "0" && c[0] <= "9"
+        c = c[0]
+        c >= "0" && c <= "9"
+      end
+
+      def is_alpha?(c)
+        c = c[0]
+        (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || (c == "_")
+      end
+
+      def is_alpha_numeric?(c)
+        is_digit?(c) || is_alpha?(c)
       end
     end
   end
