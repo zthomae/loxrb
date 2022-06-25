@@ -1,14 +1,33 @@
 module Rublox
   module TreeWalker
-    module Interpreter
-      module_function
+    class Interpreter
+      class << self
+        def run(source)
+          scanner = Scanner.new(source)
+          tokens = scanner.scan_tokens
 
-      def run(source)
-        scanner = Scanner.new(source)
-        tokens = scanner.scan_tokens
+          tokens.each do |token|
+            puts token
+          end
+        end
 
-        tokens.each do |token|
-          puts token
+        def error(line, message)
+          report(line, "", message)
+          @had_error = true
+        end
+
+        def had_error?
+          !!@had_error
+        end
+
+        def clear_error!
+          @had_error = false
+        end
+
+        private
+
+        def report(line, where, message)
+          $stderr.puts("[line #{line}] Error#{where}: #{message}")
         end
       end
     end

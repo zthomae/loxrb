@@ -12,6 +12,7 @@ module Rublox
           line = @input.gets&.strip
           break if line.nil?
           @interpreter.run(line)
+          @interpreter.clear_error!
         end
       end
     end
