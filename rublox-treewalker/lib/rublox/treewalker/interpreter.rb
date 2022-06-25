@@ -27,7 +27,7 @@ module Rublox
         private
 
         def report(line, where, message)
-          $stderr.puts("[line #{line}] Error#{where}: #{message}")
+          warn("[line #{line}] Error#{where}: #{message}")
         end
       end
     end

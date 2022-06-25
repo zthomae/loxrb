@@ -3,6 +3,8 @@
 require_relative "treewalker/interpreter"
 require_relative "treewalker/repl"
 require_relative "treewalker/scanner"
+require_relative "treewalker/token"
+require_relative "treewalker/token_type"
 require_relative "treewalker/version"
 
 module Rublox
