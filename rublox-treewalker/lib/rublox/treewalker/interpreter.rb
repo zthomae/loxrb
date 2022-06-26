@@ -8,14 +8,25 @@ module Rublox
           scanner = Rublox::Parser::Scanner.new(source, self)
           tokens = scanner.scan_tokens
 
-          tokens.each do |token|
-            puts token
-          end
+          parser = Rublox::Parser::Parser.new(tokens, self)
+          expression = parser.parse
+
+          return if had_error?
+
+          puts(Rublox::Parser::AstPrinter.new.print(expression))
         end
 
-        def error(line, message)
+        def scan_error(line, message)
           report(line, "", message)
           @had_error = true
+        end
+
+        def parse_error(token, message)
+          if token.type == Rublox::Parser::TokenType::EOF
+            report(token.line, " at end", message)
+          else
+            report(token.line, " at '#{token.lexeme}'", message)
+          end
         end
 
         def had_error?
