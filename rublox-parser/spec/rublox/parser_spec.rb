@@ -7,7 +7,7 @@ RSpec.describe Rublox::Parser do
 
   it "scans lexemes" do
     error_handler = Class.new do
-      def self.error(line, message)
+      def self.scan_error(line, message)
         raise "found unexpected error on line #{line}: #{message}"
       end
     end

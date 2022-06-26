@@ -101,7 +101,7 @@ module Rublox
           elsif is_alpha?(c)
             scan_identifier
           else
-            @error_handler.error(@line, "Unexpected character.")
+            @error_handler.scan_error(@line, "Unexpected character.")
           end
         end
       end
@@ -143,7 +143,7 @@ module Rublox
         end
 
         if is_at_end?
-          @error_handler.error("Unterminated string.")
+          @error_handler.scan_error(@line, "Unterminated string.")
           return
         end
 

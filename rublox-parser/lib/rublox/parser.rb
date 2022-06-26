@@ -5,6 +5,7 @@ require_relative "parser/token_type"
 require_relative "parser/scanner" # depends on token_type
 require_relative "parser/expr"
 require_relative "parser/ast_printer"
+require_relative "parser/parser"
 require_relative "parser/version"
 
 module Rublox
