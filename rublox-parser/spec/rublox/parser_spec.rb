@@ -53,4 +53,21 @@ RSpec.describe Rublox::Parser do
 
     expect(Rublox::Parser::AstPrinter.new.print(expr)).to eq("(* (- 123) (group 45.67))")
   end
+
+  it "parses a simple mathematical expression" do
+    error_handler = Class.new do
+      def self.scan_error(line, message)
+        raise "found unexpected error on line #{line}: #{message}"
+      end
+
+      def self.parse_error(token, message)
+        raise "found unexpected error on token #{token}: #{message}"
+      end
+    end
+
+    source = "(1 > 2.4) == (5 < \"hello\")"
+    tokens = Rublox::Parser::Scanner.new(source, error_handler).scan_tokens
+    expr = Rublox::Parser::Parser.new(tokens, error_handler).parse
+    expect(Rublox::Parser::AstPrinter.new.print(expr)).to eq("(== (group (> 1.0 2.4)) (group (< 5.0 hello)))")
+  end
 end
