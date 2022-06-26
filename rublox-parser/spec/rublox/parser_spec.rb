@@ -38,4 +38,19 @@ RSpec.describe Rublox::Parser do
     tokens = Rublox::Parser::Scanner.new(source, error_handler).scan_tokens
     expect(tokens.map(&:to_h)).to match_snapshot("scans_lexemes")
   end
+
+  it "pretty prints basic expressions" do
+    expr = Rublox::Parser::Expr::Binary.new(
+      Rublox::Parser::Expr::Unary.new(
+        Rublox::Parser::Token.new(type: Rublox::Parser::TokenType::MINUS, lexeme: "-", literal: nil, line: 1),
+        Rublox::Parser::Expr::Literal.new(123)
+      ),
+      Rublox::Parser::Token.new(type: Rublox::Parser::TokenType::STAR, lexeme: "*", literal: nil, line: 1),
+      Rublox::Parser::Expr::Grouping.new(
+        Rublox::Parser::Expr::Literal.new(45.67)
+      )
+    )
+
+    expect(Rublox::Parser::AstPrinter.new.print(expr)).to eq("(* (- 123) (group 45.67))")
+  end
 end
