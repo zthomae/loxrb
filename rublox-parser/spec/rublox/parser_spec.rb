@@ -42,10 +42,10 @@ RSpec.describe Rublox::Parser do
   it "pretty prints basic expressions" do
     expr = Rublox::Parser::Expr::Binary.new(
       Rublox::Parser::Expr::Unary.new(
-        Rublox::Parser::Token.new(type: Rublox::Parser::TokenType::MINUS, lexeme: "-", literal: nil, line: 1),
+        Rublox::Parser::Token.new(Rublox::Parser::TokenType::MINUS, "-", nil, 1),
         Rublox::Parser::Expr::Literal.new(123)
       ),
-      Rublox::Parser::Token.new(type: Rublox::Parser::TokenType::STAR, lexeme: "*", literal: nil, line: 1),
+      Rublox::Parser::Token.new(Rublox::Parser::TokenType::STAR, "*", nil, 1),
       Rublox::Parser::Expr::Grouping.new(
         Rublox::Parser::Expr::Literal.new(45.67)
       )

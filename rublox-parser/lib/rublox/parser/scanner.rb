@@ -35,7 +35,7 @@ module Rublox
           scan_token
         end
 
-        @tokens << Token.new(type: TokenType::EOF, lexeme: "", literal: nil, line: @line)
+        @tokens << Token.new(TokenType::EOF, "", nil, @line)
         @tokens
       end
 
@@ -133,7 +133,7 @@ module Rublox
 
       def add_token(type, literal = nil)
         text = @source[@start...@current]
-        @tokens << Token.new(type: type, lexeme: text, literal: literal, line: @line)
+        @tokens << Token.new(type, text, literal, @line)
       end
 
       def scan_string
