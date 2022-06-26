@@ -20,12 +20,13 @@ module Rublox
         "while" => TokenType::WHILE,
       }
 
-      def initialize(source)
+      def initialize(source, error_handler)
         @source = source
         @tokens = []
         @start = 0
         @current = 0
         @line = 1
+        @error_handler = error_handler
       end
 
       def scan_tokens
@@ -100,7 +101,7 @@ module Rublox
           elsif is_alpha?(c)
             scan_identifier
           else
-            Interpreter.error(@line, "Unexpected character.")
+            @error_handler.error(@line, "Unexpected character.")
           end
         end
       end
@@ -142,7 +143,7 @@ module Rublox
         end
 
         if is_at_end?
-          Interpreter.error("Unterminated string.")
+          @error_handler.error("Unterminated string.")
           return
         end
 

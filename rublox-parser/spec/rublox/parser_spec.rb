@@ -5,14 +5,13 @@ RSpec.describe Rublox::Parser do
     expect(Rublox::Parser::VERSION).not_to be nil
   end
 
-  # TODO: Remove interpreter references from parser
-  class Interpreter
-    def self.error(line, message)
-      puts line, message
-    end
-  end
-
   it "scans lexemes" do
+    error_handler = Class.new do
+      def self.error(line, message)
+        raise "found unexpected error on line #{line}: #{message}"
+      end
+    end
+
     source = <<~EOF
     class Foo {
       inFoo() {
@@ -36,7 +35,7 @@ RSpec.describe Rublox::Parser do
 
     var baz = Baz();
     EOF
-    tokens = Rublox::Parser::Scanner.new(source).scan_tokens
+    tokens = Rublox::Parser::Scanner.new(source, error_handler).scan_tokens
     expect(tokens.map(&:to_h)).to match_snapshot("scans_lexemes")
   end
 end

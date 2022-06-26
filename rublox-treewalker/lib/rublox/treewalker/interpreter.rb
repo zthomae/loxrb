@@ -5,7 +5,7 @@ module Rublox
     class Interpreter
       class << self
         def run(source)
-          scanner = Rublox::Parser::Scanner.new(source)
+          scanner = Rublox::Parser::Scanner.new(source, self)
           tokens = scanner.scan_tokens
 
           tokens.each do |token|
