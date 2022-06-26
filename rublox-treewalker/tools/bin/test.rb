@@ -440,7 +440,7 @@ class TestCollection
 
     java = ->(name, tests) do
       dir = name == "jlox" ? "build/java" : "build/gen/#{name}"
-      @all_suites[name] = Suite.new(name, "java", "java", ["-cp", dir, "com.craftinginterpreters.lox.Lox"], tests)
+      @all_suites[name] = Suite.new(name, "java", "exe/rublox-treewalker", [], tests)
       @java_suites.append(name)
     end
 
