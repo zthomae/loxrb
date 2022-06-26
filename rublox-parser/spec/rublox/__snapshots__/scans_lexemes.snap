@@ -1,0 +1,398 @@
+[
+  [ 0] {
+       :type => :CLASS,
+     :lexeme => "class",
+    :literal => nil,
+       :line => 1
+  },
+  [ 1] {
+       :type => :IDENTIFIER,
+     :lexeme => "Foo",
+    :literal => nil,
+       :line => 1
+  },
+  [ 2] {
+       :type => :LEFT_BRACE,
+     :lexeme => "{",
+    :literal => nil,
+       :line => 1
+  },
+  [ 3] {
+       :type => :IDENTIFIER,
+     :lexeme => "inFoo",
+    :literal => nil,
+       :line => 2
+  },
+  [ 4] {
+       :type => :LEFT_PAREN,
+     :lexeme => "(",
+    :literal => nil,
+       :line => 2
+  },
+  [ 5] {
+       :type => :RIGHT_PAREN,
+     :lexeme => ")",
+    :literal => nil,
+       :line => 2
+  },
+  [ 6] {
+       :type => :LEFT_BRACE,
+     :lexeme => "{",
+    :literal => nil,
+       :line => 2
+  },
+  [ 7] {
+       :type => :PRINT,
+     :lexeme => "print",
+    :literal => nil,
+       :line => 3
+  },
+  [ 8] {
+       :type => :STRING,
+     :lexeme => "\"in foo\"",
+    :literal => "in foo",
+       :line => 3
+  },
+  [ 9] {
+       :type => :SEMICOLON,
+     :lexeme => ";",
+    :literal => nil,
+       :line => 3
+  },
+  [10] {
+       :type => :RIGHT_BRACE,
+     :lexeme => "}",
+    :literal => nil,
+       :line => 4
+  },
+  [11] {
+       :type => :RIGHT_BRACE,
+     :lexeme => "}",
+    :literal => nil,
+       :line => 5
+  },
+  [12] {
+       :type => :CLASS,
+     :lexeme => "class",
+    :literal => nil,
+       :line => 7
+  },
+  [13] {
+       :type => :IDENTIFIER,
+     :lexeme => "Bar",
+    :literal => nil,
+       :line => 7
+  },
+  [14] {
+       :type => :LESS,
+     :lexeme => "<",
+    :literal => nil,
+       :line => 7
+  },
+  [15] {
+       :type => :IDENTIFIER,
+     :lexeme => "Foo",
+    :literal => nil,
+       :line => 7
+  },
+  [16] {
+       :type => :LEFT_BRACE,
+     :lexeme => "{",
+    :literal => nil,
+       :line => 7
+  },
+  [17] {
+       :type => :IDENTIFIER,
+     :lexeme => "inBar",
+    :literal => nil,
+       :line => 8
+  },
+  [18] {
+       :type => :LEFT_PAREN,
+     :lexeme => "(",
+    :literal => nil,
+       :line => 8
+  },
+  [19] {
+       :type => :IDENTIFIER,
+     :lexeme => "a",
+    :literal => nil,
+       :line => 8
+  },
+  [20] {
+       :type => :COMMA,
+     :lexeme => ",",
+    :literal => nil,
+       :line => 8
+  },
+  [21] {
+       :type => :IDENTIFIER,
+     :lexeme => "b",
+    :literal => nil,
+       :line => 8
+  },
+  [22] {
+       :type => :RIGHT_PAREN,
+     :lexeme => ")",
+    :literal => nil,
+       :line => 8
+  },
+  [23] {
+       :type => :LEFT_BRACE,
+     :lexeme => "{",
+    :literal => nil,
+       :line => 8
+  },
+  [24] {
+       :type => :VAR,
+     :lexeme => "var",
+    :literal => nil,
+       :line => 9
+  },
+  [25] {
+       :type => :IDENTIFIER,
+     :lexeme => "a",
+    :literal => nil,
+       :line => 9
+  },
+  [26] {
+       :type => :EQUAL,
+     :lexeme => "=",
+    :literal => nil,
+       :line => 9
+  },
+  [27] {
+       :type => :NUMBER,
+     :lexeme => "12.3",
+    :literal => 12.3,
+       :line => 9
+  },
+  [28] {
+       :type => :SEMICOLON,
+     :lexeme => ";",
+    :literal => nil,
+       :line => 9
+  },
+  [29] {
+       :type => :VAR,
+     :lexeme => "var",
+    :literal => nil,
+       :line => 10
+  },
+  [30] {
+       :type => :IDENTIFIER,
+     :lexeme => "b",
+    :literal => nil,
+       :line => 10
+  },
+  [31] {
+       :type => :EQUAL,
+     :lexeme => "=",
+    :literal => nil,
+       :line => 10
+  },
+  [32] {
+       :type => :DOT,
+     :lexeme => ".",
+    :literal => nil,
+       :line => 10
+  },
+  [33] {
+       :type => :NUMBER,
+     :lexeme => "23",
+    :literal => 23.0,
+       :line => 10
+  },
+  [34] {
+       :type => :SEMICOLON,
+     :lexeme => ";",
+    :literal => nil,
+       :line => 10
+  },
+  [35] {
+       :type => :PRINT,
+     :lexeme => "print",
+    :literal => nil,
+       :line => 11
+  },
+  [36] {
+       :type => :NIL,
+     :lexeme => "nil",
+    :literal => nil,
+       :line => 11
+  },
+  [37] {
+       :type => :SEMICOLON,
+     :lexeme => ";",
+    :literal => nil,
+       :line => 11
+  },
+  [38] {
+       :type => :RIGHT_BRACE,
+     :lexeme => "}",
+    :literal => nil,
+       :line => 12
+  },
+  [39] {
+       :type => :RIGHT_BRACE,
+     :lexeme => "}",
+    :literal => nil,
+       :line => 13
+  },
+  [40] {
+       :type => :CLASS,
+     :lexeme => "class",
+    :literal => nil,
+       :line => 15
+  },
+  [41] {
+       :type => :IDENTIFIER,
+     :lexeme => "Baz",
+    :literal => nil,
+       :line => 15
+  },
+  [42] {
+       :type => :LESS,
+     :lexeme => "<",
+    :literal => nil,
+       :line => 15
+  },
+  [43] {
+       :type => :IDENTIFIER,
+     :lexeme => "Bar",
+    :literal => nil,
+       :line => 15
+  },
+  [44] {
+       :type => :LEFT_BRACE,
+     :lexeme => "{",
+    :literal => nil,
+       :line => 15
+  },
+  [45] {
+       :type => :IDENTIFIER,
+     :lexeme => "inBaz",
+    :literal => nil,
+       :line => 16
+  },
+  [46] {
+       :type => :LEFT_PAREN,
+     :lexeme => "(",
+    :literal => nil,
+       :line => 16
+  },
+  [47] {
+       :type => :RIGHT_PAREN,
+     :lexeme => ")",
+    :literal => nil,
+       :line => 16
+  },
+  [48] {
+       :type => :LEFT_BRACE,
+     :lexeme => "{",
+    :literal => nil,
+       :line => 16
+  },
+  [49] {
+       :type => :PRINT,
+     :lexeme => "print",
+    :literal => nil,
+       :line => 17
+  },
+  [50] {
+       :type => :NUMBER,
+     :lexeme => "1",
+    :literal => 1.0,
+       :line => 17
+  },
+  [51] {
+       :type => :PLUS,
+     :lexeme => "+",
+    :literal => nil,
+       :line => 17
+  },
+  [52] {
+       :type => :NUMBER,
+     :lexeme => "2",
+    :literal => 2.0,
+       :line => 17
+  },
+  [53] {
+       :type => :SLASH,
+     :lexeme => "/",
+    :literal => nil,
+       :line => 17
+  },
+  [54] {
+       :type => :NUMBER,
+     :lexeme => "3",
+    :literal => 3.0,
+       :line => 17
+  },
+  [55] {
+       :type => :SEMICOLON,
+     :lexeme => ";",
+    :literal => nil,
+       :line => 17
+  },
+  [56] {
+       :type => :RIGHT_BRACE,
+     :lexeme => "}",
+    :literal => nil,
+       :line => 18
+  },
+  [57] {
+       :type => :RIGHT_BRACE,
+     :lexeme => "}",
+    :literal => nil,
+       :line => 19
+  },
+  [58] {
+       :type => :VAR,
+     :lexeme => "var",
+    :literal => nil,
+       :line => 21
+  },
+  [59] {
+       :type => :IDENTIFIER,
+     :lexeme => "baz",
+    :literal => nil,
+       :line => 21
+  },
+  [60] {
+       :type => :EQUAL,
+     :lexeme => "=",
+    :literal => nil,
+       :line => 21
+  },
+  [61] {
+       :type => :IDENTIFIER,
+     :lexeme => "Baz",
+    :literal => nil,
+       :line => 21
+  },
+  [62] {
+       :type => :LEFT_PAREN,
+     :lexeme => "(",
+    :literal => nil,
+       :line => 21
+  },
+  [63] {
+       :type => :RIGHT_PAREN,
+     :lexeme => ")",
+    :literal => nil,
+       :line => 21
+  },
+  [64] {
+       :type => :SEMICOLON,
+     :lexeme => ";",
+    :literal => nil,
+       :line => 21
+  },
+  [65] {
+       :type => :EOF,
+     :lexeme => "",
+    :literal => nil,
+       :line => 22
+  }
+]
