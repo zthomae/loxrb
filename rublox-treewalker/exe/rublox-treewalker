@@ -10,8 +10,8 @@ if ARGV.length > 1
 elsif ARGV.length == 1
   file_path = ARGV[0]
   contents = File.read(file_path)
-  Rublox::TreeWalker::Interpreter.run(contents)
-  exit 65 if Rublox::TreeWalker::Interpreter.had_error?
+  Rublox::TreeWalker::Main.run(contents)
+  exit 65 if Rublox::TreeWalker::Main.had_error?
 else
-  Rublox::TreeWalker::Repl.new($stdin, Rublox::TreeWalker::Interpreter).run
+  Rublox::TreeWalker::Repl.new($stdin, Rublox::TreeWalker::Main).run
 end

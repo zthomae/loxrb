@@ -2,7 +2,7 @@ require "rublox/parser"
 
 module Rublox
   module TreeWalker
-    class Interpreter
+    class Main
       class << self
         def run(source)
           scanner = Rublox::Parser::Scanner.new(source, self)
