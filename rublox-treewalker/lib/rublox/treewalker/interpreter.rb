@@ -17,11 +17,23 @@ module Rublox
         @error_handler = error_handler
       end
 
-      def interpret(expression)
-        value = evaluate(expression)
-        puts stringify(value)
+      def interpret(statements)
+        statements.each do |statement|
+          execute(statement)
+        end
       rescue LoxRuntimeError => e
         @error_handler.runtime_error(e)
+      end
+
+      def visit_expression_stmt(stmt)
+        evaluate(stmt.expression)
+        nil
+      end
+
+      def visit_print_stmt(stmt)
+        value = evaluate(stmt.expression)
+        puts stringify(value)
+        nil
       end
 
       def visit_literal_expr(expr)
@@ -84,6 +96,10 @@ module Rublox
       end
 
       private
+
+      def execute(stmt)
+        stmt.accept(self)
+      end
 
       def evaluate(expr)
         expr.accept(self)

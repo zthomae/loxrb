@@ -9,11 +9,11 @@ module Rublox
           tokens = scanner.scan_tokens
 
           parser = Rublox::Parser::Parser.new(tokens, self)
-          expression = parser.parse
+          statements = parser.parse
 
           return if had_error?
 
-          interpreter.interpret(expression)
+          interpreter.interpret(statements)
         end
 
         def scan_error(line, message)
