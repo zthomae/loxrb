@@ -12,6 +12,12 @@ module Rublox
           visitor.visit_print_stmt(self)
         end
       end
+
+      Var = Struct.new(:name, :initializer) do
+        def accept(visitor)
+          visitor.visit_var_stmt(self)
+        end
+      end
     end
   end
 end

@@ -25,6 +25,12 @@ module Rublox
           visitor.visit_unary_expr(self)
         end
       end
+
+      Variable = Struct.new(:name) do
+        def accept(visitor)
+          visitor.visit_variable_expr(self)
+        end
+      end
     end
   end
 end

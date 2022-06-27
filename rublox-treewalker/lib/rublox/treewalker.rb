@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "treewalker/lox_runtime_error"
+require_relative "treewalker/environment"
 require_relative "treewalker/interpreter"
 require_relative "treewalker/main"
 require_relative "treewalker/repl"

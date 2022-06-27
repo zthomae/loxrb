@@ -10,15 +10,34 @@ module Rublox
       def parse
         statements = []
         while !is_at_end?
-          statements << statement
+          statements << declaration
         end
 
         statements
-      rescue ::Rublox::Parser::Error
-        return nil
       end
 
       private
+
+      def declaration
+        return var_declaration if match?(TokenType::VAR)
+
+        statement
+      rescue ::Rublox::Parser::Error
+        synchronize
+        nil
+      end
+
+      def var_declaration
+        name = consume(TokenType::IDENTIFIER, "Expect variable name.")
+
+        initializer = nil
+        if match?(TokenType::EQUAL)
+          initializer = expression
+        end
+
+        consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.")
+        Stmt::Var.new(name, initializer)
+      end
 
       def statement
         return print_statement if match?(TokenType::PRINT)
@@ -107,6 +126,10 @@ module Rublox
 
         if match?(TokenType::NUMBER, TokenType::STRING)
           return Expr::Literal.new(previous.literal)
+        end
+
+        if match?(TokenType::IDENTIFIER)
+          return Expr::Variable.new(previous)
         end
 
         if match?(TokenType::LEFT_PAREN)

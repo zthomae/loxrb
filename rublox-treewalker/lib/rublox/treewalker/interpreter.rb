@@ -1,20 +1,9 @@
 module Rublox
   module TreeWalker
     class Interpreter
-      class LoxRuntimeError < StandardError
-        attr_reader :token
-
-        # Note: Always initialize with .new -- Ruby does strange things if the first parameter
-        # isn't the message with more indirect ways of instantiating the error class. I've
-        # chosen to match the book's parameter ordering to make it easier to translate.
-        def initialize(token, message)
-          super(message)
-          @token = token
-        end
-      end
-
       def initialize(error_handler)
         @error_handler = error_handler
+        @environment = Environment.new
       end
 
       def interpret(statements)
@@ -33,6 +22,16 @@ module Rublox
       def visit_print_stmt(stmt)
         value = evaluate(stmt.expression)
         puts stringify(value)
+        nil
+      end
+
+      def visit_var_stmt(stmt)
+        value = nil
+        if !stmt.initializer.nil?
+          value = evaluate(stmt.initializer)
+        end
+
+        @environment.define(stmt.name.lexeme, value)
         nil
       end
 
@@ -93,6 +92,10 @@ module Rublox
           check_number_operands(expr.operator, left, right)
           left * right
         end
+      end
+
+      def visit_variable_expr(expr)
+        @environment.get(expr.name)
       end
 
       private
