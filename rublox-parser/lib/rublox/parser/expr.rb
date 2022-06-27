@@ -2,6 +2,12 @@
 module Rublox
   module Parser
     module Expr
+      Assign = Struct.new(:name, :value) do
+        def accept(visitor)
+          visitor.visit_assign_expr(self)
+        end
+      end
+
       Binary = Struct.new(:left, :operator, :right) do
         def accept(visitor)
           visitor.visit_binary_expr(self)

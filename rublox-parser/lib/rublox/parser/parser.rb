@@ -41,6 +41,7 @@ module Rublox
 
       def statement
         return print_statement if match?(TokenType::PRINT)
+        return Stmt::Block.new(block) if match?(TokenType::LEFT_BRACE)
 
         expression_statement
       end
@@ -57,8 +58,37 @@ module Rublox
         Stmt::Expression.new(expr)
       end
 
+      def block
+        statements = []
+
+        while !check?(TokenType::RIGHT_BRACE) && !is_at_end?
+          statements << declaration
+        end
+
+        consume(TokenType::RIGHT_BRACE, "Expect '}' after block.")
+        statements
+      end
+
       def expression
-        equality
+        assignment
+      end
+
+      def assignment
+        expr = equality
+
+        if match?(TokenType::EQUAL)
+          equals = previous
+          value = assignment
+
+          if expr.is_a?(Expr::Variable)
+            name = expr.name
+            return Expr::Assign.new(name, value)
+          end
+
+          error(equals, "Invalid assignment target.")
+        end
+
+        expr
       end
 
       def equality

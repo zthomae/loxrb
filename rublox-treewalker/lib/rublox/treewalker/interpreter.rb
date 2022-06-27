@@ -14,6 +14,10 @@ module Rublox
         @error_handler.runtime_error(e)
       end
 
+      def visit_block_stmt(stmt)
+        execute_block(stmt.statements, Environment.new(@environment))
+      end
+
       def visit_expression_stmt(stmt)
         evaluate(stmt.expression)
         nil
@@ -84,7 +88,7 @@ module Rublox
             return left + right
           end
 
-          raise LoxRuntimeError.new(expr.operator, "Operands must be two number or two strings.")
+          raise LoxRuntimeError.new(expr.operator, "Operands must be two numbers or two strings.")
         when Rublox::Parser::TokenType::SLASH
           check_number_operands(expr.operator, left, right)
           left / right
@@ -98,10 +102,27 @@ module Rublox
         @environment.get(expr.name)
       end
 
+      def visit_assign_expr(expr)
+        value = evaluate(expr.value)
+        @environment.assign(expr.name, value)
+        value
+      end
+
       private
 
       def execute(stmt)
         stmt.accept(self)
+      end
+
+      def execute_block(statements, environment)
+        previous = @environment
+
+        begin
+          @environment = environment
+          statements.each { |statement| execute(statement) }
+        ensure
+          @environment = previous
+        end
       end
 
       def evaluate(expr)
