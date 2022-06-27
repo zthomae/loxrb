@@ -5,30 +5,30 @@ module Rublox
         return expr.accept(self)
       end
 
-      def visit_print(stmt)
+      def visit_print_stmt(stmt)
         "print #{print(stmt.expression)};"
       end
 
-      def visit_expression(stmt)
+      def visit_expression_stmt(stmt)
         "#{print(stmt.expression)};"
       end
 
-      def visit_binary(expr)
+      def visit_binary_expr(expr)
         parenthesize(expr.operator.lexeme, expr.left, expr.right)
       end
 
-      def visit_grouping(expr)
+      def visit_grouping_expr(expr)
         parenthesize("group", expr.expression)
       end
 
-      def visit_literal(expr)
+      def visit_literal_expr(expr)
         return "nil" if expr.value.nil?
         return "\"#{expr.value}\"" if expr.value.is_a?(String)
 
         expr.value.to_s
       end
 
-      def visit_unary(expr)
+      def visit_unary_expr(expr)
         parenthesize(expr.operator.lexeme, expr.right)
       end
 

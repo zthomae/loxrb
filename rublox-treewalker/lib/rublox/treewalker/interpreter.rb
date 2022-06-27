@@ -24,15 +24,15 @@ module Rublox
         @error_handler.runtime_error(e)
       end
 
-      def visit_literal(expr)
+      def visit_literal_expr(expr)
         return expr.value
       end
 
-      def visit_grouping(expr)
+      def visit_grouping_expr(expr)
         evaluate(expr.expression)
       end
 
-      def visit_unary(expr)
+      def visit_unary_expr(expr)
         right = evaluate(expr.right)
 
         case expr.operator.type
@@ -44,7 +44,7 @@ module Rublox
         end
       end
 
-      def visit_binary(expr)
+      def visit_binary_expr(expr)
         left = evaluate(expr.left)
         right = evaluate(expr.right)
 
