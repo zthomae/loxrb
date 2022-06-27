@@ -27,6 +27,7 @@ module Rublox
           else
             report(token.line, " at '#{token.lexeme}'", message)
           end
+          @had_error = true
         end
 
         def runtime_error(error)
