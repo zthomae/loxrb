@@ -13,7 +13,7 @@ module Rublox
 
           return if had_error?
 
-          puts(Rublox::Parser::AstPrinter.new.print(expression))
+          interpreter.interpret(expression)
         end
 
         def scan_error(line, message)
@@ -29,8 +29,17 @@ module Rublox
           end
         end
 
+        def runtime_error(error)
+          $stderr.puts "#{error.message}\n[line #{error.token.line}]"
+          @had_runtime_error = true
+        end
+
         def had_error?
           !!@had_error
+        end
+
+        def had_runtime_error?
+          !!@had_runtime_error
         end
 
         def clear_error!
@@ -38,6 +47,10 @@ module Rublox
         end
 
         private
+
+        def interpreter
+          @interpreter ||= Interpreter.new(self)
+        end
 
         def report(line, where, message)
           warn("[line #{line}] Error#{where}: #{message}")
