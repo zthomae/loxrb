@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in rublox-tree-walker.gemspec
+# Specify your gem's dependencies in rublox-treewalker.gemspec
 gemspec
 
 gem "rake", "~> 13.0"

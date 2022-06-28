@@ -5,7 +5,6 @@ require_relative "lib/rublox/treewalker/version"
 Gem::Specification.new do |spec|
   spec.name = "rublox-treewalker"
   spec.version = Rublox::TreeWalker::VERSION
-  spec.platform = "java"
   spec.authors = ["Zach Thomae"]
   spec.email = ["zach@thomae.co"]
 
