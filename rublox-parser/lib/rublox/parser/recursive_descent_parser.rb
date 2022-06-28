@@ -40,11 +40,58 @@ module Rublox
       end
 
       def statement!
+        return for_statement! if match!(TokenType::FOR)
         return if_statement! if match!(TokenType::IF)
+        return while_statement! if match!(TokenType::WHILE)
         return print_statement! if match!(TokenType::PRINT)
         return Stmt::Block.new(block!) if match!(TokenType::LEFT_BRACE)
 
         expression_statement!
+      end
+
+      def for_statement!
+        consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.")
+
+        if match!(TokenType::SEMICOLON)
+          # We do need this case because we have to consume the semicolon.
+          # Assigning to nil to be a bit more explicit about our intent.
+          initializer = nil
+        elsif match!(TokenType::VAR)
+          initializer = var_declaration!
+        else
+          # Using a statement here because it conveniently consumes the semicolon as well...
+          initializer = expression_statement!
+        end
+
+        # ...but we handle the condition differently, for some reason (a better error message?)
+        if !check?(TokenType::SEMICOLON)
+          condition = expression!
+        end
+        consume!(TokenType::SEMICOLON, "Expect ';' after loop condition.")
+
+        if !check?(TokenType::RIGHT_PAREN)
+          increment = expression!
+        end
+        consume!(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.")
+
+        body = statement!
+
+        if !increment.nil?
+          body = Stmt::Block.new([body, Stmt::Expression.new(increment)])
+        end
+
+        # We could do this above, but it might be weird to mix parsing and desugaring
+        if condition.nil?
+          condition = Expr::Literal.new(true)
+        end
+
+        body = Stmt::While.new(condition, body)
+
+        if !initializer.nil?
+          body = Stmt::Block.new([initializer, body])
+        end
+
+        body
       end
 
       def if_statement!
@@ -58,6 +105,15 @@ module Rublox
         end
 
         Stmt::If.new(condition, then_branch, else_branch)
+      end
+
+      def while_statement!
+        consume!(TokenType::LEFT_PAREN, "Expect '(' after 'while'.")
+        condition = expression!
+        consume!(TokenType::RIGHT_PAREN, "Expect ')' after condition.")
+        body = statement!
+
+        Stmt::While.new(condition, body)
       end
 
       def print_statement!

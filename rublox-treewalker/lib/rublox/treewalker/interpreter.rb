@@ -48,6 +48,13 @@ module Rublox
         nil
       end
 
+      def visit_while_stmt(stmt)
+        while is_truthy?(evaluate(stmt.condition))
+          execute(stmt.body)
+        end
+        nil
+      end
+
       def visit_literal_expr(expr)
         return expr.value
       end

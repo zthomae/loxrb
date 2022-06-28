@@ -30,6 +30,12 @@ module Rublox
           visitor.visit_var_stmt(self)
         end
       end
+
+      While = Struct.new(:condition, :body) do
+        def accept(visitor)
+          visitor.visit_while_stmt(self)
+        end
+      end
     end
   end
 end
