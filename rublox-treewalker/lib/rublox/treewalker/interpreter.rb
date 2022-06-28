@@ -23,6 +23,15 @@ module Rublox
         nil
       end
 
+      def visit_if_stmt(stmt)
+        if is_truthy?(evaluate(stmt.condition))
+          execute(stmt.then_branch)
+        else
+          execute(stmt.else_branch)
+        end
+        nil
+      end
+
       def visit_print_stmt(stmt)
         value = evaluate(stmt.expression)
         puts stringify(value)

@@ -13,6 +13,12 @@ module Rublox
         end
       end
 
+      If = Struct.new(:condition, :then_branch, :else_branch) do
+        def accept(visitor)
+          visitor.visit_if_stmt(self)
+        end
+      end
+
       Print = Struct.new(:expression) do
         def accept(visitor)
           visitor.visit_print_stmt(self)
