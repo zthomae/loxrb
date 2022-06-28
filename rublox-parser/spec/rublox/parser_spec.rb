@@ -63,7 +63,7 @@ RSpec.describe Rublox::Parser do
   it "parses a simple mathematical expression" do
     source = "(1 > 2.4) == (5 < \"hello\");"
     tokens = Rublox::Parser::Scanner.new(source, @error_handler).scan_tokens
-    statements = Rublox::Parser::RecursiveDescentParser.new(tokens, @error_handler).parse
+    statements = Rublox::Parser::RecursiveDescentParser.new(tokens, @error_handler).parse!
     printed_expressions = statements.map do |statement|
       Rublox::Parser::AstPrinter.new.print(statement.expression)
     end
@@ -76,7 +76,7 @@ RSpec.describe Rublox::Parser do
     print "done";
     EOF
     tokens = Rublox::Parser::Scanner.new(source, @error_handler).scan_tokens
-    statements = Rublox::Parser::RecursiveDescentParser.new(tokens, @error_handler).parse
+    statements = Rublox::Parser::RecursiveDescentParser.new(tokens, @error_handler).parse!
     printed_expressions = statements.map do |statement|
       Rublox::Parser::AstPrinter.new.print(statement)
     end

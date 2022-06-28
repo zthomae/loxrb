@@ -9,7 +9,7 @@ module Rublox
           tokens = scanner.scan_tokens
 
           parser = Rublox::Parser::RecursiveDescentParser.new(tokens, self)
-          statements = parser.parse
+          statements = parser.parse!
 
           return if had_error?
 

@@ -7,10 +7,10 @@ module Rublox
         @error_handler = error_handler
       end
 
-      def parse
+      def parse!
         statements = []
         while !is_at_end?
-          statements << declaration
+          statements << declaration!
         end
 
         statements
@@ -18,81 +18,81 @@ module Rublox
 
       private
 
-      def declaration
-        return var_declaration if match?(TokenType::VAR)
+      def declaration!
+        return var_declaration! if match!(TokenType::VAR)
 
-        statement
+        statement!
       rescue ::Rublox::Parser::Error
-        synchronize
+        synchronize!
         nil
       end
 
-      def var_declaration
-        name = consume(TokenType::IDENTIFIER, "Expect variable name.")
+      def var_declaration!
+        name = consume!(TokenType::IDENTIFIER, "Expect variable name.")
 
         initializer = nil
-        if match?(TokenType::EQUAL)
-          initializer = expression
+        if match!(TokenType::EQUAL)
+          initializer = expression!
         end
 
-        consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.")
+        consume!(TokenType::SEMICOLON, "Expect ';' after variable declaration.")
         Stmt::Var.new(name, initializer)
       end
 
-      def statement
-        return if_statement if match?(TokenType::IF)
-        return print_statement if match?(TokenType::PRINT)
-        return Stmt::Block.new(block) if match?(TokenType::LEFT_BRACE)
+      def statement!
+        return if_statement! if match!(TokenType::IF)
+        return print_statement! if match!(TokenType::PRINT)
+        return Stmt::Block.new(block!) if match!(TokenType::LEFT_BRACE)
 
-        expression_statement
+        expression_statement!
       end
 
-      def if_statement
-        consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.")
-        condition = expression
-        consume(TokenType::RIGHT_PAREN, "Expect ')' after if condition.")
+      def if_statement!
+        consume!(TokenType::LEFT_PAREN, "Expect '(' after 'if'.")
+        condition = expression!
+        consume!(TokenType::RIGHT_PAREN, "Expect ')' after if condition.")
 
-        then_branch = statement
-        if match?(TokenType::ELSE)
-          else_branch = statement
+        then_branch = statement!
+        if match!(TokenType::ELSE)
+          else_branch = statement!
         end
 
         Stmt::If.new(condition, then_branch, else_branch)
       end
 
-      def print_statement
-        value = expression
-        consume(TokenType::SEMICOLON, "Expect ';' after value.")
+      def print_statement!
+        value = expression!
+        consume!(TokenType::SEMICOLON, "Expect ';' after value.")
         Stmt::Print.new(value)
       end
 
-      def expression_statement
-        expr = expression
-        consume(TokenType::SEMICOLON, "Expect ';' after expression.")
+      def expression_statement!
+        expr = expression!
+        consume!(TokenType::SEMICOLON, "Expect ';' after expression.")
         Stmt::Expression.new(expr)
       end
 
-      def block
+      def block!
         statements = []
 
         while !check?(TokenType::RIGHT_BRACE) && !is_at_end?
-          statements << declaration
+          statements << declaration!
         end
 
-        consume(TokenType::RIGHT_BRACE, "Expect '}' after block.")
+        consume!(TokenType::RIGHT_BRACE, "Expect '}' after block.")
         statements
       end
 
-      def expression
-        assignment
+      def expression!
+        assignment!
       end
 
-      def assignment
-        expr = equality
+      def assignment!
+        expr = equality!
 
-        if match?(TokenType::EQUAL)
+        if match!(TokenType::EQUAL)
           equals = previous
-          value = assignment
+          value = assignment!
 
           if expr.is_a?(Expr::Variable)
             name = expr.name
@@ -105,90 +105,90 @@ module Rublox
         expr
       end
 
-      def equality
-        expr = comparison
+      def equality!
+        expr = comparison!
 
-        while match?(TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL)
+        while match!(TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL)
           operator = previous
-          right = comparison
+          right = comparison!
           expr = Expr::Binary.new(expr, operator, right)
         end
 
         expr
       end
 
-      def comparison
-        expr = term
+      def comparison!
+        expr = term!
 
-        while match?(TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL)
+        while match!(TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL)
           operator = previous
-          right = term
+          right = term!
           expr = Expr::Binary.new(expr, operator, right)
         end
 
         expr
       end
 
-      def term
-        expr = factor
+      def term!
+        expr = factor!
 
-        while match?(TokenType::MINUS, TokenType::PLUS)
+        while match!(TokenType::MINUS, TokenType::PLUS)
           operator = previous
-          right = factor
+          right = factor!
           expr = Expr::Binary.new(expr, operator, right)
         end
 
         expr
       end
 
-      def factor
-        expr = unary
+      def factor!
+        expr = unary!
 
-        while match?(TokenType::SLASH, TokenType::STAR)
+        while match!(TokenType::SLASH, TokenType::STAR)
           operator = previous
-          right = unary
+          right = unary!
           expr = Expr::Binary.new(expr, operator, right)
         end
 
         expr
       end
 
-      def unary
-        if match?(TokenType::BANG, TokenType::MINUS)
+      def unary!
+        if match!(TokenType::BANG, TokenType::MINUS)
           operator = previous
-          right = unary
+          right = unary!
           return Expr::Unary.new(operator, right)
         end
 
-        primary
+        primary!
       end
 
-      def primary
-        return Expr::Literal.new(false) if match?(TokenType::FALSE)
-        return Expr::Literal.new(true) if match?(TokenType::TRUE)
-        return Expr::Literal.new(nil) if match?(TokenType::NIL)
+      def primary!
+        return Expr::Literal.new(false) if match!(TokenType::FALSE)
+        return Expr::Literal.new(true) if match!(TokenType::TRUE)
+        return Expr::Literal.new(nil) if match!(TokenType::NIL)
 
-        if match?(TokenType::NUMBER, TokenType::STRING)
+        if match!(TokenType::NUMBER, TokenType::STRING)
           return Expr::Literal.new(previous.literal)
         end
 
-        if match?(TokenType::IDENTIFIER)
+        if match!(TokenType::IDENTIFIER)
           return Expr::Variable.new(previous)
         end
 
-        if match?(TokenType::LEFT_PAREN)
-          expr = expression
-          consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.")
+        if match!(TokenType::LEFT_PAREN)
+          expr = expression!
+          consume!(TokenType::RIGHT_PAREN, "Expect ')' after expression.")
           return Expr::Grouping.new(expr)
         end
 
         raise error(peek, "Expect expression.")
       end
 
-      def match?(*types)
+      def match!(*types)
         types.each do |type|
           if check?(type)
-            advance
+            advance!
             return true
           end
         end
@@ -196,8 +196,8 @@ module Rublox
         false
       end
 
-      def consume(type, message)
-        return advance if check?(type)
+      def consume!(type, message)
+        return advance! if check?(type)
 
         raise error(peek, message)
       end
@@ -208,7 +208,7 @@ module Rublox
         peek.type == type
       end
 
-      def advance
+      def advance!
         if !is_at_end?
           @current += 1
         end
@@ -233,8 +233,8 @@ module Rublox
         ::Rublox::Parser::Error.new
       end
 
-      def synchronize
-        advance
+      def synchronize!
+        advance!
 
         while !is_at_end?
           return if previous.type == TokenType::SEMICOLON
@@ -244,7 +244,7 @@ module Rublox
             return
           end
 
-          advance
+          advance!
         end
       end
     end
