@@ -1,6 +1,6 @@
 module Rublox
   module Parser
-    class Parser
+    class RecursiveDescentParser
       def initialize(tokens, error_handler)
         @tokens = tokens
         @current = 0
