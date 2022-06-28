@@ -50,7 +50,7 @@ module Rublox
       end
 
       def for_statement!
-        consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.")
+        consume!(TokenType::LEFT_PAREN, "Expect '(' after 'for'.")
 
         if match!(TokenType::SEMICOLON)
           # We do need this case because we have to consume the semicolon.

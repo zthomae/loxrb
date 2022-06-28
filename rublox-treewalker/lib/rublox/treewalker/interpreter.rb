@@ -26,7 +26,7 @@ module Rublox
       def visit_if_stmt(stmt)
         if is_truthy?(evaluate(stmt.condition))
           execute(stmt.then_branch)
-        else
+        elsif !stmt.else_branch.nil?
           execute(stmt.else_branch)
         end
         nil
