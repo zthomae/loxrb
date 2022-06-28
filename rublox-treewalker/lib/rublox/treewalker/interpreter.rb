@@ -52,6 +52,18 @@ module Rublox
         return expr.value
       end
 
+      def visit_logical_expr(expr)
+        left = evaluate(expr.left)
+
+        if expr.operator.type == Rublox::Parser::TokenType::OR
+          return left if is_truthy?(left)
+        else
+          return left if !is_truthy?(left)
+        end
+
+        evaluate(expr.right)
+      end
+
       def visit_grouping_expr(expr)
         evaluate(expr.expression)
       end

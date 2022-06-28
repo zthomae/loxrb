@@ -26,6 +26,12 @@ module Rublox
         end
       end
 
+      Logical = Struct.new(:left, :operator, :right) do
+        def accept(visitor)
+          visitor.visit_logical_expr(self)
+        end
+      end
+
       Unary = Struct.new(:operator, :right) do
         def accept(visitor)
           visitor.visit_unary_expr(self)
