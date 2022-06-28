@@ -1,9 +1,18 @@
 module Rublox
   module TreeWalker
     class Interpreter
+      attr_reader :globals
+
       def initialize(error_handler)
         @error_handler = error_handler
-        @environment = Environment.new
+        @globals = Environment.new
+        @globals.define(
+          "clock",
+          Callable.create_native(0) do |interpreter, arguments|
+            Time.now.strftime('%s%L') / 1000.0
+          end
+        )
+        @environment = @globals
       end
 
       def interpret(statements)
@@ -23,6 +32,12 @@ module Rublox
         nil
       end
 
+      def visit_function_stmt(stmt)
+        function = Callable.create_function(stmt, @environment)
+        @environment.define(stmt.name.lexeme, function)
+        nil
+      end
+
       def visit_if_stmt(stmt)
         if is_truthy?(evaluate(stmt.condition))
           execute(stmt.then_branch)
@@ -36,6 +51,14 @@ module Rublox
         value = evaluate(stmt.expression)
         puts stringify(value)
         nil
+      end
+
+      def visit_return_stmt(stmt)
+        if !stmt.value.nil?
+          value = evaluate(stmt.value)
+        end
+
+        raise RuntimeReturn.new(value)
       end
 
       def visit_var_stmt(stmt)
@@ -126,6 +149,22 @@ module Rublox
         end
       end
 
+      def visit_call_expr(expr)
+        callee = evaluate(expr.callee)
+
+        arguments = expr.arguments.map(&method(:evaluate))
+
+        if !callee.is_a?(Callable)
+          raise LoxRuntimeError.new(expr.paren, "Can only call functions and classes.")
+        end
+
+        if arguments.count != callee.arity
+          raise LoxRuntimeError.new(expr.paren, "Expected #{callee.arity} arguments but got #{arguments.count}.")
+        end
+
+        callee.call(self, arguments)
+      end
+
       def visit_variable_expr(expr)
         @environment.get(expr.name)
       end
@@ -136,21 +175,22 @@ module Rublox
         value
       end
 
-      private
-
-      def execute(stmt)
-        stmt.accept(self)
-      end
-
       def execute_block(statements, environment)
         previous = @environment
 
         begin
           @environment = environment
           statements.each { |statement| execute(statement) }
+          nil
         ensure
           @environment = previous
         end
+      end
+
+      private
+
+      def execute(stmt)
+        stmt.accept(self)
       end
 
       def evaluate(expr)

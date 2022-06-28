@@ -19,12 +19,34 @@ module Rublox
       private
 
       def declaration!
+        return function!("function") if match!(TokenType::FUN)
         return var_declaration! if match!(TokenType::VAR)
 
         statement!
       rescue ::Rublox::Parser::Error
         synchronize!
         nil
+      end
+
+      def function!(kind)
+        name = consume!(TokenType::IDENTIFIER, "Expect #{kind} name.")
+        consume!(TokenType::LEFT_PAREN, "Expect '(' after #{kind} name.")
+        parameters = []
+        if !check?(TokenType::RIGHT_PAREN)
+          parameters << consume!(TokenType::IDENTIFIER, "Expect parameter name.")
+
+          while match!(TokenType::COMMA)
+            error(peek, "Can't have more than 255 parameters.") if parameters.count >= 255
+
+            parameters << consume!(TokenType::IDENTIFIER, "Expect parameter name.")
+          end
+        end
+
+        consume!(TokenType::RIGHT_PAREN, "Expect ')' after parameters.")
+
+        consume!(TokenType::LEFT_BRACE, "Expect '{' before #{kind} body.")
+        body = block!
+        Stmt::Function.new(name, parameters, body)
       end
 
       def var_declaration!
@@ -42,8 +64,9 @@ module Rublox
       def statement!
         return for_statement! if match!(TokenType::FOR)
         return if_statement! if match!(TokenType::IF)
-        return while_statement! if match!(TokenType::WHILE)
         return print_statement! if match!(TokenType::PRINT)
+        return return_statement! if match!(TokenType::RETURN)
+        return while_statement! if match!(TokenType::WHILE)
         return Stmt::Block.new(block!) if match!(TokenType::LEFT_BRACE)
 
         expression_statement!
@@ -107,6 +130,22 @@ module Rublox
         Stmt::If.new(condition, then_branch, else_branch)
       end
 
+      def print_statement!
+        value = expression!
+        consume!(TokenType::SEMICOLON, "Expect ';' after value.")
+        Stmt::Print.new(value)
+      end
+
+      def return_statement!
+        keyword = previous
+        if !check?(TokenType::SEMICOLON)
+          value = expression!
+        end
+
+        consume!(TokenType::SEMICOLON, "Expect ';' after return value.")
+        Stmt::Return.new(keyword, value)
+      end
+
       def while_statement!
         consume!(TokenType::LEFT_PAREN, "Expect '(' after 'while'.")
         condition = expression!
@@ -114,12 +153,6 @@ module Rublox
         body = statement!
 
         Stmt::While.new(condition, body)
-      end
-
-      def print_statement!
-        value = expression!
-        consume!(TokenType::SEMICOLON, "Expect ';' after value.")
-        Stmt::Print.new(value)
       end
 
       def expression_statement!
@@ -240,7 +273,39 @@ module Rublox
           return Expr::Unary.new(operator, right)
         end
 
-        primary!
+        call!
+      end
+
+      def call!
+        expr = primary!
+
+        loop do
+          if match!(TokenType::LEFT_PAREN)
+            expr = finish_call!(expr)
+          else
+            break
+          end
+        end
+
+        expr
+      end
+
+      def finish_call!(callee)
+        arguments = []
+
+        if !check?(TokenType::RIGHT_PAREN)
+          arguments << expression!
+          while match!(TokenType::COMMA)
+            if arguments.count >= 255
+              error(peek, "Can't have more than 255 arguments.")
+            end
+            arguments << expression!
+          end
+        end
+
+        paren = consume!(TokenType::RIGHT_PAREN, "Expect ')' after arguments.")
+
+        Expr::Call.new(callee, paren, arguments)
       end
 
       def primary!

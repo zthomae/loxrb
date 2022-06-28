@@ -13,6 +13,12 @@ module Rublox
         end
       end
 
+      Function = Struct.new(:name, :params, :body) do
+        def accept(visitor)
+          visitor.visit_function_stmt(self)
+        end
+      end
+
       If = Struct.new(:condition, :then_branch, :else_branch) do
         def accept(visitor)
           visitor.visit_if_stmt(self)
@@ -22,6 +28,12 @@ module Rublox
       Print = Struct.new(:expression) do
         def accept(visitor)
           visitor.visit_print_stmt(self)
+        end
+      end
+
+      Return = Struct.new(:keyword, :value) do
+        def accept(visitor)
+          visitor.visit_return_stmt(self)
         end
       end
 

@@ -14,6 +14,12 @@ module Rublox
         end
       end
 
+      Call = Struct.new(:callee, :paren, :arguments) do
+        def accept(visitor)
+          visitor.visit_call_expr(self)
+        end
+      end
+
       Grouping = Struct.new(:expression) do
         def accept(visitor)
           visitor.visit_grouping_expr(self)
