@@ -13,6 +13,7 @@ module Rublox
           end
         )
         @environment = @globals
+        @locals = {}
       end
 
       def interpret(statements)
@@ -166,12 +167,19 @@ module Rublox
       end
 
       def visit_variable_expr(expr)
-        @environment.get(expr.name)
+        lookup_variable(expr.name, expr)
       end
 
       def visit_assign_expr(expr)
         value = evaluate(expr.value)
-        @environment.assign(expr.name, value)
+
+        distance = @locals[expr.object_id]
+        if !distance.nil?
+          @environment.assign_at(distance, expr.name, value)
+        else
+          @globals.assign(expr.name, value)
+        end
+
         value
       end
 
@@ -187,6 +195,12 @@ module Rublox
         end
       end
 
+      def resolve(expr, depth)
+        # Using object_id to uniquely identify each expression regardless of its contents.
+        # Using value objects like structs might have been a mistake...
+        @locals[expr.object_id] = depth
+      end
+
       private
 
       def execute(stmt)
@@ -195,6 +209,15 @@ module Rublox
 
       def evaluate(expr)
         expr.accept(self)
+      end
+
+      def lookup_variable(name, expr)
+        distance = @locals[expr.object_id]
+        if !distance.nil?
+          @environment.get_at(distance, name.lexeme)
+        else
+          @globals.get(name)
+        end
       end
 
       def is_truthy?(object)

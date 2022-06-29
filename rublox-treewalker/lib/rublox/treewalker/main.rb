@@ -13,6 +13,11 @@ module Rublox
 
           return if had_error?
 
+          resolver = Resolver.new(interpreter, self)
+          resolver.resolve(statements)
+
+          return if had_error?
+
           interpreter.interpret(statements)
         end
 
@@ -27,6 +32,11 @@ module Rublox
           else
             report(token.line, " at '#{token.lexeme}'", message)
           end
+          @had_error = true
+        end
+
+        def resolution_error(name, message)
+          report(name.line, " at '#{name.lexeme}'", message)
           @had_error = true
         end
 
