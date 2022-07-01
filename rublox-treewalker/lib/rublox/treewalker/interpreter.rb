@@ -9,7 +9,7 @@ module Rublox
         @globals.define(
           "clock",
           NativeFunction.new(0) do |interpreter, arguments|
-            Time.now.strftime('%s%L') / 1000.0
+            Time.now.strftime("%s%L").to_f / 1000.0
           end
         )
         @environment = @globals
