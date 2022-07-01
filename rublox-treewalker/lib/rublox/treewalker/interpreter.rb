@@ -8,7 +8,7 @@ module Rublox
         @globals = Environment.new
         @globals.define(
           "clock",
-          Callable.create_native(0) do |interpreter, arguments|
+          NativeFunction.new(0) do |interpreter, arguments|
             Time.now.strftime('%s%L') / 1000.0
           end
         )
@@ -34,7 +34,7 @@ module Rublox
       end
 
       def visit_function_stmt(stmt)
-        function = Callable.create_function(stmt, @environment)
+        function = LoxFunction.new(stmt, @environment)
         @environment.define(stmt.name.lexeme, function)
         nil
       end
@@ -155,7 +155,7 @@ module Rublox
 
         arguments = expr.arguments.map(&method(:evaluate))
 
-        if !callee.is_a?(Callable)
+        if !callee.is_a?(NativeFunction) && !callee.is_a?(LoxFunction)
           raise LoxRuntimeError.new(expr.paren, "Can only call functions and classes.")
         end
 
