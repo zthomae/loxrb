@@ -1,7 +1,7 @@
 module Rublox
   module TreeWalker
     class LoxFunction
-      def initialize(declaration, closure, is_initializer)
+      def initialize(declaration, closure, is_initializer:)
         @declaration = declaration
         @closure = closure
         @is_initializer = is_initializer
@@ -36,7 +36,7 @@ module Rublox
       def bind(instance)
         environment = Environment.new(@closure)
         environment.define("this", instance)
-        LoxFunction.new(@declaration, environment, is_initializer?)
+        LoxFunction.new(@declaration, environment, is_initializer: is_initializer?)
       end
 
       private

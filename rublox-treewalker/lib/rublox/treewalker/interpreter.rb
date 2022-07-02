@@ -45,7 +45,7 @@ module Rublox
 
         methods = {}
         stmt.methods.each do |method|
-          function = LoxFunction.new(method, @environment, method.name.lexeme == "init")
+          function = LoxFunction.new(method, @environment, is_initializer: method.name.lexeme == "init")
           methods[method.name.lexeme] = function
         end
 
@@ -63,7 +63,7 @@ module Rublox
       end
 
       def visit_function_stmt(stmt)
-        function = LoxFunction.new(stmt, @environment, false)
+        function = LoxFunction.new(stmt, @environment, is_initializer: false)
         @environment.define(stmt.name.lexeme, function)
       end
 
