@@ -16,7 +16,7 @@ module Rublox
         return @values[name.lexeme] if @values.include?(name.lexeme)
         return @enclosing.get(name) if !@enclosing.nil?
 
-        raise LoxRuntimeError.new(name, "Undefined variable '#{name.lexeme}'.")
+        raise LanguageRuntimeError.new(name, "Undefined variable '#{name.lexeme}'.")
       end
 
       def get_at(distance, name)
@@ -42,7 +42,7 @@ module Rublox
           return
         end
 
-        raise LoxRuntimeError.new(name, "Undefined variable '#{name.lexeme}'.")
+        raise LanguageRuntimeError.new(name, "Undefined variable '#{name.lexeme}'.")
       end
 
       def assign_at(distance, name, value)

@@ -20,7 +20,7 @@ module Rublox
         statements.each do |statement|
           execute(statement)
         end
-      rescue LoxRuntimeError => e
+      rescue LanguageRuntimeError => e
         @error_handler.runtime_error(e)
       end
 
@@ -31,8 +31,8 @@ module Rublox
       def visit_class_stmt(stmt)
         if !stmt.superclass.nil?
           superclass = evaluate(stmt.superclass)
-          if !superclass.is_a?(LoxClass)
-            raise LoxRuntimeError.new(stmt.superclass.name, "Superclass must be a class.")
+          if !superclass.is_a?(UserDefinedClass)
+            raise LanguageRuntimeError.new(stmt.superclass.name, "Superclass must be a class.")
           end
         end
 
@@ -45,11 +45,11 @@ module Rublox
 
         methods = {}
         stmt.methods.each do |method|
-          function = LoxFunction.new(method, @environment, is_initializer: method.name.lexeme == "init")
+          function = UserDefinedFunction.new(method, @environment, is_initializer: method.name.lexeme == "init")
           methods[method.name.lexeme] = function
         end
 
-        klass = LoxClass.new(stmt.name.lexeme, superclass, methods)
+        klass = UserDefinedClass.new(stmt.name.lexeme, superclass, methods)
 
         if !superclass.nil?
           @environment = @environment.enclosing
@@ -63,7 +63,7 @@ module Rublox
       end
 
       def visit_function_stmt(stmt)
-        function = LoxFunction.new(stmt, @environment, is_initializer: false)
+        function = UserDefinedFunction.new(stmt, @environment, is_initializer: false)
         @environment.define(stmt.name.lexeme, function)
       end
 
@@ -163,7 +163,7 @@ module Rublox
             return left + right
           end
 
-          raise LoxRuntimeError.new(expr.operator, "Operands must be two numbers or two strings.")
+          raise LanguageRuntimeError.new(expr.operator, "Operands must be two numbers or two strings.")
         when Rublox::Parser::TokenType::SLASH
           check_number_operands(expr.operator, left, right)
           left / right
@@ -179,11 +179,11 @@ module Rublox
         arguments = expr.arguments.map(&method(:evaluate))
 
         if !callee.respond_to?(:arity) || !callee.respond_to?(:call)
-          raise LoxRuntimeError.new(expr.paren, "Can only call functions and classes.")
+          raise LanguageRuntimeError.new(expr.paren, "Can only call functions and classes.")
         end
 
         if arguments.count != callee.arity
-          raise LoxRuntimeError.new(expr.paren, "Expected #{callee.arity} arguments but got #{arguments.count}.")
+          raise LanguageRuntimeError.new(expr.paren, "Expected #{callee.arity} arguments but got #{arguments.count}.")
         end
 
         callee.call(self, arguments)
@@ -191,18 +191,18 @@ module Rublox
 
       def visit_get_expr(expr)
         object = evaluate(expr.object)
-        if object.is_a?(LoxInstance)
+        if object.is_a?(UserDefinedClassInstance)
           return object.get(expr.name)
         end
 
-        raise LoxRuntimeError.new(expr.name, "Only instances have properties.")
+        raise LanguageRuntimeError.new(expr.name, "Only instances have properties.")
       end
 
       def visit_set_expr(expr)
         object = evaluate(expr.object)
 
-        if !object.is_a?(LoxInstance)
-          raise LoxRuntimeError.new(expr.name, "Only instances have fields.")
+        if !object.is_a?(UserDefinedClassInstance)
+          raise LanguageRuntimeError.new(expr.name, "Only instances have fields.")
         end
 
         value = evaluate(expr.value)
@@ -216,7 +216,7 @@ module Rublox
         object = @environment.get_at(distance - 1, "this")
         method = superclass.find_method(expr.method.lexeme)
         if method.nil?
-          raise LoxRuntimeError.new(expr.method, "Undefined property '#{expr.method.lexeme}'.")
+          raise LanguageRuntimeError.new(expr.method, "Undefined property '#{expr.method.lexeme}'.")
         end
         method.bind(object)
       end
@@ -288,13 +288,13 @@ module Rublox
       def check_number_operand(operator, operand)
         return if operand.is_a?(Float)
 
-        raise LoxRuntimeError.new(operator, "Operand must be a number.")
+        raise LanguageRuntimeError.new(operator, "Operand must be a number.")
       end
 
       def check_number_operands(operator, left, right)
         return if left.is_a?(Float) && right.is_a?(Float)
 
-        raise LoxRuntimeError.new(operator, "Operands must be numbers.")
+        raise LanguageRuntimeError.new(operator, "Operands must be numbers.")
       end
 
       def stringify(object)

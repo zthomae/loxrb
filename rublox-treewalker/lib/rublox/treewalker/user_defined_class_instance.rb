@@ -1,6 +1,6 @@
 module Rublox
   module TreeWalker
-    class LoxInstance
+    class UserDefinedClassInstance
       def initialize(klass)
         @klass = klass
         @fields = {}
@@ -18,7 +18,7 @@ module Rublox
         method = @klass.find_method(name.lexeme)
         return method.bind(self) if !method.nil?
 
-        raise LoxRuntimeError.new(name, "Undefined property '#{name.lexeme}'.")
+        raise LanguageRuntimeError.new(name, "Undefined property '#{name.lexeme}'.")
       end
 
       def set(name, value)

@@ -1,6 +1,6 @@
 module Rublox
   module TreeWalker
-    class RuntimeReturn < LoxRuntimeError
+    class RuntimeReturn < LanguageRuntimeError
       attr_reader :value
 
       # Note: Always initialize with .new -- Ruby does strange things if the first parameter

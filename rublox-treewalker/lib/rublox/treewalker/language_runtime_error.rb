@@ -1,6 +1,6 @@
 module Rublox
   module TreeWalker
-    class LoxRuntimeError < StandardError
+    class LanguageRuntimeError < StandardError
       attr_reader :token
 
       # Note: Always initialize with .new -- Ruby does strange things if the first parameter

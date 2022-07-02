@@ -1,6 +1,6 @@
 module Rublox
   module TreeWalker
-    class LoxClass
+    class UserDefinedClass
       attr_reader :name
       attr_reader :superclass
 
@@ -22,7 +22,7 @@ module Rublox
       end
 
       def call(interpreter, arguments)
-        instance = LoxInstance.new(self)
+        instance = UserDefinedClassInstance.new(self)
         initializer = find_method("init")
         if !initializer.nil?
           initializer.bind(instance).call(interpreter, arguments)
