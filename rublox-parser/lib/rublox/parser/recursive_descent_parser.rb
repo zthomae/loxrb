@@ -31,6 +31,12 @@ module Rublox
 
       def class_declaration!
         name = consume!(TokenType::IDENTIFIER, "Expect class name.")
+
+        if match!(TokenType::LESS)
+          consume!(TokenType::IDENTIFIER, "Expect superclass name.")
+          superclass = Expr::Variable.new(previous)
+        end
+
         consume!(TokenType::LEFT_BRACE, "Expect '{' before class body.")
 
         methods = []
@@ -40,7 +46,7 @@ module Rublox
 
         consume!(TokenType::RIGHT_BRACE, "Expect '}' after class body.")
 
-        Stmt::Class.new(name, methods)
+        Stmt::Class.new(name, superclass, methods)
       end
 
       def function!(kind)
@@ -335,6 +341,13 @@ module Rublox
 
         if match!(TokenType::NUMBER, TokenType::STRING)
           return Expr::Literal.new(previous.literal)
+        end
+
+        if match!(TokenType::SUPER)
+          keyword = previous
+          consume!(TokenType::DOT, "Expect '.' after 'super'.")
+          method = consume!(TokenType::IDENTIFIER, "Expect superclass method name.")
+          return Expr::Super.new(keyword, method)
         end
 
         if match!(TokenType::THIS)

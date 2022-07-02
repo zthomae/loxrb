@@ -50,6 +50,12 @@ module Rublox
         end
       end
 
+      Super = Struct.new(:keyword, :method) do
+        def accept(visitor)
+          visitor.visit_super_expr(self)
+        end
+      end
+
       This = Struct.new(:keyword) do
         def accept(visitor)
           visitor.visit_this_expr(self)

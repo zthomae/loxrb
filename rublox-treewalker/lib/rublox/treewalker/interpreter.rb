@@ -29,7 +29,19 @@ module Rublox
       end
 
       def visit_class_stmt(stmt)
+        if !stmt.superclass.nil?
+          superclass = evaluate(stmt.superclass)
+          if !superclass.is_a?(LoxClass)
+            raise LoxRuntimeError.new(stmt.superclass.name, "Superclass must be a class.")
+          end
+        end
+
         @environment.define(stmt.name.lexeme, nil)
+
+        if !stmt.superclass.nil?
+          @environment = Environment.new(@environment)
+          @environment.define("super", superclass)
+        end
 
         methods = {}
         stmt.methods.each do |method|
@@ -37,7 +49,12 @@ module Rublox
           methods[method.name.lexeme] = function
         end
 
-        klass = LoxClass.new(stmt.name.lexeme, methods)
+        klass = LoxClass.new(stmt.name.lexeme, superclass, methods)
+
+        if !superclass.nil?
+          @environment = @environment.enclosing
+        end
+
         @environment.assign(stmt.name, klass)
         nil
       end
@@ -199,6 +216,17 @@ module Rublox
         value = evaluate(expr.value)
         object.set(expr.name, value)
         value
+      end
+
+      def visit_super_expr(expr)
+        distance = @locals[expr.object_id]
+        superclass = @environment.get_at(distance, "super")
+        object = @environment.get_at(distance - 1, "this")
+        method = superclass.find_method(expr.method.lexeme)
+        if method.nil?
+          raise LoxRuntimeError.new(expr.method, "Undefined property '#{expr.method.lexeme}'.")
+        end
+        method.bind(object)
       end
 
       def visit_this_expr(expr)

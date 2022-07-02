@@ -2,9 +2,11 @@ module Rublox
   module TreeWalker
     class LoxClass
       attr_reader :name
+      attr_reader :superclass
 
-      def initialize(name, methods)
+      def initialize(name, superclass, methods)
         @name = name
+        @superclass = superclass
         @methods = methods
       end
 
@@ -33,6 +35,8 @@ module Rublox
         if @methods.include?(name)
           return @methods[name]
         end
+
+        return superclass.find_method(name) if !superclass.nil?
 
         nil
       end

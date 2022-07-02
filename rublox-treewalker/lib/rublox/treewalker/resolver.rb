@@ -23,6 +23,20 @@ module Rublox
         declare(stmt.name)
         define(stmt.name)
 
+        if !stmt.superclass.nil? && stmt.name.lexeme == stmt.superclass.name.lexeme
+          @error_handler.resolution_error(stmt.superclass.name, "A class can't inherit from itself.")
+        end
+
+        if !stmt.superclass.nil?
+          @current_class = ClassType::SUBCLASS
+          resolve(stmt.superclass)
+        end
+
+        if !stmt.superclass.nil?
+          begin_scope
+          @scopes[-1]["super"] = true
+        end
+
         begin_scope
         @scopes[-1]["this"] = true
 
@@ -35,6 +49,8 @@ module Rublox
         end
 
         end_scope
+
+        end_scope if !stmt.superclass.nil?
 
         @current_class = enclosing_class
         nil
@@ -139,6 +155,17 @@ module Rublox
         nil
       end
 
+      def visit_super_expr(expr)
+        if @current_class == ClassType::NONE
+          @error_handler.resolution_error(expr.keyword, "Can't use 'super' outside of a class.")
+        elsif @current_class == ClassType::CLASS
+          @error_handler.resolution_error(expr.keyword, "Can't use 'super' in a class with no superclass.")
+        end
+
+        resolve_local(expr, expr.keyword)
+        nil
+      end
+
       def visit_this_expr(expr)
         if @current_class == ClassType::NONE
           @error_handler.resolution_error(expr.keyword, "Can't use 'this' outside of a class.")
@@ -183,6 +210,7 @@ module Rublox
       module ClassType
         NONE = "NONE"
         CLASS = "CLASS"
+        SUBCLASS = "SUBCLASS"
       end
 
       def begin_scope
