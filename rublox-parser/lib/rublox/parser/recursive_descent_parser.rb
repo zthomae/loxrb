@@ -26,7 +26,6 @@ module Rublox
         statement!
       rescue ::Rublox::Parser::Error
         synchronize!
-        nil
       end
 
       def class_declaration!

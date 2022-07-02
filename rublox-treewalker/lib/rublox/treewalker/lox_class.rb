@@ -37,8 +37,6 @@ module Rublox
         end
 
         return superclass.find_method(name) if !superclass.nil?
-
-        nil
       end
     end
   end

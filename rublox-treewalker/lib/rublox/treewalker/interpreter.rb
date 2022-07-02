@@ -56,18 +56,15 @@ module Rublox
         end
 
         @environment.assign(stmt.name, klass)
-        nil
       end
 
       def visit_expression_stmt(stmt)
         evaluate(stmt.expression)
-        nil
       end
 
       def visit_function_stmt(stmt)
         function = LoxFunction.new(stmt, @environment, false)
         @environment.define(stmt.name.lexeme, function)
-        nil
       end
 
       def visit_if_stmt(stmt)
@@ -76,13 +73,11 @@ module Rublox
         elsif !stmt.else_branch.nil?
           execute(stmt.else_branch)
         end
-        nil
       end
 
       def visit_print_stmt(stmt)
         value = evaluate(stmt.expression)
         puts stringify(value)
-        nil
       end
 
       def visit_return_stmt(stmt)
@@ -100,14 +95,12 @@ module Rublox
         end
 
         @environment.define(stmt.name.lexeme, value)
-        nil
       end
 
       def visit_while_stmt(stmt)
         while is_truthy?(evaluate(stmt.condition))
           execute(stmt.body)
         end
-        nil
       end
 
       def visit_literal_expr(expr)
@@ -256,7 +249,6 @@ module Rublox
         begin
           @environment = environment
           statements.each { |statement| execute(statement) }
-          nil
         ensure
           @environment = previous
         end
