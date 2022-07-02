@@ -10,9 +10,7 @@ module Rublox
       end
 
       def visit_block_stmt(stmt)
-        begin_scope
-        resolve(stmt.statements)
-        end_scope
+        with_scope { resolve(stmt.statements) }
       end
 
       def visit_class_stmt(stmt)
@@ -36,18 +34,17 @@ module Rublox
           @scopes[-1]["super"] = true
         end
 
-        begin_scope
-        @scopes[-1]["this"] = true
+        with_scope do |scope|
+          scope["this"] = true
 
-        stmt.methods.each do |method|
-          declaration = FunctionType::METHOD
-          if method.name.lexeme == "init"
-            declaration = FunctionType::INITIALIZER
+          stmt.methods.each do |method|
+            declaration = FunctionType::METHOD
+            if method.name.lexeme == "init"
+              declaration = FunctionType::INITIALIZER
+            end
+            resolve_function(method, declaration)
           end
-          resolve_function(method, declaration)
         end
-
-        end_scope
 
         end_scope if !stmt.superclass.nil?
 
@@ -200,6 +197,12 @@ module Rublox
         @scopes.pop
       end
 
+      def with_scope
+        begin_scope
+        yield @scopes[-1]
+        end_scope
+      end
+
       def declare(name)
         return if @scopes.empty?
 
@@ -229,13 +232,13 @@ module Rublox
         enclosing_function = @current_function
         @current_function = type
 
-        begin_scope
-        function.params.each do |param|
-          declare(param)
-          define(param)
+        with_scope do
+          function.params.each do |param|
+            declare(param)
+            define(param)
+          end
+          resolve(function.body)
         end
-        resolve(function.body)
-        end_scope
 
         @current_function = enclosing_function
       end
