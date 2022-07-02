@@ -211,7 +211,7 @@ module Rublox
       end
 
       def visit_super_expr(expr)
-        distance = @locals[expr.object_id]
+        distance = get_local(expr)
         superclass = @environment.get_at(distance, "super")
         object = @environment.get_at(distance - 1, "this")
         method = superclass.find_method(expr.method.lexeme)
@@ -232,7 +232,7 @@ module Rublox
       def visit_assign_expr(expr)
         value = evaluate(expr.value)
 
-        distance = @locals[expr.object_id]
+        distance = get_local(expr)
         if !distance.nil?
           @environment.assign_at(distance, expr.name, value)
         else
@@ -254,9 +254,7 @@ module Rublox
       end
 
       def resolve(expr, depth)
-        # Using object_id to uniquely identify each expression regardless of its contents.
-        # Using value objects like structs might have been a mistake...
-        @locals[expr.object_id] = depth
+        set_local(expr, depth)
       end
 
       private
@@ -270,7 +268,7 @@ module Rublox
       end
 
       def lookup_variable(name, expr)
-        distance = @locals[expr.object_id]
+        distance = get_local(expr)
         if !distance.nil?
           @environment.get_at(distance, name.lexeme)
         else
@@ -311,6 +309,14 @@ module Rublox
         end
 
         object.to_s
+      end
+
+      def get_local(expr)
+        @locals[expr.object_id]
+      end
+
+      def set_local(expr, depth)
+        @locals[expr.object_id] = depth
       end
     end
   end
