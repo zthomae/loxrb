@@ -89,7 +89,6 @@ module Rublox
       end
 
       def visit_var_stmt(stmt)
-        value = nil
         if !stmt.initializer.nil?
           value = evaluate(stmt.initializer)
         end

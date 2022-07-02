@@ -72,7 +72,6 @@ module Rublox
       def var_declaration!
         name = consume!(TokenType::IDENTIFIER, "Expect variable name.")
 
-        initializer = nil
         if match!(TokenType::EQUAL)
           initializer = expression!
         end
