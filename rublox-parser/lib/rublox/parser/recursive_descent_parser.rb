@@ -19,6 +19,7 @@ module Rublox
       private
 
       def declaration!
+        return class_declaration! if match!(TokenType::CLASS)
         return function!("function") if match!(TokenType::FUN)
         return var_declaration! if match!(TokenType::VAR)
 
@@ -26,6 +27,20 @@ module Rublox
       rescue ::Rublox::Parser::Error
         synchronize!
         nil
+      end
+
+      def class_declaration!
+        name = consume!(TokenType::IDENTIFIER, "Expect class name.")
+        consume!(TokenType::LEFT_BRACE, "Expect '{' before class body.")
+
+        methods = []
+        while !check?(TokenType::RIGHT_BRACE) && !is_at_end?
+          methods << function!("method")
+        end
+
+        consume!(TokenType::RIGHT_BRACE, "Expect '}' after class body.")
+
+        Stmt::Class.new(name, methods)
       end
 
       def function!(kind)
@@ -186,6 +201,8 @@ module Rublox
           if expr.is_a?(Expr::Variable)
             name = expr.name
             return Expr::Assign.new(name, value)
+          elsif expr.is_a?(Expr::Get)
+            return Expr::Set.new(expr.object, expr.name, value)
           end
 
           error(equals, "Invalid assignment target.")
@@ -282,6 +299,9 @@ module Rublox
         loop do
           if match!(TokenType::LEFT_PAREN)
             expr = finish_call!(expr)
+          elsif match!(TokenType::DOT)
+            name = consume!(TokenType::IDENTIFIER, "Expect property name after '.'.")
+            expr = Expr::Get.new(expr, name)
           else
             break
           end
@@ -315,6 +335,10 @@ module Rublox
 
         if match!(TokenType::NUMBER, TokenType::STRING)
           return Expr::Literal.new(previous.literal)
+        end
+
+        if match!(TokenType::THIS)
+          return Expr::This.new(previous)
         end
 
         if match!(TokenType::IDENTIFIER)

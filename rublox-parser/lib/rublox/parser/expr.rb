@@ -20,6 +20,12 @@ module Rublox
         end
       end
 
+      Get = Struct.new(:object, :name) do
+        def accept(visitor)
+          visitor.visit_get_expr(self)
+        end
+      end
+
       Grouping = Struct.new(:expression) do
         def accept(visitor)
           visitor.visit_grouping_expr(self)
@@ -35,6 +41,18 @@ module Rublox
       Logical = Struct.new(:left, :operator, :right) do
         def accept(visitor)
           visitor.visit_logical_expr(self)
+        end
+      end
+
+      Set = Struct.new(:object, :name, :value) do
+        def accept(visitor)
+          visitor.visit_set_expr(self)
+        end
+      end
+
+      This = Struct.new(:keyword) do
+        def accept(visitor)
+          visitor.visit_this_expr(self)
         end
       end
 

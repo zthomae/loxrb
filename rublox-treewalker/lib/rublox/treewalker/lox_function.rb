@@ -1,9 +1,10 @@
 module Rublox
   module TreeWalker
     class LoxFunction
-      def initialize(declaration, closure)
+      def initialize(declaration, closure, is_initializer)
         @declaration = declaration
         @closure = closure
+        @is_initializer = is_initializer
       end
 
       def arity
@@ -23,8 +24,25 @@ module Rublox
         begin
           interpreter.execute_block(@declaration.body, environment)
         rescue RuntimeReturn => e
+          return @closure.get_at(0, "this") if is_initializer?
           return e.value
         end
+
+        if is_initializer?
+          return @closure.get_at(0, "this")
+        end
+      end
+
+      def bind(instance)
+        environment = Environment.new(@closure)
+        environment.define("this", instance)
+        LoxFunction.new(@declaration, environment, is_initializer?)
+      end
+
+      private
+
+      def is_initializer?
+        !!@is_initializer
       end
     end
   end

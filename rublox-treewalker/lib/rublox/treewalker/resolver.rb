@@ -6,12 +6,37 @@ module Rublox
         @error_handler = error_handler
         @scopes = []
         @current_function = FunctionType::NONE
+        @current_class = ClassType::NONE
       end
 
       def visit_block_stmt(stmt)
         begin_scope
         resolve(stmt.statements)
         end_scope
+        nil
+      end
+
+      def visit_class_stmt(stmt)
+        enclosing_class = @current_class
+        @current_class = ClassType::CLASS
+
+        declare(stmt.name)
+        define(stmt.name)
+
+        begin_scope
+        @scopes[-1]["this"] = true
+
+        stmt.methods.each do |method|
+          declaration = FunctionType::METHOD
+          if method.name.lexeme == "init"
+            declaration = FunctionType::INITIALIZER
+          end
+          resolve_function(method, declaration)
+        end
+
+        end_scope
+
+        @current_class = enclosing_class
         nil
       end
 
@@ -45,7 +70,13 @@ module Rublox
           @error_handler.resolution_error(stmt.keyword, "Can't return from top-level code.")
         end
 
-        resolve(stmt.value) if !stmt.value.nil?
+        if !stmt.value.nil?
+          if @current_function == FunctionType::INITIALIZER
+            @error_handler.resolution_error(stmt.keyword, "Can't return a value from an initializer.")
+          end
+
+          resolve(stmt.value)
+        end
         nil
       end
 
@@ -82,6 +113,11 @@ module Rublox
         nil
       end
 
+      def visit_get_expr(expr)
+        resolve(expr.object)
+        nil
+      end
+
       def visit_grouping_expr(expr)
         resolve(expr.expression)
         nil
@@ -94,6 +130,22 @@ module Rublox
       def visit_logical_expr(expr)
         resolve(expr.left)
         resolve(expr.right)
+        nil
+      end
+
+      def visit_set_expr(expr)
+        resolve(expr.value)
+        resolve(expr.object)
+        nil
+      end
+
+      def visit_this_expr(expr)
+        if @current_class == ClassType::NONE
+          @error_handler.resolution_error(expr.keyword, "Can't use 'this' outside of a class.")
+          return
+        end
+
+        resolve_local(expr, expr.keyword)
         nil
       end
 
@@ -124,6 +176,13 @@ module Rublox
       module FunctionType
         NONE = "NONE"
         FUNCTION = "FUNCTION"
+        INITIALIZER = "INITIALIZER"
+        METHOD = "METHOD"
+      end
+
+      module ClassType
+        NONE = "NONE"
+        CLASS = "CLASS"
       end
 
       def begin_scope

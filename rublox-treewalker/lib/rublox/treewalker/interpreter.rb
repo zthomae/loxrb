@@ -28,13 +28,27 @@ module Rublox
         execute_block(stmt.statements, Environment.new(@environment))
       end
 
+      def visit_class_stmt(stmt)
+        @environment.define(stmt.name.lexeme, nil)
+
+        methods = {}
+        stmt.methods.each do |method|
+          function = LoxFunction.new(method, @environment, method.name.lexeme == "init")
+          methods[method.name.lexeme] = function
+        end
+
+        klass = LoxClass.new(stmt.name.lexeme, methods)
+        @environment.assign(stmt.name, klass)
+        nil
+      end
+
       def visit_expression_stmt(stmt)
         evaluate(stmt.expression)
         nil
       end
 
       def visit_function_stmt(stmt)
-        function = LoxFunction.new(stmt, @environment)
+        function = LoxFunction.new(stmt, @environment, false)
         @environment.define(stmt.name.lexeme, function)
         nil
       end
@@ -155,7 +169,7 @@ module Rublox
 
         arguments = expr.arguments.map(&method(:evaluate))
 
-        if !callee.is_a?(NativeFunction) && !callee.is_a?(LoxFunction)
+        if !callee.respond_to?(:arity) || !callee.respond_to?(:call)
           raise LoxRuntimeError.new(expr.paren, "Can only call functions and classes.")
         end
 
@@ -164,6 +178,31 @@ module Rublox
         end
 
         callee.call(self, arguments)
+      end
+
+      def visit_get_expr(expr)
+        object = evaluate(expr.object)
+        if object.is_a?(LoxInstance)
+          return object.get(expr.name)
+        end
+
+        raise LoxRuntimeError.new(expr.name, "Only instances have properties.")
+      end
+
+      def visit_set_expr(expr)
+        object = evaluate(expr.object)
+
+        if !object.is_a?(LoxInstance)
+          raise LoxRuntimeError.new(expr.name, "Only instances have fields.")
+        end
+
+        value = evaluate(expr.value)
+        object.set(expr.name, value)
+        value
+      end
+
+      def visit_this_expr(expr)
+        lookup_variable(expr.keyword, expr)
       end
 
       def visit_variable_expr(expr)
