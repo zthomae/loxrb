@@ -24,12 +24,12 @@ module Rublox
           instruction = chunk.contents_at(offset)
           case instruction
           when Opcode::CONSTANT
-            return constant_instruction("OP_CONSTANT", chunk, offset)
+            constant_instruction("OP_CONSTANT", chunk, offset)
           when Opcode::RETURN
-            return simple_instruction("OP_RETURN", offset)
+            simple_instruction("OP_RETURN", offset)
           else
             puts "Unknown opcode #{instruction}\n"
-            return offset + 1
+            offset + 1
           end
         end
 

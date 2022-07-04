@@ -41,7 +41,7 @@ module Rublox
         end
 
         def runtime_error(error)
-          $stderr.puts "#{error.message}\n[line #{error.token.line}]"
+          warn "#{error.message}\n[line #{error.token.line}]"
           @had_runtime_error = true
         end
 

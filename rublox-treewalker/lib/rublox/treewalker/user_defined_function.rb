@@ -29,7 +29,7 @@ module Rublox
         end
 
         if is_initializer?
-          return @closure.get_at(0, "this")
+          @closure.get_at(0, "this")
         end
       end
 

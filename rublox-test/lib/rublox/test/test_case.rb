@@ -41,7 +41,7 @@ module Rublox
         expectations = 0
 
         parts.each do |part|
-          subpath += "/" if !subpath.empty?
+          subpath += "/" unless subpath.empty?
           subpath += part
 
           if @suite.tests.include?(subpath)
@@ -62,7 +62,7 @@ module Rublox
           if !match.nil?
             return TestParseOutput.new(false, expectations)
           end
-          return TestParseOutput.new(false, expectations) if !match.nil?
+          return TestParseOutput.new(false, expectations) unless match.nil?
 
           match = OutputPatterns::EXPECTED_OUTPUT.match(line)
           if !match.nil?
@@ -142,33 +142,33 @@ module Rublox
 
         validate_exit_code(status.exitstatus, error_lines)
         validate_output(output_lines)
-        return @failures
+        @failures
       end
 
       def validate_runtime_error(error_lines)
         if error_lines.length < 2
-          fail("Expected runtime error '#{@expected_runtime_error}' and got none.")
+          add_failure("Expected runtime error '#{@expected_runtime_error}' and got none.")
           return
         end
 
         if error_lines[0] != @expected_runtime_error
-          fail("Expected runtime error '#{@expected_runtime_error}' and got:")
-          fail(error_lines[0])
+          add_failure("Expected runtime error '#{@expected_runtime_error}' and got:")
+          add_failure(error_lines[0])
         end
 
         match = nil
         stack_lines = error_lines.drop(1)
         stack_lines.each do |line|
           match = OutputPatterns::STACK_TRACE.match(line)
-          break if !match.nil?
+          break unless match.nil?
         end
 
         if match.nil?
-          fail("Expcted stack trace and got:", stack_lines)
+          add_failure("Expcted stack trace and got:", stack_lines)
         else
           stack_line = match[1].to_i
           if stack_line != @runtime_error_line
-            fail("Expected runtime error on line #{@runtime_error_line} but was on line #{stack_line}.")
+            add_failure("Expected runtime error on line #{@runtime_error_line} but was on line #{stack_line}.")
           end
         end
       end
@@ -184,26 +184,26 @@ module Rublox
               found_errors.add(error)
             else
               if unexpected_count < 10
-                fail("Unexpected error:")
-                fail(line)
+                add_failure("Unexpected error:")
+                add_failure(line)
               end
               unexpected_count += 1
             end
           elsif line != ""
             if unexpected_count < 10
-              fail("Unexpected output on stderr:")
-              fail(line)
+              add_failure("Unexpected output on stderr:")
+              add_failure(line)
             end
             unexpected_count += 1
           end
         end
 
         if unexpected_count > 10
-          fail("(truncated #{unexpected_count - 10} more...")
+          add_failure("(truncated #{unexpected_count - 10} more...")
         end
 
         (@expected_errors - found_errors).each do |error|
-          fail("Missing expected error: #{error}")
+          add_failure("Missing expected error: #{error}")
         end
       end
 
@@ -215,7 +215,7 @@ module Rublox
           error_lines << "(truncated...)"
         end
 
-        fail("Expected return code #{@expected_exit_code} but got #{exit_code}. Stderr:", error_lines)
+        add_failure("Expected return code #{@expected_exit_code} but got #{exit_code}. Stderr:", error_lines)
       end
 
       def validate_output(output_lines)
@@ -228,14 +228,14 @@ module Rublox
         while index < output_lines.length
           line = output_lines[index]
           if index >= @expected_output.length
-            fail("Got output '#{line}' when none was expected.")
+            add_failure("Got output '#{line}' when none was expected.")
             index += 1
             next
           end
 
           expected = @expected_output[index]
           if expected.output != line
-            fail("Expected output '#{expected.output}' on line #{expected.line} and got '#{line}'.")
+            add_failure("Expected output '#{expected.output}' on line #{expected.line} and got '#{line}'.")
           end
 
           index += 1
@@ -243,12 +243,12 @@ module Rublox
 
         while index < @expected_output.length
           expected = @expected_output[index]
-          fail("Missing expected output '#{expected.output}' on line #{expected.line}.")
+          add_failure("Missing expected output '#{expected.output}' on line #{expected.line}.")
           index += 1
         end
       end
 
-      def fail(message, lines = nil)
+      def add_failure(message, lines = nil)
         @failures << message
         if !lines.nil?
           @failures.append(*lines)

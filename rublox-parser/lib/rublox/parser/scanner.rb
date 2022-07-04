@@ -17,7 +17,7 @@ module Rublox
         "this" => TokenType::THIS,
         "true" => TokenType::TRUE,
         "var" => TokenType::VAR,
-        "while" => TokenType::WHILE,
+        "while" => TokenType::WHILE
       }
 
       def initialize(source, error_handler)
@@ -30,7 +30,7 @@ module Rublox
       end
 
       def scan_tokens
-        while !is_at_end?
+        until is_at_end?
           @start = @current
           scan_token
         end
@@ -151,7 +151,7 @@ module Rublox
         advance
 
         # Trim surrounding quotes
-        value = @source[@start+1...@current-1]
+        value = @source[@start + 1...@current - 1]
         add_token(TokenType::STRING, value)
       end
 

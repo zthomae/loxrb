@@ -2,7 +2,7 @@ module Rublox
   module Parser
     class AstPrinter
       def print(expr)
-        return expr.accept(self)
+        expr.accept(self)
       end
 
       def visit_print_stmt(stmt)

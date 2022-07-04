@@ -9,7 +9,7 @@ module Rublox
 
       def parse!
         statements = []
-        while !is_at_end?
+        until is_at_end?
           statements << declaration!
         end
 
@@ -94,15 +94,15 @@ module Rublox
       def for_statement!
         consume!(TokenType::LEFT_PAREN, "Expect '(' after 'for'.")
 
-        if match!(TokenType::SEMICOLON)
+        initializer = if match!(TokenType::SEMICOLON)
           # We do need this case because we have to consume the semicolon.
           # Assigning to nil to be a bit more explicit about our intent.
-          initializer = nil
+          nil
         elsif match!(TokenType::VAR)
-          initializer = var_declaration!
+          var_declaration!
         else
           # Using a statement here because it conveniently consumes the semicolon as well...
-          initializer = expression_statement!
+          expression_statement!
         end
 
         # ...but we handle the condition differently, for some reason (a better error message?)
@@ -416,7 +416,7 @@ module Rublox
       def synchronize!
         advance!
 
-        while !is_at_end?
+        until is_at_end?
           return if previous.type == TokenType::SEMICOLON
 
           case peek.type

@@ -19,27 +19,27 @@ RSpec.describe Rublox::Parser do
 
   it "scans lexemes" do
     source = <<~EOF
-    class Foo {
-      inFoo() {
-        print "in foo";
+      class Foo {
+        inFoo() {
+          print "in foo";
+        }
       }
-    }
 
-    class Bar < Foo {
-      inBar(a, b) {
-        var a = 12.3;
-        var b = .23;
-        print nil;
+      class Bar < Foo {
+        inBar(a, b) {
+          var a = 12.3;
+          var b = .23;
+          print nil;
+        }
       }
-    }
 
-    class Baz < Bar {
-      inBaz() {
-        print 1+2 / 3;
+      class Baz < Bar {
+        inBaz() {
+          print 1+2 / 3;
+        }
       }
-    }
 
-    var baz = Baz();
+      var baz = Baz();
     EOF
     tokens = Rublox::Parser::Scanner.new(source, @error_handler).scan_tokens
     expect(tokens.map(&:to_h)).to match_snapshot("scans_lexemes")
@@ -72,8 +72,8 @@ RSpec.describe Rublox::Parser do
 
   it "parses multiple statements" do
     source = <<~EOF
-    "hello" + " " + "world";
-    print "done";
+      "hello" + " " + "world";
+      print "done";
     EOF
     tokens = Rublox::Parser::Scanner.new(source, @error_handler).scan_tokens
     statements = Rublox::Parser::RecursiveDescentParser.new(tokens, @error_handler).parse!

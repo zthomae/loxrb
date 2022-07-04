@@ -28,7 +28,7 @@ def main
   if ARGV.empty?
     usage_error("Missing suite name")
   elsif ARGV.length > 2
-    usage_error("Unexpected arguments: #{ASRGV.drop(2).join(' ')}")
+    usage_error("Unexpected arguments: #{ASRGV.drop(2).join(" ")}")
   end
 
   suite_name = ARGV[0]
@@ -72,7 +72,7 @@ def run_suites(suites, filter_path, custom_interpreter, custom_arguments)
   any_failed = false
   suites.each do |name, suite|
     puts "=== #{name} ==="
-    any_failed = true if !run_suite(suite, filter_path, custom_interpreter, custom_arguments)
+    any_failed = true unless run_suite(suite, filter_path, custom_interpreter, custom_arguments)
     puts ""
   end
 

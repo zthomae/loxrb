@@ -28,7 +28,7 @@ module Rublox
 
           if !filter_path.nil?
             this_test = Pathname.new(path).relative_path_from(Pathname.new("test"))
-            next if !this_test.start_with?(filter_path)
+            next unless this_test.start_with?(filter_path)
           end
 
           test = TestCase.new(self, path, custom_interpreter, custom_arguments)
@@ -68,7 +68,7 @@ module Rublox
           puts "#{passed} tests passed. #{failed} tests failed."
         end
 
-        return failed == 0
+        failed == 0
       end
     end
   end

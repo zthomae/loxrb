@@ -103,7 +103,7 @@ module Rublox
       end
 
       def visit_literal_expr(expr)
-        return expr.value
+        expr.value
       end
 
       def visit_logical_expr(expr)
@@ -111,8 +111,8 @@ module Rublox
 
         if expr.operator.type == Rublox::Parser::TokenType::OR
           return left if is_truthy?(left)
-        else
-          return left if !is_truthy?(left)
+        elsif !is_truthy?(left)
+          return left
         end
 
         evaluate(expr.right)

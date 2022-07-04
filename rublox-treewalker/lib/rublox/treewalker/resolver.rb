@@ -223,7 +223,7 @@ module Rublox
         @scopes.reverse.each.with_index do |scope, i|
           if scope.include?(name.lexeme)
             @interpreter.resolve(expr, i)
-            return
+            break
           end
         end
       end
