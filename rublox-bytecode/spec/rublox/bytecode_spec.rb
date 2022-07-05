@@ -18,6 +18,7 @@ RSpec.describe Rublox::Bytecode do
       io = StringIO.new
       disassembler = Rublox::Bytecode::Disassembler.new(io)
       disassembler.disassemble_chunk(chunk, "test chunk")
+      Rublox::Bytecode.chunk_free(chunk)
       expect(io.string).to eq(
         <<~EOF
         == test chunk ==
@@ -25,6 +26,7 @@ RSpec.describe Rublox::Bytecode do
         0002    | OP_RETURN
         EOF
       )
+      expect(chunk[:count]).to eq(0)
     end
   end
 end
