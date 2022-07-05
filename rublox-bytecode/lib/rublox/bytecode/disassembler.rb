@@ -26,9 +26,9 @@ module Rublox
 
         instruction = chunk.contents_at(offset)
         case instruction
-        when VM::Opcode[:constant]
+        when Opcode[:constant]
           constant_instruction("OP_CONSTANT", chunk, offset)
-        when VM::Opcode[:return]
+        when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else
           io.puts "Unknown opcode #{instruction}\n"

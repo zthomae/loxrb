@@ -10,11 +10,11 @@ RSpec.describe Rublox::Bytecode do
   it "disassembles simple chunks" do
     FFI::MemoryPointer.new(Rublox::Bytecode::Chunk, 1) do |p|
       chunk = Rublox::Bytecode::Chunk.new(p[0])
-      Rublox::Bytecode::VM.chunk_init(chunk)
-      constant = Rublox::Bytecode::VM.chunk_add_constant(chunk, 1.2)
-      Rublox::Bytecode::VM.chunk_write(chunk, constant, 123)
-      Rublox::Bytecode::VM.chunk_write(chunk, :constant, 123)
-      Rublox::Bytecode::VM.chunk_write(chunk, :return, 123)
+      Rublox::Bytecode.chunk_init(chunk)
+      constant = Rublox::Bytecode.chunk_add_constant(chunk, 1.2)
+      Rublox::Bytecode.chunk_write(chunk, constant, 123)
+      Rublox::Bytecode.chunk_write(chunk, :constant, 123)
+      Rublox::Bytecode.chunk_write(chunk, :return, 123)
       io = StringIO.new
       disassembler = Rublox::Bytecode::Disassembler.new(io)
       disassembler.disassemble_chunk(chunk, "test chunk")
