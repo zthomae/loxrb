@@ -1,36 +1,20 @@
+require "ffi"
+
 module Rublox
   module Bytecode
-    class Chunk
-      def initialize
-        @code = []
-        @constants = []
-        @lines = []
-      end
+    class Chunk < FFI::Struct
+      layout :capacity, :int, :count, :int, :code, :pointer, :lines, :pointer, :constants, ValueArray
 
-      def count
-        @code.length
-      end
-
-      def write(byte, line)
-        @code << byte
-        @lines << line
-      end
-
-      def add_constant(value)
-        @constants << value
-        @constants.length - 1
+      def line_at(offset)
+        (self[:lines] + (offset * FFI.type_size(FFI::TYPE_INT32))).read(:int)
       end
 
       def contents_at(offset)
-        @code[offset]
+        (self[:code] + (offset * FFI.type_size(FFI::TYPE_UINT8))).read(:uint8)
       end
 
       def constant_at(offset)
-        @constants[offset]
-      end
-
-      def line_at(offset)
-        @lines[offset]
+        self[:constants].constant_at(offset)
       end
     end
   end
