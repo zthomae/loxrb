@@ -28,6 +28,16 @@ module Rblox
         case instruction
         when Opcode[:constant]
           constant_instruction("OP_CONSTANT", chunk, offset)
+        when Opcode[:add]
+          simple_instruction("OP_ADD", offset)
+        when Opcode[:subtract]
+          simple_instruction("OP_SUBTRACT", offset)
+        when Opcode[:multiply]
+          simple_instruction("OP_MULTIPLY", offset)
+        when Opcode[:divide]
+          simple_instruction("OP_DIVIDE", offset)
+        when Opcode[:negate]
+          simple_instruction("OP_NEGATE", offset)
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else

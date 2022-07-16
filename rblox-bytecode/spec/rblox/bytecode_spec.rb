@@ -11,6 +11,20 @@ RSpec.describe Rblox::Bytecode do
     constant = Rblox::Bytecode.chunk_add_constant(chunk, 1.2)
     Rblox::Bytecode.chunk_write(chunk, constant, 123)
     Rblox::Bytecode.chunk_write(chunk, :constant, 123)
+
+    constant = Rblox::Bytecode.chunk_add_constant(chunk, 3.4)
+    Rblox::Bytecode.chunk_write(chunk, :constant, 123)
+    Rblox::Bytecode.chunk_write(chunk, constant, 123)
+
+    Rblox::Bytecode.chunk_write(chunk, :add, 123)
+
+    constant = Rblox::Bytecode.chunk_add_constant(chunk, 5.6)
+    Rblox::Bytecode.chunk_write(chunk, :constant, 123)
+    Rblox::Bytecode.chunk_write(chunk, constant, 123)
+
+    Rblox::Bytecode.chunk_write(chunk, :divide, 123)
+
+    Rblox::Bytecode.chunk_write(chunk, :negate, 123)
     Rblox::Bytecode.chunk_write(chunk, :return, 123)
   end
 
@@ -24,7 +38,12 @@ RSpec.describe Rblox::Bytecode do
         <<~EOF
           == test chunk ==
           0000  123 OP_CONSTANT         0 '1.2'
-          0002    | OP_RETURN
+          0002    | OP_CONSTANT         1 '3.4'
+          0004    | OP_ADD
+          0005    | OP_CONSTANT         2 '5.6'
+          0007    | OP_DIVIDE
+          0008    | OP_NEGATE
+          0009    | OP_RETURN
         EOF
       )
     end

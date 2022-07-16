@@ -51,23 +51,61 @@ static inline Value vm_read_constant(VM* vm) {
   return vm->chunk->constants.values[vm_read_byte(vm)];
 }
 
+static inline void vm_add(VM* vm) {
+  double b = VM_pop(vm);
+  double a = VM_pop(vm);
+  VM_push(vm, a + b);
+}
+
+static inline void vm_subtract(VM* vm) {
+  double b = VM_pop(vm);
+  double a = VM_pop(vm);
+  VM_push(vm, a - b);
+}
+
+static inline void vm_multiply(VM* vm) {
+  double b = VM_pop(vm);
+  double a = VM_pop(vm);
+  VM_push(vm, a * b);
+}
+
+static inline void vm_divide(VM* vm) {
+  double b = VM_pop(vm);
+  double a = VM_pop(vm);
+  VM_push(vm, a / b);
+}
+
 static inline InterpretResult vm_run_instruction(VM* vm) {
   uint8_t instruction;
   switch (instruction = vm_read_byte(vm)) {
     case OP_CONSTANT: {
       Value constant = vm_read_constant(vm);
       VM_push(vm, constant);
-      return INTERPRET_INCOMPLETE;
+      break;
     }
-    case OP_RETURN: {
+    case OP_ADD:
+      vm_add(vm);
+      break;
+    case OP_SUBTRACT:
+      vm_subtract(vm);
+      break;
+    case OP_MULTIPLY:
+      vm_multiply(vm);
+      break;
+    case OP_DIVIDE:
+      vm_divide(vm);
+      break;
+    case OP_NEGATE:
+      VM_push(vm, -VM_pop(vm));
+      break;
+    case OP_RETURN:
       Value_print(VM_pop(vm));
       printf("\n");
       return INTERPRET_OK;
-    }
-    default: {
+    default:
       return INTERPRET_RUNTIME_ERROR;
-    }
   }
+  return INTERPRET_INCOMPLETE;
 }
 
 static InterpretResult vm_run(VM* vm) {
