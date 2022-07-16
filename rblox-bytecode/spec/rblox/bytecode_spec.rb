@@ -40,6 +40,7 @@ RSpec.describe Rblox::Bytecode do
         loop do
           disassembler.disassemble_instruction(chunk, vm.current_offset)
           interpret_result = Rblox::Bytecode.vm_interpret_next_instruction(vm)
+          pp vm.stack_contents
           break if interpret_result != :incomplete
         end
       end
