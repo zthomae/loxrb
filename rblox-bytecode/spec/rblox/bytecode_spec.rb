@@ -22,9 +22,9 @@ RSpec.describe Rblox::Bytecode do
       disassembler.disassemble_chunk(chunk, "test chunk")
       expect(io.string).to eq(
         <<~EOF
-        == test chunk ==
-        0000  123 OP_CONSTANT         0 '1.2'
-        0002    | OP_RETURN
+          == test chunk ==
+          0000  123 OP_CONSTANT         0 '1.2'
+          0002    | OP_RETURN
         EOF
       )
     end
@@ -49,8 +49,6 @@ RSpec.describe Rblox::Bytecode do
 
   it "executes simple instructions all at once" do
     Rblox::Bytecode::VM.with_new do |vm|
-      disassembler = Rblox::Bytecode::Disassembler.new($stdout)
-
       Rblox::Bytecode::Chunk.with_new do |chunk|
         write_simple_chunk(chunk)
         Rblox::Bytecode.vm_interpret(vm, chunk)
