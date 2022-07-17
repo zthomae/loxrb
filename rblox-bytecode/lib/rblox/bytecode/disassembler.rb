@@ -34,6 +34,12 @@ module Rblox
           simple_instruction("OP_TRUE", offset)
         when Opcode[:false]
           simple_instruction("OP_FALSE", offset)
+        when Opcode[:equal]
+          simple_instruction("OP_EQUAL", offset)
+        when Opcode[:greater]
+          simple_instruction("OP_GREATER", offset)
+        when Opcode[:less]
+          simple_instruction("OP_LESS", offset)
         when Opcode[:add]
           simple_instruction("OP_ADD", offset)
         when Opcode[:subtract]

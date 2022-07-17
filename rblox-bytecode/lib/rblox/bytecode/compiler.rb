@@ -27,6 +27,18 @@ module Rblox
         add_expression_to_chunk(expr.right)
 
         case expr.operator.type
+        when Rblox::Parser::TokenType::BANG_EQUAL
+          emit_bytes(:equal, :not)
+        when Rblox::Parser::TokenType::EQUAL_EQUAL
+          emit_byte(:equal)
+        when Rblox::Parser::TokenType::GREATER
+          emit_byte(:greater)
+        when Rblox::Parser::TokenType::GREATER_EQUAL
+          emit_bytes(:less, :not)
+        when Rblox::Parser::TokenType::LESS
+          emit_byte(:less)
+        when Rblox::Parser::TokenType::LESS_EQUAL
+          emit_bytes(:greater, :not)
         when Rblox::Parser::TokenType::PLUS
           emit_byte(:add)
         when Rblox::Parser::TokenType::MINUS

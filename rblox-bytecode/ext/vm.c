@@ -8,7 +8,8 @@ static void vm_reset_stack(VM* vm);
 static InterpretResult vm_run(VM* vm);
 static inline InterpretResult vm_run_instruction(VM* vm);
 static Value vm_stack_peek(VM* vm, int distance);
-static bool vm_is_falsey(VM* vm, Value value);
+static bool vm_is_falsey(Value value);
+static bool vm_values_equal(Value a, Value b);
 static void vm_runtime_error(VM* vm, const char* format, ...);
 
 void VM_init(VM* vm) {
@@ -72,6 +73,32 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     case OP_FALSE:
       VM_push(vm, Value_make_boolean(false));
       break;
+    case OP_EQUAL: {
+      Value b = VM_pop(vm);
+      Value a = VM_pop(vm);
+      VM_push(vm, Value_make_boolean(vm_values_equal(a, b)));
+      break;
+    }
+    case OP_GREATER: {
+      if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
+        vm_runtime_error(vm, "Operands must be numbers.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      double b = Value_as_number(VM_pop(vm));
+      double a = Value_as_number(VM_pop(vm));
+      VM_push(vm, Value_make_boolean(a > b));
+      break;
+    }
+    case OP_LESS: {
+      if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
+        vm_runtime_error(vm, "Operands must be numbers.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      double b = Value_as_number(VM_pop(vm));
+      double a = Value_as_number(VM_pop(vm));
+      VM_push(vm, Value_make_boolean(a < b));
+      break;
+    }
     case OP_ADD: {
       if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
         vm_runtime_error(vm, "Operands must be numbers.");
@@ -113,7 +140,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       break;
     }
     case OP_NOT:
-      VM_push(vm, Value_make_boolean(vm_is_falsey(vm, VM_pop(vm))));
+      VM_push(vm, Value_make_boolean(vm_is_falsey(VM_pop(vm))));
       break;
     case OP_NEGATE:
       if (!Value_is_number(vm_stack_peek(vm, 0))) {
@@ -145,8 +172,24 @@ static Value vm_stack_peek(VM* vm, int distance) {
   return vm->stack_top[-1 - distance];
 }
 
-static bool vm_is_falsey(VM* vm, Value value) {
+static bool vm_is_falsey(Value value) {
   return Value_is_nil(value) || (Value_is_boolean(value) && !Value_as_boolean(value));
+}
+
+static bool vm_values_equal(Value a, Value b) {
+  if (a.type != b.type) {
+    return false;
+  }
+  switch (a.type) {
+    case VAL_BOOL:
+      return Value_as_boolean(a) == Value_as_boolean(b);
+    case VAL_NIL:
+      return true;
+    case VAL_NUMBER:
+      return Value_as_number(a) == Value_as_number(b);
+    default:
+      return false;
+  }
 }
 
 static void vm_runtime_error(VM* vm, const char* format, ...) {

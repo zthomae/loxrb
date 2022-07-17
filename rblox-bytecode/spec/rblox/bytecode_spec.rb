@@ -96,4 +96,12 @@ RSpec.describe Rblox::Bytecode do
   it "executes a more complex arithmetic expression with Main" do
     Rblox::Bytecode::Main.run("(5 - (3 - 1)) + -1;", debug_mode: false)
   end
+
+  it "executes a logical and arithmetic expression with Main in debug mode" do
+    Rblox::Bytecode::Main.run("!(5 - 4 > 3 * 2 == !nil);", debug_mode: true)
+  end
+
+  it "executes a logical and arithmetic expression with Main in" do
+    Rblox::Bytecode::Main.run("!(5 - 4 > 3 * 2 == !nil);", debug_mode: false)
+  end
 end
