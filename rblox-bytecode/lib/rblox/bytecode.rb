@@ -44,6 +44,16 @@ module Rblox
           nil
         when :number
           self[:as][:number]
+        when :obj
+          obj = self[:as][:obj]
+          case obj[:type]
+          when :string
+            obj.as_string[:chars]
+          else
+            raise "Unsupported object type #{obj[:type]}"
+          end
+        else
+          raise "Unsupported value type #{self[:type]}"
         end
       end
     end
