@@ -17,10 +17,20 @@ module Rblox
 
     ### VALUES ###
 
-    ValueType = enum :value_type, [:bool, :nil, :number]
+    ValueType = enum :value_type, [:bool, :nil, :number, :obj]
+
+    ObjType = enum :obj_type, [:string]
+
+    class Obj < FFI::Struct
+      layout :type, ObjType
+
+      def as_string
+        ObjString.new(self.to_ptr)
+      end
+    end
 
     class ValueU < FFI::Union
-      layout :boolean, :bool, :number, :double
+      layout :boolean, :bool, :number, :double, :obj, Obj.ptr
     end
 
     class Value < FFI::Struct
@@ -46,6 +56,8 @@ module Rblox
         case value[:type]
         when :number
           value[:as][:number]
+        when :obj
+          value[:as][:obj]
         else
           raise "Unsupported value type #{value[:type]}"
         end
@@ -53,6 +65,12 @@ module Rblox
     end
 
     attach_function :value_print, :Value_print, [Value], :void
+
+    class ObjString < FFI::Struct
+      layout :obj, Obj, :length, :int, :chars, :string
+    end
+
+    attach_function :object_copy_string, :Object_copy_string, [:pointer, :int], ObjString.ptr
 
     ### CHUNKS ###
 
@@ -104,7 +122,9 @@ module Rblox
     attach_function :chunk_init, :Chunk_init, [Chunk.ptr], :void
     attach_function :chunk_write, :Chunk_write, [Chunk.ptr, :uint8, :int], :void
     attach_function :chunk_free, :Chunk_free, [Chunk.ptr], :void
+
     attach_function :chunk_add_number, :Chunk_add_number, [Chunk.ptr, :double], :int
+    attach_function :chunk_add_object, :Chunk_add_object, [Chunk.ptr, :pointer], :int
 
     ### VM ###
 

@@ -12,7 +12,7 @@ module Rblox
         end
 
         # Since this is synthetic, we make it appear as if it comes from the previous line
-        emit_return(statements.last.bounding_lines.last)
+        emit_return(statements.last&.bounding_lines&.last || 0)
       end
 
       def visit_expression_stmt(stmt)
@@ -54,7 +54,9 @@ module Rblox
       def visit_literal_expr(expr)
         case expr.value.literal
         when Float
-          emit_constant(expr.value.literal, expr.value.line)
+          emit_constant(:number, expr.value.literal, expr.value.line)
+        when String
+          emit_string_literal(expr.value.literal, expr.value.line)
         else
           case expr.value.type
           when Rblox::Parser::TokenType::TRUE
@@ -101,12 +103,17 @@ module Rblox
         emit_byte(byte2, line)
       end
 
-      def emit_constant(value, line)
-        constant = Rblox::Bytecode.chunk_add_number(current_chunk, value)
+      def emit_constant(type, value, line)
+        constant = Rblox::Bytecode.public_send("chunk_add_#{type}", current_chunk, value)
         if constant > 255
           @error_handler.compile_error(@token, "Too many constants in one chunk.")
         end
         emit_bytes(:constant, constant, line)
+      end
+
+      def emit_string_literal(value, line)
+        obj_string = Rblox::Bytecode.object_copy_string(value, value.length)
+        emit_constant(:object, obj_string, line)
       end
 
       def emit_return(line)

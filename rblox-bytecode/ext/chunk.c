@@ -1,7 +1,9 @@
 #include <stdlib.h>
+#include <stdio.h> // TEMPORARY
 
 #include "chunk.h"
 #include "memory.h"
+#include "object.h"
 
 void Chunk_init(Chunk* chunk) {
   chunk->count = 0;
@@ -33,5 +35,10 @@ void Chunk_free(Chunk* chunk) {
 
 int Chunk_add_number(Chunk* chunk, double number) {
   ValueArray_write(&chunk->constants, Value_make_number(number));
+  return chunk->constants.count - 1;
+}
+
+int Chunk_add_object(Chunk* chunk, Obj* object) {
+  ValueArray_write(&chunk->constants, Value_make_obj(object));
   return chunk->constants.count - 1;
 }

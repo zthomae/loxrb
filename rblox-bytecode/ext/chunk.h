@@ -33,5 +33,6 @@ void Chunk_init(Chunk* chunk);
 void Chunk_write(Chunk* chunk, uint8_t byte, int line);
 void Chunk_free(Chunk* chunk);
 int Chunk_add_number(Chunk* chunk, double number);
+int Chunk_add_object(Chunk* chunk, Obj* object);
 
 #endif

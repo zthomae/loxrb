@@ -65,8 +65,20 @@ module Rblox
       attr_reader :io
 
       def constant_instruction(name, chunk, offset)
-        constant = chunk.contents_at(offset + 1)
-        io.puts "%-16s %4d '%g'" % [name, constant, chunk.constant_at(constant)]
+        constant_index = chunk.contents_at(offset + 1)
+        constant = chunk.constant_at(constant_index)
+        case constant
+        when Float
+          io.puts "%-16s %4d '%g'" % [name, constant_index, constant]
+        when Rblox::Bytecode::Obj
+          case constant[:type]
+          when :string
+            io.puts "%-16s %4d '%s'" % [name, constant_index, constant.as_string[:chars]]
+          else
+            io.puts "%-16s %4d '%s'" % [name, constant_index, "Unsupported type: #{constant[:type]}"]
+          end
+        end
+
         offset + 2
       end
 

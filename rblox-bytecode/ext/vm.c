@@ -9,7 +9,6 @@ static InterpretResult vm_run(VM* vm);
 static inline InterpretResult vm_run_instruction(VM* vm);
 static Value vm_stack_peek(VM* vm, int distance);
 static bool vm_is_falsey(Value value);
-static bool vm_values_equal(Value a, Value b);
 static void vm_runtime_error(VM* vm, const char* format, ...);
 
 void VM_init(VM* vm) {
@@ -76,7 +75,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     case OP_EQUAL: {
       Value b = VM_pop(vm);
       Value a = VM_pop(vm);
-      VM_push(vm, Value_make_boolean(vm_values_equal(a, b)));
+      VM_push(vm, Value_make_boolean(Value_equals(a, b)));
       break;
     }
     case OP_GREATER: {
@@ -174,22 +173,6 @@ static Value vm_stack_peek(VM* vm, int distance) {
 
 static bool vm_is_falsey(Value value) {
   return Value_is_nil(value) || (Value_is_boolean(value) && !Value_as_boolean(value));
-}
-
-static bool vm_values_equal(Value a, Value b) {
-  if (a.type != b.type) {
-    return false;
-  }
-  switch (a.type) {
-    case VAL_BOOL:
-      return Value_as_boolean(a) == Value_as_boolean(b);
-    case VAL_NIL:
-      return true;
-    case VAL_NUMBER:
-      return Value_as_number(a) == Value_as_number(b);
-    default:
-      return false;
-  }
 }
 
 static void vm_runtime_error(VM* vm, const char* format, ...) {
