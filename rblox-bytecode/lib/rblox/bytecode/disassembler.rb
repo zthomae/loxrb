@@ -28,6 +28,12 @@ module Rblox
         case instruction
         when Opcode[:constant]
           constant_instruction("OP_CONSTANT", chunk, offset)
+        when Opcode[:nil]
+          simple_instruction("OP_NIL", offset)
+        when Opcode[:true]
+          simple_instruction("OP_TRUE", offset)
+        when Opcode[:false]
+          simple_instruction("OP_FALSE", offset)
         when Opcode[:add]
           simple_instruction("OP_ADD", offset)
         when Opcode[:subtract]

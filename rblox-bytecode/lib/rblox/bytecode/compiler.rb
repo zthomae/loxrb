@@ -42,7 +42,16 @@ module Rblox
       end
 
       def visit_literal_expr(expr)
-        emit_constant(expr.value)
+        case expr.value
+        when NilClass
+          emit_byte(:nil)
+        when TrueClass
+          emit_byte(:true)
+        when FalseClass
+          emit_byte(:false)
+        when Float
+          emit_constant(expr.value)
+        end
       end
 
       def visit_unary_expr(expr)
@@ -69,6 +78,9 @@ module Rblox
       end
 
       def line
+        # TODO: Should not do this
+        return 0 if @token.nil?
+
         @token.line
       end
 

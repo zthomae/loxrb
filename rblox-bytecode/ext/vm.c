@@ -62,6 +62,15 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       VM_push(vm, constant);
       break;
     }
+    case OP_NIL:
+      VM_push(vm, Value_make_nil());
+      break;
+    case OP_TRUE:
+      VM_push(vm, Value_make_boolean(true));
+      break;
+    case OP_FALSE:
+      VM_push(vm, Value_make_boolean(false));
+      break;
     case OP_ADD: {
       if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
         vm_runtime_error(vm, "Operands must be numbers.");
