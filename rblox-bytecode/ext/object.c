@@ -16,6 +16,10 @@ ObjString* Object_copy_string(const char* chars, int length) {
   return object_allocate_string(heap_chars, length);
 }
 
+ObjString* Object_take_string(const char* chars, int length) {
+  return object_allocate_string(chars, length);
+}
+
 void Object_print(Value value) {
   switch (Object_type(value)) {
     case OBJ_STRING:

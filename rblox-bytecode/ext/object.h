@@ -44,6 +44,7 @@ inline char* Object_as_cstring(Value value) {
 }
 
 ObjString* Object_copy_string(const char* chars, int length);
+ObjString* Object_take_string(const char* chars, int length);
 
 void Object_print(Value value);
 

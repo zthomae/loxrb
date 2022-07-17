@@ -1,7 +1,11 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "common.h"
+#include "memory.h"
+#include "object.h"
+#include "value.h"
 #include "vm.h"
 
 static void vm_reset_stack(VM* vm);
@@ -10,6 +14,7 @@ static inline InterpretResult vm_run_instruction(VM* vm);
 static Value vm_stack_peek(VM* vm, int distance);
 static bool vm_is_falsey(Value value);
 static void vm_runtime_error(VM* vm, const char* format, ...);
+static void vm_concatenate(VM* vm);
 
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
@@ -99,13 +104,16 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       break;
     }
     case OP_ADD: {
-      if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
-        vm_runtime_error(vm, "Operands must be numbers.");
+      if (Object_is_string(vm_stack_peek(vm, 0)) && Object_is_string(vm_stack_peek(vm, 1))) {
+        vm_concatenate(vm);
+      } else if (Value_is_number(vm_stack_peek(vm, 0)) && Value_is_number(vm_stack_peek(vm, 1))) {
+        double b = Value_as_number(VM_pop(vm));
+        double a = Value_as_number(VM_pop(vm));
+        VM_push(vm, Value_make_number(a + b));
+      } else {
+        vm_runtime_error(vm, "Operands must be two numbers or two strings.");
         return INTERPRET_RUNTIME_ERROR;
       }
-      double b = Value_as_number(VM_pop(vm));
-      double a = Value_as_number(VM_pop(vm));
-      VM_push(vm, Value_make_number(a + b));
       break;
     }
     case OP_SUBTRACT: {
@@ -186,4 +194,18 @@ static void vm_runtime_error(VM* vm, const char* format, ...) {
   int line = vm->chunk->lines[instruction];
   fprintf(stderr, "[line %d] in script\n", line);
   vm_reset_stack(vm);
+}
+
+static void vm_concatenate(VM *vm) {
+  ObjString* b = Object_as_string(VM_pop(vm));
+  ObjString* a = Object_as_string(VM_pop(vm));
+
+  int length = a->length + b->length;
+  char* chars = Memory_allocate_chars(length + 1);
+  memcpy(chars, a->chars, a->length);
+  memcpy(chars + a->length, b->chars, b->length);
+  chars[length] = '\0';
+
+  ObjString* result = Object_take_string(chars, length);
+  VM_push(vm, Value_make_obj((Obj*)result));
 }
