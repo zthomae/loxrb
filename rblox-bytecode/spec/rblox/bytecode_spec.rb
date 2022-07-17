@@ -8,17 +8,17 @@ RSpec.describe Rblox::Bytecode do
   end
 
   def write_simple_chunk(chunk)
-    constant = Rblox::Bytecode.chunk_add_constant(chunk, 1.2)
+    constant = Rblox::Bytecode.chunk_add_number(chunk, 1.2)
     Rblox::Bytecode.chunk_write(chunk, constant, 123)
     Rblox::Bytecode.chunk_write(chunk, :constant, 123)
 
-    constant = Rblox::Bytecode.chunk_add_constant(chunk, 3.4)
+    constant = Rblox::Bytecode.chunk_add_number(chunk, 3.4)
     Rblox::Bytecode.chunk_write(chunk, :constant, 123)
     Rblox::Bytecode.chunk_write(chunk, constant, 123)
 
     Rblox::Bytecode.chunk_write(chunk, :add, 123)
 
-    constant = Rblox::Bytecode.chunk_add_constant(chunk, 5.6)
+    constant = Rblox::Bytecode.chunk_add_number(chunk, 5.6)
     Rblox::Bytecode.chunk_write(chunk, :constant, 123)
     Rblox::Bytecode.chunk_write(chunk, constant, 123)
 

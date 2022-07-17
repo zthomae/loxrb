@@ -31,7 +31,7 @@ void Chunk_free(Chunk* chunk) {
   Chunk_init(chunk);
 }
 
-int Chunk_add_constant(Chunk* chunk, Value value) {
-  ValueArray_write(&chunk->constants, value);
+int Chunk_add_number(Chunk* chunk, double number) {
+  ValueArray_write(&chunk->constants, Value_make_number(number));
   return chunk->constants.count - 1;
 }

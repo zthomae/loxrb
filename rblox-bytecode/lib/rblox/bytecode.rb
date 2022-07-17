@@ -17,15 +17,42 @@ module Rblox
 
     ### VALUES ###
 
+    ValueType = enum :value_type, [:bool, :nil, :number]
+
+    class ValueU < FFI::Union
+      layout :boolean, :bool, :number, :double
+    end
+
+    class Value < FFI::Struct
+      layout :type, ValueType, :as, ValueU
+
+      def value
+        case self[:type]
+        when :bool
+          self[:as][:boolean]
+        when :nil
+          nil
+        when :number
+          self[:as][:number]
+        end
+      end
+    end
+
     class ValueArray < FFI::Struct
       layout :capacity, :int, :count, :int, :values, :pointer
 
       def constant_at(offset)
-        (self[:values] + (offset * FFI.type_size(FFI::TYPE_FLOAT64))).read(:double)
+        value = Value.new(self[:values] + (offset * Value.size))
+        case value[:type]
+        when :number
+          value[:as][:number]
+        else
+          raise "Unsupported value type #{value[:type]}"
+        end
       end
     end
 
-    attach_function :value_print, :Value_print, [:double], :void
+    attach_function :value_print, :Value_print, [Value], :void
 
     ### CHUNKS ###
 
@@ -62,14 +89,14 @@ module Rblox
     attach_function :chunk_init, :Chunk_init, [Chunk.ptr], :void
     attach_function :chunk_write, :Chunk_write, [Chunk.ptr, :uint8, :int], :void
     attach_function :chunk_free, :Chunk_free, [Chunk.ptr], :void
-    attach_function :chunk_add_constant, :Chunk_add_constant, [Chunk.ptr, :double], :int
+    attach_function :chunk_add_number, :Chunk_add_number, [Chunk.ptr, :double], :int
 
     ### VM ###
 
     InterpretResult = enum :interpret_result, [:incomplete, :ok, :compile_error, :runtime_error]
 
     class VM < FFI::Struct
-      layout :chunk, Chunk.ptr, :ip, :pointer, :stack, [:double, 256], :stack_top, :pointer
+      layout :chunk, Chunk.ptr, :ip, :pointer, :stack, [Value, 256], :stack_top, Value.ptr
 
       def self.with_new
         FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1) do |p|
@@ -88,9 +115,9 @@ module Rblox
       end
 
       def stack_contents
-        num_elements = (self[:stack_top].address - self[:stack].to_ptr.address) / FFI.type_size(FFI::TYPE_FLOAT64)
+        num_elements = (self[:stack_top].to_ptr.address - self[:stack].to_ptr.address) / Value.size
         contents = []
-        (0...num_elements).each { |i| contents << self[:stack][i] }
+        (0...num_elements).each { |i| contents << self[:stack][i].value }
         contents
       end
     end

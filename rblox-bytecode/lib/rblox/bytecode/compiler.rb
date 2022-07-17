@@ -82,7 +82,7 @@ module Rblox
       end
 
       def emit_constant(value)
-        constant = Rblox::Bytecode.chunk_add_constant(current_chunk, value)
+        constant = Rblox::Bytecode.chunk_add_number(current_chunk, value)
         if constant > 255
           @error_handler.compile_error(@token, "Too many constants in one chunk.")
         end

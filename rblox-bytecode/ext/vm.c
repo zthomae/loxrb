@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "common.h"
@@ -6,6 +7,8 @@
 static void vm_reset_stack(VM* vm);
 static InterpretResult vm_run(VM* vm);
 static inline InterpretResult vm_run_instruction(VM* vm);
+static Value vm_stack_peek(VM* vm, int distance);
+static void vm_runtime_error(VM* vm, const char* format, ...);
 
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
@@ -51,30 +54,6 @@ static inline Value vm_read_constant(VM* vm) {
   return vm->chunk->constants.values[vm_read_byte(vm)];
 }
 
-static inline void vm_add(VM* vm) {
-  double b = VM_pop(vm);
-  double a = VM_pop(vm);
-  VM_push(vm, a + b);
-}
-
-static inline void vm_subtract(VM* vm) {
-  double b = VM_pop(vm);
-  double a = VM_pop(vm);
-  VM_push(vm, a - b);
-}
-
-static inline void vm_multiply(VM* vm) {
-  double b = VM_pop(vm);
-  double a = VM_pop(vm);
-  VM_push(vm, a * b);
-}
-
-static inline void vm_divide(VM* vm) {
-  double b = VM_pop(vm);
-  double a = VM_pop(vm);
-  VM_push(vm, a / b);
-}
-
 static inline InterpretResult vm_run_instruction(VM* vm) {
   uint8_t instruction;
   switch (instruction = vm_read_byte(vm)) {
@@ -83,20 +62,52 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       VM_push(vm, constant);
       break;
     }
-    case OP_ADD:
-      vm_add(vm);
+    case OP_ADD: {
+      if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
+        vm_runtime_error(vm, "Operands must be numbers.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      double b = Value_as_number(VM_pop(vm));
+      double a = Value_as_number(VM_pop(vm));
+      VM_push(vm, Value_make_number(a + b));
       break;
-    case OP_SUBTRACT:
-      vm_subtract(vm);
+    }
+    case OP_SUBTRACT: {
+      if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
+        vm_runtime_error(vm, "Operands must be numbers.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      double b = Value_as_number(VM_pop(vm));
+      double a = Value_as_number(VM_pop(vm));
+      VM_push(vm, Value_make_number(a - b));
       break;
-    case OP_MULTIPLY:
-      vm_multiply(vm);
+    }
+    case OP_MULTIPLY: {
+      if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
+        vm_runtime_error(vm, "Operands must be numbers.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      double b = Value_as_number(VM_pop(vm));
+      double a = Value_as_number(VM_pop(vm));
+      VM_push(vm, Value_make_number(a * b));
       break;
-    case OP_DIVIDE:
-      vm_divide(vm);
+    }
+    case OP_DIVIDE: {
+      if (!Value_is_number(vm_stack_peek(vm, 0)) || !Value_is_number(vm_stack_peek(vm, 1))) {
+        vm_runtime_error(vm, "Operands must be numbers.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      double b = Value_as_number(VM_pop(vm));
+      double a = Value_as_number(VM_pop(vm));
+      VM_push(vm, Value_make_number(a / b));
       break;
+    }
     case OP_NEGATE:
-      VM_push(vm, -VM_pop(vm));
+      if (!Value_is_number(vm_stack_peek(vm, 0))) {
+        vm_runtime_error(vm, "Operand must be a number.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      VM_push(vm, Value_make_number(-Value_as_number(VM_pop(vm))));
       break;
     case OP_RETURN:
       Value_print(VM_pop(vm));
@@ -115,4 +126,21 @@ static InterpretResult vm_run(VM* vm) {
       return result;
     }
   }
+}
+
+static Value vm_stack_peek(VM* vm, int distance) {
+  return vm->stack_top[-1 - distance];
+}
+
+static void vm_runtime_error(VM* vm, const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+  fputs("\n", stderr);
+
+  size_t instruction = vm->ip - vm->chunk->code - 1;
+  int line = vm->chunk->lines[instruction];
+  fprintf(stderr, "[line %d] in script\n", line);
+  vm_reset_stack(vm);
 }
