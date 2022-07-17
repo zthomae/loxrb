@@ -2,6 +2,10 @@
 
 require "ffi"
 
+require_relative "bytecode/compiler"
+require_relative "bytecode/interpreter"
+require_relative "bytecode/main"
+require_relative "bytecode/repl"
 require_relative "bytecode/disassembler"
 require_relative "bytecode/version"
 

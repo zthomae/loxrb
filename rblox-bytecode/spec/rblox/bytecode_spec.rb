@@ -74,4 +74,26 @@ RSpec.describe Rblox::Bytecode do
       end
     end
   end
+
+  it "executes simple arithmetic with Main in debug mode" do
+    ["1 + 1;", "2 - 3;", "5 * 5;", "6 / 2;"].each do |expr|
+      puts "evaluating '#{expr}' (debug mode)"
+      Rblox::Bytecode::Main.run(expr, debug_mode: true)
+    end
+  end
+
+  it "executes simple arithmetic with Main" do
+    ["1 + 1;", "2 - 3;", "5 * 5;", "6 / 2;"].each do |expr|
+      puts "evaluating '#{expr}'"
+      Rblox::Bytecode::Main.run(expr, debug_mode: false)
+    end
+  end
+
+  it "executes a more complex arithmetic expression with Main in debug mode" do
+    Rblox::Bytecode::Main.run("(5 - (3 - 1)) + -1;", debug_mode: true)
+  end
+
+  it "executes a more complex arithmetic expression with Main" do
+    Rblox::Bytecode::Main.run("(5 - (3 - 1)) + -1;", debug_mode: false)
+  end
 end

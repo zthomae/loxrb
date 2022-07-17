@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift("#{__dir__}/../lib")
+
+require "rblox/bytecode"
+
+if ARGV.length > 1
+  puts "Usage: rblox-bytecode [script]"
+  exit 64
+elsif ARGV.length == 1
+  file_path = ARGV[0]
+  contents = File.read(file_path)
+  Rblox::Bytecode::Main.run(contents)
+  exit 65 if Rblox::Bytecode::Main.had_error?
+  exit 70 if Rblox::Bytecode::Main.had_runtime_error?
+else
+  Rblox::Bytecode::Repl.new($stdin, Rblox::Bytecode::Main).run
+end
