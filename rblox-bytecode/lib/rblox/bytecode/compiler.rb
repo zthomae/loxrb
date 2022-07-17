@@ -5,6 +5,7 @@ module Rblox
         @chunk = chunk
         @error_handler = error_handler
         @token = nil
+        @line = 0
       end
 
       def compile(statements)
@@ -20,7 +21,7 @@ module Rblox
       end
 
       def visit_binary_expr(expr)
-        @token = expr.operator
+        update_token(expr.operator)
 
         add_expression_to_chunk(expr.left)
         add_expression_to_chunk(expr.right)
@@ -58,6 +59,8 @@ module Rblox
         add_expression_to_chunk(expr.right)
 
         case expr.operator.type
+        when Rblox::Parser::TokenType::BANG
+          emit_byte(:not)
         when Rblox::Parser::TokenType::MINUS
           emit_byte(:negate)
         end
@@ -77,15 +80,8 @@ module Rblox
         expr.accept(self)
       end
 
-      def line
-        # TODO: Should not do this
-        return 0 if @token.nil?
-
-        @token.line
-      end
-
       def emit_byte(byte)
-        Rblox::Bytecode.chunk_write(current_chunk, byte, line)
+        Rblox::Bytecode.chunk_write(current_chunk, byte, @line)
       end
 
       def emit_bytes(byte1, byte2)
@@ -103,6 +99,11 @@ module Rblox
 
       def emit_return
         emit_byte(:return)
+      end
+
+      def update_token(token)
+        @token = token
+        @line = token.line
       end
     end
   end

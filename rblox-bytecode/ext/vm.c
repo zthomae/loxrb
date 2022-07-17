@@ -8,6 +8,7 @@ static void vm_reset_stack(VM* vm);
 static InterpretResult vm_run(VM* vm);
 static inline InterpretResult vm_run_instruction(VM* vm);
 static Value vm_stack_peek(VM* vm, int distance);
+static bool vm_is_falsey(VM* vm, Value value);
 static void vm_runtime_error(VM* vm, const char* format, ...);
 
 void VM_init(VM* vm) {
@@ -111,6 +112,9 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       VM_push(vm, Value_make_number(a / b));
       break;
     }
+    case OP_NOT:
+      VM_push(vm, Value_make_boolean(vm_is_falsey(vm, VM_pop(vm))));
+      break;
     case OP_NEGATE:
       if (!Value_is_number(vm_stack_peek(vm, 0))) {
         vm_runtime_error(vm, "Operand must be a number.");
@@ -139,6 +143,10 @@ static InterpretResult vm_run(VM* vm) {
 
 static Value vm_stack_peek(VM* vm, int distance) {
   return vm->stack_top[-1 - distance];
+}
+
+static bool vm_is_falsey(VM* vm, Value value) {
+  return Value_is_nil(value) || (Value_is_boolean(value) && !Value_as_boolean(value));
 }
 
 static void vm_runtime_error(VM* vm, const char* format, ...) {

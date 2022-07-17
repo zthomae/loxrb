@@ -56,7 +56,7 @@ module Rblox
 
     ### CHUNKS ###
 
-    Opcode = enum :opcode, [:constant, :nil, :true, :false, :add, :subtract, :multiply, :divide, :negate, :return]
+    Opcode = enum :opcode, [:constant, :nil, :true, :false, :add, :subtract, :multiply, :divide, :not, :negate, :return]
 
     class Chunk < FFI::Struct
       layout :capacity, :int, :count, :int, :code, :pointer, :lines, :pointer, :constants, ValueArray

@@ -42,6 +42,8 @@ module Rblox
           simple_instruction("OP_MULTIPLY", offset)
         when Opcode[:divide]
           simple_instruction("OP_DIVIDE", offset)
+        when Opcode[:not]
+          simple_instruction("OP_NOT", offset)
         when Opcode[:negate]
           simple_instruction("OP_NEGATE", offset)
         when Opcode[:return]
