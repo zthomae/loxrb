@@ -4,8 +4,6 @@ module Rblox
       def initialize(chunk, error_handler)
         @chunk = chunk
         @error_handler = error_handler
-        @token = nil
-        @line = 0
       end
 
       def compile(statements)
@@ -13,7 +11,8 @@ module Rblox
           add_statement_to_chunk(statement)
         end
 
-        emit_return
+        # Since this is synthetic, we make it appear as if it comes from the previous line
+        emit_return(statements.last.bounding_lines.last)
       end
 
       def visit_expression_stmt(stmt)
@@ -21,32 +20,30 @@ module Rblox
       end
 
       def visit_binary_expr(expr)
-        update_token(expr.operator)
-
         add_expression_to_chunk(expr.left)
         add_expression_to_chunk(expr.right)
 
         case expr.operator.type
         when Rblox::Parser::TokenType::BANG_EQUAL
-          emit_bytes(:equal, :not)
+          emit_bytes(:equal, :not, expr.operator.line)
         when Rblox::Parser::TokenType::EQUAL_EQUAL
-          emit_byte(:equal)
+          emit_byte(:equal, expr.operator.line)
         when Rblox::Parser::TokenType::GREATER
-          emit_byte(:greater)
+          emit_byte(:greater, expr.operator.line)
         when Rblox::Parser::TokenType::GREATER_EQUAL
-          emit_bytes(:less, :not)
+          emit_bytes(:less, :not, expr.operator.line)
         when Rblox::Parser::TokenType::LESS
-          emit_byte(:less)
+          emit_byte(:less, expr.operator.line)
         when Rblox::Parser::TokenType::LESS_EQUAL
-          emit_bytes(:greater, :not)
+          emit_bytes(:greater, :not, expr.operator.line)
         when Rblox::Parser::TokenType::PLUS
-          emit_byte(:add)
+          emit_byte(:add, expr.operator.line)
         when Rblox::Parser::TokenType::MINUS
-          emit_byte(:subtract)
+          emit_byte(:subtract, expr.operator.line)
         when Rblox::Parser::TokenType::STAR
-          emit_byte(:multiply)
+          emit_byte(:multiply, expr.operator.line)
         when Rblox::Parser::TokenType::SLASH
-          emit_byte(:divide)
+          emit_byte(:divide, expr.operator.line)
         end
       end
 
@@ -57,15 +54,15 @@ module Rblox
       def visit_literal_expr(expr)
         case expr.value.literal
         when Float
-          emit_constant(expr.value.literal)
+          emit_constant(expr.value.literal, expr.value.line)
         else
           case expr.value.type
           when Rblox::Parser::TokenType::TRUE
-            emit_byte(:true)
+            emit_byte(:true, expr.value.line)
           when Rblox::Parser::TokenType::FALSE
-            emit_byte(:false)
+            emit_byte(:false, expr.value.line)
           when Rblox::Parser::TokenType::NIL
-            emit_byte(:nil)
+            emit_byte(:nil, expr.value.line)
           end
         end
       end
@@ -75,9 +72,9 @@ module Rblox
 
         case expr.operator.type
         when Rblox::Parser::TokenType::BANG
-          emit_byte(:not)
+          emit_byte(:not, expr.operator.line)
         when Rblox::Parser::TokenType::MINUS
-          emit_byte(:negate)
+          emit_byte(:negate, expr.operator.line)
         end
       end
 
@@ -95,30 +92,25 @@ module Rblox
         expr.accept(self)
       end
 
-      def emit_byte(byte)
-        Rblox::Bytecode.chunk_write(current_chunk, byte, @line)
+      def emit_byte(byte, line)
+        Rblox::Bytecode.chunk_write(current_chunk, byte, line)
       end
 
-      def emit_bytes(byte1, byte2)
-        emit_byte(byte1)
-        emit_byte(byte2)
+      def emit_bytes(byte1, byte2, line)
+        emit_byte(byte1, line)
+        emit_byte(byte2, line)
       end
 
-      def emit_constant(value)
+      def emit_constant(value, line)
         constant = Rblox::Bytecode.chunk_add_number(current_chunk, value)
         if constant > 255
           @error_handler.compile_error(@token, "Too many constants in one chunk.")
         end
-        emit_bytes(:constant, constant)
+        emit_bytes(:constant, constant, line)
       end
 
-      def emit_return
-        emit_byte(:return)
-      end
-
-      def update_token(token)
-        @token = token
-        @line = token.line
+      def emit_return(line)
+        emit_byte(:return, line)
       end
     end
   end
