@@ -12,7 +12,7 @@ module Rblox
           add_statement_to_chunk(statement)
         end
 
-        emit_byte(:return)
+        emit_return
       end
 
       def visit_expression_stmt(stmt)
@@ -56,6 +56,10 @@ module Rblox
 
       private
 
+      def current_chunk
+        @chunk
+      end
+
       def add_statement_to_chunk(stmt)
         stmt.accept(self)
       end
@@ -69,7 +73,7 @@ module Rblox
       end
 
       def emit_byte(byte)
-        Rblox::Bytecode.chunk_write(@chunk, byte, line)
+        Rblox::Bytecode.chunk_write(current_chunk, byte, line)
       end
 
       def emit_bytes(byte1, byte2)
@@ -78,11 +82,15 @@ module Rblox
       end
 
       def emit_constant(value)
-        constant = Rblox::Bytecode.chunk_add_constant(@chunk, value)
+        constant = Rblox::Bytecode.chunk_add_constant(current_chunk, value)
         if constant > 255
           @error_handler.compile_error(@token, "Too many constants in one chunk.")
         end
         emit_bytes(:constant, constant)
+      end
+
+      def emit_return
+        emit_byte(:return)
       end
     end
   end

@@ -1,19 +1,18 @@
 module Rblox
   module Bytecode
     class Interpreter
-      def initialize(vm, debug_mode: false)
+      def initialize(vm, disassembler: nil)
         @vm = vm
-        @debug_mode = debug_mode
+        @disassembler = disassembler
       end
 
       def interpret(chunk)
         interpret_result = nil
 
         if debug_mode?
-          disassembler = Rblox::Bytecode::Disassembler.new($stdout)
           Rblox::Bytecode.vm_init_chunk(@vm, chunk)
           loop do
-            disassembler.disassemble_instruction(chunk, @vm.current_offset)
+            @disassembler.disassemble_instruction(chunk, @vm.current_offset)
             interpret_result = Rblox::Bytecode.vm_interpret_next_instruction(@vm)
             pp @vm.stack_contents
             break if interpret_result != :incomplete
@@ -28,7 +27,7 @@ module Rblox
       private
 
       def debug_mode?
-        !!@debug_mode
+        !!@disassembler
       end
 
       def execute(statement)

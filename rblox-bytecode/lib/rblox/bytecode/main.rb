@@ -13,6 +13,10 @@ module Rblox
 
           return if had_error?
 
+          if debug_mode
+            disassembler = Rblox::Bytecode::Disassembler.new($stdout)
+          end
+
           Rblox::Bytecode::VM.with_new do |vm|
             Rblox::Bytecode::Chunk.with_new do |chunk|
               compiler = Compiler.new(chunk, self)
@@ -20,7 +24,11 @@ module Rblox
 
               return if had_error?
 
-              interpreter = Interpreter.new(vm, debug_mode: debug_mode)
+              if debug_mode
+                disassembler.disassemble_chunk(chunk, "code")
+              end
+
+              interpreter = Interpreter.new(vm, disassembler: disassembler)
               interpret_result = interpreter.interpret(chunk)
               if interpret_result != :ok
                 @had_error = true
