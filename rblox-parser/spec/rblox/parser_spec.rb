@@ -45,21 +45,6 @@ RSpec.describe Rblox::Parser do
     expect(tokens.map(&:to_h)).to match_snapshot("scans_lexemes")
   end
 
-  it "pretty prints basic expressions" do
-    expr = Rblox::Parser::Expr::Binary.new(
-      Rblox::Parser::Expr::Unary.new(
-        Rblox::Parser::Token.new(Rblox::Parser::TokenType::MINUS, "-", nil, 1),
-        Rblox::Parser::Expr::Literal.new(123)
-      ),
-      Rblox::Parser::Token.new(Rblox::Parser::TokenType::STAR, "*", nil, 1),
-      Rblox::Parser::Expr::Grouping.new(
-        Rblox::Parser::Expr::Literal.new(45.67)
-      )
-    )
-
-    expect(Rblox::Parser::AstPrinter.new.print(expr)).to eq("(* (- 123) (group 45.67))")
-  end
-
   it "parses a simple mathematical expression" do
     source = "(1 > 2.4) == (5 < \"hello\");"
     tokens = Rblox::Parser::Scanner.new(source, @error_handler).scan_tokens
@@ -84,5 +69,16 @@ RSpec.describe Rblox::Parser do
       "(+ (+ \"hello\" \" \") \"world\");",
       "print \"done\";"
     ])
+  end
+
+  it "captures line numbers" do
+    source = <<~EOF
+      "hello" + " " +
+        "world";
+      print 1;
+    EOF
+    tokens = Rblox::Parser::Scanner.new(source, @error_handler).scan_tokens
+    statements = Rblox::Parser::RecursiveDescentParser.new(tokens, @error_handler).parse!
+    expect(statements.map(&:bounding_lines)).to eq([[1, 2], [3, 3]])
   end
 end

@@ -124,7 +124,9 @@ module Rblox
 
         # We could do this above, but it might be weird to mix parsing and desugaring
         if condition.nil?
-          condition = Expr::Literal.new(true)
+          # The line choice here is a hack. Choosing to put something here rather
+          # than letting it be nil.
+          condition = Expr::Literal.new(Token.new(TokenType::TRUE, "true", true, previous.line))
         end
 
         body = Stmt::While.new(condition, body)
@@ -333,12 +335,12 @@ module Rblox
       end
 
       def primary!
-        return Expr::Literal.new(false) if match!(TokenType::FALSE)
-        return Expr::Literal.new(true) if match!(TokenType::TRUE)
-        return Expr::Literal.new(nil) if match!(TokenType::NIL)
+        return Expr::Literal.new(previous) if match!(TokenType::FALSE)
+        return Expr::Literal.new(previous) if match!(TokenType::TRUE)
+        return Expr::Literal.new(previous) if match!(TokenType::NIL)
 
         if match!(TokenType::NUMBER, TokenType::STRING)
-          return Expr::Literal.new(previous.literal)
+          return Expr::Literal.new(previous)
         end
 
         if match!(TokenType::SUPER)

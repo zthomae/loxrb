@@ -26,6 +26,7 @@ module Rblox
 
               if debug_mode
                 disassembler.disassemble_chunk(chunk, "code")
+                puts ""
               end
 
               interpreter = Interpreter.new(vm, disassembler: disassembler)

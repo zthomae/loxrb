@@ -22,10 +22,10 @@ module Rblox
       end
 
       def visit_literal_expr(expr)
-        return "nil" if expr.value.nil?
-        return "\"#{expr.value}\"" if expr.value.is_a?(String)
+        return "nil" if expr.value.type == :NIL
+        return expr.value.lexeme if expr.value.type == :STRING
 
-        expr.value.to_s
+        expr.value.literal.to_s
       end
 
       def visit_unary_expr(expr)

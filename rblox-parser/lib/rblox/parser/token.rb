@@ -4,6 +4,10 @@ module Rblox
       def to_s
         "#{type} #{lexeme} #{literal.nil? ? "null" : literal}"
       end
+
+      def bounding_lines
+        [line, line]
+      end
     end
   end
 end

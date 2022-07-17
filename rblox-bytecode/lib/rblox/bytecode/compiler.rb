@@ -55,15 +55,18 @@ module Rblox
       end
 
       def visit_literal_expr(expr)
-        case expr.value
-        when NilClass
-          emit_byte(:nil)
-        when TrueClass
-          emit_byte(:true)
-        when FalseClass
-          emit_byte(:false)
+        case expr.value.literal
         when Float
-          emit_constant(expr.value)
+          emit_constant(expr.value.literal)
+        else
+          case expr.value.type
+          when Rblox::Parser::TokenType::TRUE
+            emit_byte(:true)
+          when Rblox::Parser::TokenType::FALSE
+            emit_byte(:false)
+          when Rblox::Parser::TokenType::NIL
+            emit_byte(:nil)
+          end
         end
       end
 

@@ -103,7 +103,16 @@ module Rblox
       end
 
       def visit_literal_expr(expr)
-        expr.value
+        return expr.value.literal if !expr.value.literal.nil?
+
+        case expr.value.type
+        when Rblox::Parser::TokenType::TRUE
+          true
+        when Rblox::Parser::TokenType::FALSE
+          false
+        when Rblox::Parser::TokenType::NIL
+          nil
+        end
       end
 
       def visit_logical_expr(expr)
