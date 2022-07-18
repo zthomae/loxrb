@@ -1,7 +1,8 @@
 module Rblox
   module Bytecode
     class Compiler
-      def initialize(chunk, error_handler)
+      def initialize(vm, chunk, error_handler)
+        @vm = vm
         @chunk = chunk
         @error_handler = error_handler
       end
@@ -112,7 +113,7 @@ module Rblox
       end
 
       def emit_string_literal(value, line)
-        obj_string = Rblox::Bytecode.object_copy_string(value, value.length)
+        obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.length)
         emit_constant(:object, obj_string, line)
       end
 

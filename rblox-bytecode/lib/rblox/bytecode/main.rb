@@ -19,7 +19,7 @@ module Rblox
 
           Rblox::Bytecode::VM.with_new do |vm|
             Rblox::Bytecode::Chunk.with_new do |chunk|
-              compiler = Compiler.new(chunk, self)
+              compiler = Compiler.new(vm, chunk, self)
               compiler.compile(statements)
 
               return if had_error?

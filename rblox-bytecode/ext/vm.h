@@ -2,6 +2,7 @@
 #define clox_vm_h
 
 #include "chunk.h"
+#include "object.h"
 #include "value.h"
 
 #define STACK_MAX 256
@@ -26,6 +27,10 @@ InterpretResult VM_interpret(VM* vm, Chunk* chunk);
 InterpretResult VM_interpret_next_instruction(VM* vm);
 void VM_push(VM* vm, Value value);
 Value VM_pop(VM* vm);
+
+ObjString* VM_copy_string(VM* vm, char* chars, int length);
+ObjString* VM_take_string(VM* vm, char* chars, int length);
+
 void VM_free(VM* vm);
 
 #endif

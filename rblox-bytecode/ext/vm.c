@@ -15,6 +15,8 @@ static Value vm_stack_peek(VM* vm, int distance);
 static bool vm_is_falsey(Value value);
 static void vm_runtime_error(VM* vm, const char* format, ...);
 static void vm_concatenate(VM* vm);
+ObjString* vm_allocate_string(VM* vm, char* chars, int length);
+ObjString* vm_allocate_new_string(VM* vm);
 
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
@@ -42,6 +44,17 @@ void VM_push(VM* vm, Value value) {
 Value VM_pop(VM* vm) {
   *vm->stack_top--;
   return *vm->stack_top;
+}
+
+ObjString* VM_copy_string(VM* vm, char* chars, int length) {
+  char* heap_chars = Memory_allocate_chars(length + 1);
+  memcpy(heap_chars, chars, length);
+  heap_chars[length] = '\0';
+  return vm_allocate_string(vm, heap_chars, length);
+}
+
+ObjString* VM_take_string(VM* vm, char* chars, int length) {
+  return vm_allocate_string(vm, chars, length);
 }
 
 void VM_free(VM* vm) {
@@ -206,6 +219,23 @@ static void vm_concatenate(VM *vm) {
   memcpy(chars + a->length, b->chars, b->length);
   chars[length] = '\0';
 
-  ObjString* result = Object_take_string(chars, length);
+  ObjString* result = VM_take_string(vm, chars, length);
   VM_push(vm, Value_make_obj((Obj*)result));
+}
+
+ObjString* vm_allocate_string(VM* vm, char* chars, int length) {
+  ObjString* string = vm_allocate_new_string(vm);
+  string->length = length;
+  string->chars = chars;
+  return string;
+}
+
+Obj* vm_allocate_new(VM* vm, size_t size, ObjType type) {
+  Obj* object = (Obj*)Memory_reallocate(NULL, 0, size);
+  object->type = type;
+  return object;
+}
+
+ObjString* vm_allocate_new_string(VM* vm) {
+  return (ObjString*)vm_allocate_new(vm, sizeof(ObjString), OBJ_STRING);
 }
