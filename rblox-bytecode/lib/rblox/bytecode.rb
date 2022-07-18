@@ -22,7 +22,7 @@ module Rblox
     ObjType = enum :obj_type, [:string]
 
     class Obj < FFI::Struct
-      layout :type, ObjType
+      layout :type, ObjType, :next, Obj.ptr
 
       def as_string
         ObjString.new(self.to_ptr)
@@ -139,7 +139,7 @@ module Rblox
     InterpretResult = enum :interpret_result, [:incomplete, :ok, :compile_error, :runtime_error]
 
     class VM < FFI::Struct
-      layout :chunk, Chunk.ptr, :ip, :pointer, :stack, [Value, 256], :stack_top, Value.ptr
+      layout :chunk, Chunk.ptr, :ip, :pointer, :stack, [Value, 256], :stack_top, Value.ptr, :objects, Obj.ptr
 
       def self.with_new
         FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1) do |p|

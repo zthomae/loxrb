@@ -20,6 +20,7 @@ ObjString* vm_allocate_new_string(VM* vm);
 
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
+  vm->objects = NULL;
 }
 
 void VM_init_chunk(VM* vm, Chunk* chunk) {
@@ -58,7 +59,7 @@ ObjString* VM_take_string(VM* vm, char* chars, int length) {
 }
 
 void VM_free(VM* vm) {
-
+  Memory_free_objects(vm);
 }
 
 static void vm_reset_stack(VM* vm) {
@@ -233,6 +234,10 @@ ObjString* vm_allocate_string(VM* vm, char* chars, int length) {
 Obj* vm_allocate_new(VM* vm, size_t size, ObjType type) {
   Obj* object = (Obj*)Memory_reallocate(NULL, 0, size);
   object->type = type;
+
+  object->next = vm->objects;
+  vm->objects = object;
+
   return object;
 }
 

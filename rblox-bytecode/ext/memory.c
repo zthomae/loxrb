@@ -2,6 +2,10 @@
 
 #include "common.h"
 #include "memory.h"
+#include "object.h"
+#include "vm.h"
+
+static void memory_free_object(Obj* objecct);
 
 void *Memory_reallocate(void *array, size_t old_size, size_t new_size) {
   if (new_size == 0) {
@@ -12,6 +16,10 @@ void *Memory_reallocate(void *array, size_t old_size, size_t new_size) {
   void* result = realloc(array, new_size);
   if (result == NULL) exit(1);
   return result;
+}
+
+void Memory_free(void *ptr, size_t size) {
+  Memory_reallocate(ptr, size, 0);
 }
 
 int Memory_grow_capacity(int old_capacity) {
@@ -30,4 +38,24 @@ void Memory_free_array(void *array, size_t item_size, int capacity) {
 
 char *Memory_allocate_chars(size_t count) {
   return Memory_reallocate(NULL, 0, sizeof(char) * count);
+}
+
+void Memory_free_objects(VM* vm) {
+  Obj* object = vm->objects;
+  while (object != NULL) {
+    Obj* next = object->next;
+    memory_free_object(object);
+    object = next;
+  }
+}
+
+static void memory_free_object(Obj* object) {
+  switch (object->type) {
+    case OBJ_STRING: {
+      ObjString* string = (ObjString*)object;
+      Memory_free_array(string->chars, sizeof(char), string->length + 1);
+      Memory_free(object, sizeof(ObjString));
+      break;
+    }
+  }
 }
