@@ -40,6 +40,8 @@ module Rblox
           constant_instruction("OP_GET_GLOBAL", chunk, offset)
         when Opcode[:define_global]
           constant_instruction("OP_DEFINE_GLOBAL", chunk, offset)
+        when Opcode[:set_global]
+          constant_instruction("OP_SET_GLOBAL", chunk, offset)
         when Opcode[:equal]
           simple_instruction("OP_EQUAL", offset)
         when Opcode[:greater]
