@@ -180,10 +180,10 @@ module Rblox
         }
 
         java.call("jlox", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits))
-        java.call("chap04_scanning", {"test" => "skip", "test/scanning" => "pass"})
-        java.call("chap06_parsing", {"test" => "skip", "test/expressions/parse.lox" => "pass"})
-        java.call("chap07_evaluating", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
-        java.call("chap08_statements", {"test" => "pass"}.merge(
+        java.call("chap04", {"test" => "skip", "test/scanning" => "pass"})
+        java.call("chap06", {"test" => "skip", "test/expressions/parse.lox" => "pass"})
+        java.call("chap07", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
+        java.call("chap08", {"test" => "pass"}.merge(
           early_chapters,
           java_nan_equality,
           no_java_limits,
@@ -200,10 +200,10 @@ module Rblox
             "test/variable/unreached_undefined.lox" => "skip"
           }
         ))
-        java.call("chap09_control", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits, no_java_functions, no_java_resolution, no_java_classes))
-        java.call("chap10_functions", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits, no_java_resolution, no_java_classes))
-        java.call("chap11_resolving", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits, no_java_classes))
-        java.call("chap12_classes", {"test" => "pass"}.merge(early_chapters, no_java_limits, java_nan_equality, {
+        java.call("chap09", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits, no_java_functions, no_java_resolution, no_java_classes))
+        java.call("chap10", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits, no_java_resolution, no_java_classes))
+        java.call("chap11", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits, no_java_classes))
+        java.call("chap12", {"test" => "pass"}.merge(early_chapters, no_java_limits, java_nan_equality, {
           # No inheritance.
           "test/class/local_inherit_other.lox" => "skip",
           "test/class/local_inherit_self.lox" => "skip",
@@ -213,14 +213,14 @@ module Rblox
           "test/regression/394.lox" => "skip",
           "test/super" => "skip"
         }))
-        java.call("chap13_inheritance", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits))
+        java.call("chap13", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits))
 
         c.call("clox", {"test" => "pass"}.merge(early_chapters))
-        c.call("chap17_compiling", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
-        c.call("chap18_types", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
-        c.call("chap19_strings", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
-        c.call("chap20_hash", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
-        c.call("chap21_global", {"test" => "pass"}.merge(
+        c.call("chap17", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
+        c.call("chap18", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
+        c.call("chap19", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
+        c.call("chap20", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
+        c.call("chap21", {"test" => "pass"}.merge(
           early_chapters,
           no_c_control_flow,
           no_c_functions,
@@ -240,9 +240,9 @@ module Rblox
           "test/variable/shadow_local.lox" => "skip",
           "test/variable/use_local_in_initializer.lox" => "skip"
         ))
-        c.call("chap22_local", {"test" => "pass"}.merge(early_chapters, no_c_control_flow, no_c_functions, no_c_classes))
-        c.call("chap23_jumping", {"test" => "pass"}.merge(early_chapters, no_c_functions, no_c_classes))
-        c.call("chap24_calls", {"test" => "pass"}.merge(early_chapters, no_c_classes, {
+        c.call("chap22", {"test" => "pass"}.merge(early_chapters, no_c_control_flow, no_c_functions, no_c_classes))
+        c.call("chap23", {"test" => "pass"}.merge(early_chapters, no_c_functions, no_c_classes))
+        c.call("chap24", {"test" => "pass"}.merge(early_chapters, no_c_classes, {
           # No closures.
           "test/closure" => "skip",
           "test/for/closure_in_body.lox" => "skip",
@@ -253,9 +253,9 @@ module Rblox
           "test/while/closure_in_body.lox" => "skip",
           "test/while/return_closure.lox" => "skip"
         }))
-        c.call("chap25_closures", {"test" => "pass"}.merge(early_chapters, no_c_classes))
-        c.call("chap26_garbage", {"test" => "pass"}.merge(early_chapters, no_c_classes))
-        c.call("chap27_classes", {"test" => "pass"}.merge(early_chapters, no_c_inheritance, {
+        c.call("chap25", {"test" => "pass"}.merge(early_chapters, no_c_classes))
+        c.call("chap26", {"test" => "pass"}.merge(early_chapters, no_c_classes))
+        c.call("chap27", {"test" => "pass"}.merge(early_chapters, no_c_inheritance, {
           # No methods.
           "test/assignment/to_this.lox" => "skip",
           "test/class/local_reference_self.lox" => "skip",
@@ -272,9 +272,9 @@ module Rblox
           "test/this" => "skip",
           "test/variable/local_from_method.lox" => "skip"
         }))
-        c.call("chap28_methods", {"test" => "pass"}.merge(early_chapters, no_c_inheritance))
-        c.call("chap29_superclasses", {"test" => "pass"}.merge(early_chapters))
-        c.call("chap30_optimization", {"test" => "pass"}.merge(early_chapters))
+        c.call("chap28", {"test" => "pass"}.merge(early_chapters, no_c_inheritance))
+        c.call("chap29", {"test" => "pass"}.merge(early_chapters))
+        c.call("chap30", {"test" => "pass"}.merge(early_chapters))
       end
     end
   end
