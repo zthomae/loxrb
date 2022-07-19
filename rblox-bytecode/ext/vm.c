@@ -23,6 +23,7 @@ static uint32_t vm_hash_string(char* chars, int length);
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
   vm->objects = NULL;
+  Table_init(&vm->globals);
   Table_init(&vm->strings);
 }
 
@@ -76,6 +77,7 @@ ObjString* VM_take_string(VM* vm, char* chars, int length) {
 
 void VM_free(VM* vm) {
   Table_free(&vm->strings);
+  Table_free(&vm->globals);
   Memory_free_objects(vm);
 }
 
@@ -89,6 +91,10 @@ static inline uint8_t vm_read_byte(VM* vm) {
 
 static inline Value vm_read_constant(VM* vm) {
   return vm->chunk->constants.values[vm_read_byte(vm)];
+}
+
+static inline ObjString* vm_read_string(VM* vm) {
+  return Object_as_string(vm_read_constant(vm));
 }
 
 static inline InterpretResult vm_run_instruction(VM* vm) {
@@ -111,6 +117,22 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     case OP_POP:
       VM_pop(vm);
       break;
+    case OP_GET_GLOBAL: {
+      ObjString* name = vm_read_string(vm);
+      Value value;
+      if (!Table_get(&vm->globals, name, &value)) {
+        vm_runtime_error(vm, "Undefined variable '%s'.", name->chars);
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      VM_push(vm, value);
+      break;
+    }
+    case OP_DEFINE_GLOBAL: {
+      ObjString* name = vm_read_string(vm);
+      Table_set(&vm->globals, name, vm_stack_peek(vm, 0));
+      VM_pop(vm);
+      break;
+    }
     case OP_EQUAL: {
       Value b = VM_pop(vm);
       Value a = VM_pop(vm);

@@ -98,6 +98,8 @@ module Rblox
       :true,
       :false,
       :pop,
+      :get_global,
+      :define_global,
       :equal,
       :greater,
       :less,
@@ -151,7 +153,13 @@ module Rblox
     InterpretResult = enum :interpret_result, [:incomplete, :ok, :compile_error, :runtime_error]
 
     class VM < FFI::Struct
-      layout :chunk, Chunk.ptr, :ip, :pointer, :stack, [Value, 256], :stack_top, Value.ptr, :strings, Table, :objects, Obj.ptr
+      layout :chunk, Chunk.ptr,
+        :ip, :pointer,
+        :stack, [Value, 256],
+        :stack_top, Value.ptr,
+        :globals, Table,
+        :strings, Table,
+        :objects, Obj.ptr
 
       def self.with_new
         FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1) do |p|

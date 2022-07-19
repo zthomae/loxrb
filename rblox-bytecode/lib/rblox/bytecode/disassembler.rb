@@ -36,6 +36,10 @@ module Rblox
           simple_instruction("OP_FALSE", offset)
         when Opcode[:pop]
           simple_instruction("OP_POP", offset)
+        when Opcode[:get_global]
+          constant_instruction("OP_GET_GLOBAL", chunk, offset)
+        when Opcode[:define_global]
+          constant_instruction("OP_DEFINE_GLOBAL", chunk, offset)
         when Opcode[:equal]
           simple_instruction("OP_EQUAL", offset)
         when Opcode[:greater]

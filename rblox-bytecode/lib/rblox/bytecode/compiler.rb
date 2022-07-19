@@ -25,6 +25,20 @@ module Rblox
         emit_byte(:print, stmt.bounding_lines.first)
       end
 
+      def visit_var_stmt(stmt)
+        # Now that's what I call dynamic typing
+        global = emit_string_literal(stmt.name.lexeme, stmt.name.line)
+
+        if stmt.initializer.nil?
+          emit_byte(:nil, stmt.bounding_lines.first)
+        else
+          stmt.initializer.accept(self)
+        end
+
+        # Using the last bounding line to match what was just emitted
+        emit_bytes(:define_global, global, stmt.bounding_lines.last)
+      end
+
       def visit_binary_expr(expr)
         add_expression_to_chunk(expr.left)
         add_expression_to_chunk(expr.right)
@@ -86,6 +100,10 @@ module Rblox
         end
       end
 
+      def visit_variable_expr(expr)
+        named_variable(expr.name.lexeme, expr.name.bounding_lines.first)
+      end
+
       private
 
       def current_chunk
@@ -115,11 +133,17 @@ module Rblox
           @error_handler.compile_error(@token, "Too many constants in one chunk.")
         end
         emit_bytes(:constant, constant, line)
+        constant
       end
 
       def emit_string_literal(value, line)
         obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.length)
         emit_constant(:object, obj_string, line)
+      end
+
+      def named_variable(name, line)
+        arg = emit_string_literal(name, line)
+        emit_bytes(:get_global, arg, line)
       end
 
       def emit_return(line)
