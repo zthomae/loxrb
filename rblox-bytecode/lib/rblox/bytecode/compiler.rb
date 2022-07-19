@@ -150,7 +150,7 @@ module Rblox
       end
 
       def emit_string_literal(value, line)
-        obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.length)
+        obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.bytesize)
         emit_constant(:object, obj_string, line)
       end
 
