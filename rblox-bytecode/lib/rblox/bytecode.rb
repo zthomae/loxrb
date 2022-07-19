@@ -97,6 +97,7 @@ module Rblox
       :nil,
       :true,
       :false,
+      :pop,
       :equal,
       :greater,
       :less,

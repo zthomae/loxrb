@@ -108,6 +108,9 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     case OP_FALSE:
       VM_push(vm, Value_make_boolean(false));
       break;
+    case OP_POP:
+      VM_pop(vm);
+      break;
     case OP_EQUAL: {
       Value b = VM_pop(vm);
       Value a = VM_pop(vm);
