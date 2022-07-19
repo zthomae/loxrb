@@ -108,7 +108,7 @@ module Rblox
           "test/variable/duplicate_parameter.lox" => "skip",
           "test/variable/early_bound.lox" => "skip",
 
-          # Broken because we haven"t fixed it yet by detecting the error.
+          # Broken because we haven't fixed it yet by detecting the error.
           "test/return/at_top_level.lox" => "skip",
           "test/variable/use_local_in_initializer.lox" => "skip"
         }
