@@ -41,6 +41,14 @@ module Rblox
         emit_byte(:pop, stmt.bounding_lines.last)
       end
 
+      def visit_assign_expr(expr)
+        line = expr.name.bounding_lines.first
+        arg = emit_string_literal(expr.name.lexeme, line)
+        emit_byte(:pop, line)
+        expr.value.accept(self)
+        emit_bytes(:set_global, arg, line)
+      end
+
       def visit_binary_expr(expr)
         add_expression_to_chunk(expr.left)
         add_expression_to_chunk(expr.right)
@@ -103,7 +111,10 @@ module Rblox
       end
 
       def visit_variable_expr(expr)
-        named_variable(expr.name.lexeme, expr.name.bounding_lines.first)
+        line = expr.name.bounding_lines.first
+        arg = emit_string_literal(expr.name.lexeme, line)
+        emit_byte(:pop, line)
+        emit_bytes(:get_global, arg, line)
       end
 
       private
@@ -141,12 +152,6 @@ module Rblox
       def emit_string_literal(value, line)
         obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.length)
         emit_constant(:object, obj_string, line)
-      end
-
-      def named_variable(name, line)
-        arg = emit_string_literal(name, line)
-        emit_byte(:pop, line)
-        emit_bytes(:get_global, arg, line)
       end
 
       def emit_return(line)

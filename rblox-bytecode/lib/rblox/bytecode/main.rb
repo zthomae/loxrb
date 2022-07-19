@@ -35,7 +35,7 @@ module Rblox
           interpreter = Interpreter.new(@vm, disassembler: disassembler)
           interpret_result = interpreter.interpret(chunk)
           if interpret_result != :ok
-            @had_error = true
+            @had_runtime_error = true
           end
         end
       end
