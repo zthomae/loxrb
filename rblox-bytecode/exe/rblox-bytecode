@@ -12,9 +12,9 @@ if ARGV.length > 1
 elsif ARGV.length == 1
   file_path = ARGV[0]
   contents = File.read(file_path)
-  Rblox::Bytecode::Main.run(contents, debug_mode: debug_mode)
+  Rblox::Bytecode::Main.new.run(contents, debug_mode: debug_mode)
   exit 65 if Rblox::Bytecode::Main.had_error?
   exit 70 if Rblox::Bytecode::Main.had_runtime_error?
 else
-  Rblox::Bytecode::Repl.new($stdin, Rblox::Bytecode::Main, debug_mode: debug_mode).run
+  Rblox::Bytecode::Repl.new($stdin, Rblox::Bytecode::Main.new, debug_mode: debug_mode).run
 end
