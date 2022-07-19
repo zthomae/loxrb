@@ -7,6 +7,8 @@ RSpec.describe Rblox::Bytecode do
     expect(Rblox::Bytecode::VERSION).not_to be nil
   end
 
+  subject { Rblox::Bytecode::Main.new }
+
   def write_simple_chunk(chunk)
     constant = Rblox::Bytecode.chunk_add_number(chunk, 1.2)
     Rblox::Bytecode.chunk_write(chunk, constant, 123)
@@ -78,30 +80,30 @@ RSpec.describe Rblox::Bytecode do
   it "executes simple arithmetic with Main in debug mode" do
     ["1 + 1;", "2 - 3;", "5 * 5;", "6 / 2;"].each do |expr|
       puts "evaluating '#{expr}' (debug mode)"
-      Rblox::Bytecode::Main.run(expr, debug_mode: true)
+      subject.run(expr, debug_mode: true)
     end
   end
 
   it "executes simple arithmetic with Main" do
     ["1 + 1;", "2 - 3;", "5 * 5;", "6 / 2;"].each do |expr|
       puts "evaluating '#{expr}'"
-      Rblox::Bytecode::Main.run(expr, debug_mode: false)
+      subject.run(expr, debug_mode: false)
     end
   end
 
   it "executes a more complex arithmetic expression with Main in debug mode" do
-    Rblox::Bytecode::Main.run("(5 - (3 - 1)) + -1;", debug_mode: true)
+    subject.run("(5 - (3 - 1)) + -1;", debug_mode: true)
   end
 
   it "executes a more complex arithmetic expression with Main" do
-    Rblox::Bytecode::Main.run("(5 - (3 - 1)) + -1;", debug_mode: false)
+    subject.run("(5 - (3 - 1)) + -1;", debug_mode: false)
   end
 
   it "executes a logical and arithmetic expression with Main in debug mode" do
-    Rblox::Bytecode::Main.run("!(5 - 4 > 3 * 2 == !nil);", debug_mode: true)
+    subject.run("!(5 - 4 > 3 * 2 == !nil);", debug_mode: true)
   end
 
   it "executes a logical and arithmetic expression with Main in" do
-    Rblox::Bytecode::Main.run("!(5 - 4 > 3 * 2 == !nil);", debug_mode: false)
+    subject.run("!(5 - 4 > 3 * 2 == !nil);", debug_mode: false)
   end
 end
