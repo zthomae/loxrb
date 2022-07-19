@@ -187,9 +187,12 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       }
       VM_push(vm, Value_make_number(-Value_as_number(VM_pop(vm))));
       break;
-    case OP_RETURN:
+    case OP_PRINT: {
       Value_print(VM_pop(vm));
       printf("\n");
+      break;
+    }
+    case OP_RETURN:
       return INTERPRET_OK;
     default:
       return INTERPRET_RUNTIME_ERROR;

@@ -20,6 +20,11 @@ module Rblox
         stmt.expression.accept(self)
       end
 
+      def visit_print_stmt(stmt)
+        stmt.expression.accept(self)
+        emit_byte(:print, stmt.bounding_lines.first)
+      end
+
       def visit_binary_expr(expr)
         add_expression_to_chunk(expr.left)
         add_expression_to_chunk(expr.right)

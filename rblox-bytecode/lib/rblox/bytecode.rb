@@ -106,6 +106,7 @@ module Rblox
       :divide,
       :not,
       :negate,
+      :print,
       :return
     ]
 

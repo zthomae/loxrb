@@ -52,6 +52,8 @@ module Rblox
           simple_instruction("OP_NOT", offset)
         when Opcode[:negate]
           simple_instruction("OP_NEGATE", offset)
+        when Opcode[:print]
+          simple_instruction("OP_PRINT", offset)
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else
