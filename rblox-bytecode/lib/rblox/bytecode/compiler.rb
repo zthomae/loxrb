@@ -18,6 +18,7 @@ module Rblox
 
       def visit_expression_stmt(stmt)
         stmt.expression.accept(self)
+        emit_byte(:pop, stmt.bounding_lines.last)
       end
 
       def visit_print_stmt(stmt)
@@ -37,6 +38,7 @@ module Rblox
 
         # Using the last bounding line to match what was just emitted
         emit_bytes(:define_global, global, stmt.bounding_lines.last)
+        emit_byte(:pop, stmt.bounding_lines.last)
       end
 
       def visit_binary_expr(expr)
@@ -143,6 +145,7 @@ module Rblox
 
       def named_variable(name, line)
         arg = emit_string_literal(name, line)
+        emit_byte(:pop, line)
         emit_bytes(:get_global, arg, line)
       end
 
