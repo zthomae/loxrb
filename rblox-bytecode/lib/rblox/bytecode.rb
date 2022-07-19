@@ -77,7 +77,17 @@ module Rblox
     attach_function :value_print, :Value_print, [Value], :void
 
     class ObjString < FFI::Struct
-      layout :obj, Obj, :length, :int, :chars, :string
+      layout :obj, Obj, :length, :int, :chars, :string, :hash, :uint32
+    end
+
+    ### TABLE ###
+
+    class Entry < FFI::Struct
+      layout :key, ObjString.ptr, :value, Value
+    end
+
+    class Table < FFI::Struct
+      layout :count, :int, :capacity, :int, :entries, Entry.ptr
     end
 
     ### CHUNKS ###
@@ -139,7 +149,7 @@ module Rblox
     InterpretResult = enum :interpret_result, [:incomplete, :ok, :compile_error, :runtime_error]
 
     class VM < FFI::Struct
-      layout :chunk, Chunk.ptr, :ip, :pointer, :stack, [Value, 256], :stack_top, Value.ptr, :objects, Obj.ptr
+      layout :chunk, Chunk.ptr, :ip, :pointer, :stack, [Value, 256], :stack_top, Value.ptr, :strings, Table, :objects, Obj.ptr
 
       def self.with_new
         FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1) do |p|

@@ -39,10 +39,7 @@ bool Value_equals(Value a, Value b) {
     case VAL_NUMBER:
       return Value_as_number(a) == Value_as_number(b);
     case VAL_OBJ: {
-      ObjString* a_string = Object_as_string(a);
-      ObjString* b_string = Object_as_string(b);
-      return a_string->length == b_string->length &&
-        memcmp(a_string->chars, b_string->chars, a_string->length) == 0;
+      return Value_as_obj(a) == Value_as_obj(b);
     }
     default:
       return false;

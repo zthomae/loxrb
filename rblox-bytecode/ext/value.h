@@ -39,6 +39,7 @@ inline Value Value_make_boolean(bool value) {
   return (Value){VAL_BOOL, {.boolean = value}};
 }
 
+// TODO: There should only really need to be one nil value
 inline Value Value_make_nil() {
   return (Value){VAL_NIL, {.number = 0}};
 }

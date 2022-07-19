@@ -36,8 +36,12 @@ void Memory_free_array(void *array, size_t item_size, int capacity) {
   Memory_reallocate(array, item_size * capacity, 0);
 }
 
-char *Memory_allocate_chars(size_t count) {
-  return Memory_reallocate(NULL, 0, sizeof(char) * count);
+void* Memory_allocate(size_t size, size_t count) {
+  return Memory_reallocate(NULL, 0, size * count);
+}
+
+char* Memory_allocate_chars(size_t count) {
+  return (char*)Memory_allocate(sizeof(char), count);
 }
 
 void Memory_free_objects(VM* vm) {

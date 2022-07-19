@@ -5,6 +5,7 @@
 #include "common.h"
 #include "memory.h"
 #include "object.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 
@@ -15,12 +16,14 @@ static Value vm_stack_peek(VM* vm, int distance);
 static bool vm_is_falsey(Value value);
 static void vm_runtime_error(VM* vm, const char* format, ...);
 static void vm_concatenate(VM* vm);
-ObjString* vm_allocate_string(VM* vm, char* chars, int length);
-ObjString* vm_allocate_new_string(VM* vm);
+static ObjString* vm_allocate_string(VM* vm, char* chars, int length, uint32_t hash);
+static ObjString* vm_allocate_new_string(VM* vm);
+static uint32_t vm_hash_string(char* chars, int length);
 
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
   vm->objects = NULL;
+  Table_init(&vm->strings);
 }
 
 void VM_init_chunk(VM* vm, Chunk* chunk) {
@@ -48,17 +51,31 @@ Value VM_pop(VM* vm) {
 }
 
 ObjString* VM_copy_string(VM* vm, char* chars, int length) {
+  uint32_t hash = vm_hash_string(chars, length);
+  ObjString* interned = Table_find_string(&vm->strings, chars, length, hash);
+  if (interned != NULL) {
+    return interned;
+  }
+
   char* heap_chars = Memory_allocate_chars(length + 1);
   memcpy(heap_chars, chars, length);
   heap_chars[length] = '\0';
-  return vm_allocate_string(vm, heap_chars, length);
+  return vm_allocate_string(vm, heap_chars, length, hash);
 }
 
 ObjString* VM_take_string(VM* vm, char* chars, int length) {
-  return vm_allocate_string(vm, chars, length);
+  uint32_t hash = vm_hash_string(chars, length);
+  ObjString* interned = Table_find_string(&vm->strings, chars, length, hash);
+  if (interned != NULL) {
+    Memory_free_array(chars, sizeof(char), length + 1);
+    return interned;
+  }
+
+  return vm_allocate_string(vm, chars, length, hash);
 }
 
 void VM_free(VM* vm) {
+  Table_free(&vm->strings);
   Memory_free_objects(vm);
 }
 
@@ -224,14 +241,16 @@ static void vm_concatenate(VM *vm) {
   VM_push(vm, Value_make_obj((Obj*)result));
 }
 
-ObjString* vm_allocate_string(VM* vm, char* chars, int length) {
+static ObjString* vm_allocate_string(VM* vm, char* chars, int length, uint32_t hash) {
   ObjString* string = vm_allocate_new_string(vm);
   string->length = length;
   string->chars = chars;
+  string->hash = hash;
+  Table_set(&vm->strings, string, Value_make_nil());
   return string;
 }
 
-Obj* vm_allocate_new(VM* vm, size_t size, ObjType type) {
+static Obj* vm_allocate_new(VM* vm, size_t size, ObjType type) {
   Obj* object = (Obj*)Memory_reallocate(NULL, 0, size);
   object->type = type;
 
@@ -241,6 +260,15 @@ Obj* vm_allocate_new(VM* vm, size_t size, ObjType type) {
   return object;
 }
 
-ObjString* vm_allocate_new_string(VM* vm) {
+static ObjString* vm_allocate_new_string(VM* vm) {
   return (ObjString*)vm_allocate_new(vm, sizeof(ObjString), OBJ_STRING);
+}
+
+static uint32_t vm_hash_string(char* key, int length) {
+  uint32_t hash = 2166136261u;
+  for (int i = 0; i < length; i++) {
+    hash ^= (uint8_t)key[i];
+    hash *= 16777619;
+  }
+  return hash;
 }
