@@ -44,7 +44,7 @@ module Rblox
       def visit_var_stmt(stmt)
         if @scope_depth == 0
           # Now that's what I call dynamic typing
-          global = emit_string_literal(stmt.name.lexeme, stmt.name.line)
+          global = emit_string_literal(stmt.name, stmt.name.lexeme, stmt.name.line)
 
           if stmt.initializer.nil?
             emit_byte(:nil, stmt.bounding_lines.first)
@@ -63,7 +63,7 @@ module Rblox
           end
 
           if @locals.size > 255
-            @error_handler.compile_error(@token, "Too many local variables in function.")
+            @error_handler.compile_error(stmt.name, "Too many local variables in function.")
             return
           end
 
@@ -73,7 +73,7 @@ module Rblox
             end
 
             if local.name == stmt.name.lexeme
-              @error_handler.compile_error(@token, "Already a variable with this name in scope.")
+              @error_handler.compile_error(stmt.name, "Already a variable with this name in scope.")
             end
           end
 
@@ -85,7 +85,7 @@ module Rblox
         line = expr.name.bounding_lines.first
         variable_depth = resolve_local(expr.name.lexeme)
         if variable_depth == -1
-          arg = emit_string_literal(expr.name.lexeme, line)
+          arg = emit_string_literal(expr.name, expr.name.lexeme, line)
           emit_byte(:pop, line)
           expr.value.accept(self)
           emit_bytes(:set_global, arg, line)
@@ -130,9 +130,9 @@ module Rblox
       def visit_literal_expr(expr)
         case expr.value.literal
         when Float
-          emit_constant(:number, expr.value.literal, expr.value.line)
+          emit_constant(:number, expr.value, expr.value.literal, expr.value.line)
         when String
-          emit_string_literal(expr.value.literal, expr.value.line)
+          emit_string_literal(expr.value, expr.value.literal, expr.value.line)
         else
           case expr.value.type
           when Rblox::Parser::TokenType::TRUE
@@ -160,7 +160,7 @@ module Rblox
         line = expr.name.bounding_lines.first
         variable_depth = resolve_local(expr.name.lexeme)
         if variable_depth == -1
-          arg = emit_string_literal(expr.name.lexeme, line)
+          arg = emit_string_literal(expr.name, expr.name.lexeme, line)
           emit_byte(:pop, line)
           emit_bytes(:get_global, arg, line)
         else
@@ -201,18 +201,18 @@ module Rblox
         emit_byte(byte2, line)
       end
 
-      def emit_constant(type, value, line)
+      def emit_constant(type, token, value, line)
         constant = Rblox::Bytecode.public_send("chunk_add_#{type}", current_chunk, value)
         if constant > 255
-          @error_handler.compile_error(@token, "Too many constants in one chunk.")
+          @error_handler.compile_error(token, "Too many constants in one chunk.")
         end
         emit_bytes(:constant, constant, line)
         constant
       end
 
-      def emit_string_literal(value, line)
+      def emit_string_literal(token, value, line)
         obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.bytesize)
-        emit_constant(:object, obj_string, line)
+        emit_constant(:object, token, obj_string, line)
       end
 
       def emit_return(line)
