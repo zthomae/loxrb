@@ -56,12 +56,6 @@ module Rblox
           emit_bytes(:define_global, global, stmt.bounding_lines.last)
           emit_byte(:pop, stmt.bounding_lines.last)
         else
-          if stmt.initializer.nil?
-            emit_byte(:nil, stmt.bounding_lines.first)
-          else
-            stmt.initializer.accept(self)
-          end
-
           if @locals.size > 255
             @error_handler.compile_error(stmt.name, "Too many local variables in function.")
             return
@@ -73,17 +67,25 @@ module Rblox
             end
 
             if local.name == stmt.name.lexeme
-              @error_handler.compile_error(stmt.name, "Already a variable with this name in scope.")
+              @error_handler.compile_error(stmt.name, "Already a variable with this name in this scope.")
             end
           end
 
-          @locals << Local.new(stmt.name.lexeme, @scope_depth)
+          @locals << Local.new(stmt.name.lexeme, -1)
+
+          if stmt.initializer.nil?
+            emit_byte(:nil, stmt.bounding_lines.first)
+          else
+            stmt.initializer.accept(self)
+          end
+
+          @locals[-1].depth = @scope_depth
         end
       end
 
       def visit_assign_expr(expr)
         line = expr.name.bounding_lines.first
-        variable_depth = resolve_local(expr.name.lexeme)
+        variable_depth = resolve_local(expr.name, expr.name.lexeme)
         if variable_depth == -1
           arg = emit_string_literal(expr.name, expr.name.lexeme, line)
           emit_byte(:pop, line)
@@ -158,7 +160,7 @@ module Rblox
 
       def visit_variable_expr(expr)
         line = expr.name.bounding_lines.first
-        variable_depth = resolve_local(expr.name.lexeme)
+        variable_depth = resolve_local(expr.name, expr.name.lexeme)
         if variable_depth == -1
           arg = emit_string_literal(expr.name, expr.name.lexeme, line)
           emit_byte(:pop, line)
@@ -182,9 +184,14 @@ module Rblox
         expr.accept(self)
       end
 
-      def resolve_local(name)
-        @locals.reverse.each.with_index do |local, i|
+      def resolve_local(token, name)
+        (@locals.length - 1).downto(0).each do |i|
+          local = @locals[i]
           if name == local.name
+            if local.depth == -1
+              @error_handler.compile_error(token, "Can't read local variable in its own initializer.")
+            end
+
             return i
           end
         end
