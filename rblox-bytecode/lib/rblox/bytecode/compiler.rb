@@ -83,10 +83,16 @@ module Rblox
 
       def visit_assign_expr(expr)
         line = expr.name.bounding_lines.first
-        arg = emit_string_literal(expr.name.lexeme, line)
-        emit_byte(:pop, line)
-        expr.value.accept(self)
-        emit_bytes(:set_global, arg, line)
+        variable_depth = resolve_local(expr.name.lexeme)
+        if variable_depth == -1
+          arg = emit_string_literal(expr.name.lexeme, line)
+          emit_byte(:pop, line)
+          expr.value.accept(self)
+          emit_bytes(:set_global, arg, line)
+        else
+          expr.value.accept(self)
+          emit_bytes(:set_local, variable_depth, line)
+        end
       end
 
       def visit_binary_expr(expr)
@@ -152,9 +158,14 @@ module Rblox
 
       def visit_variable_expr(expr)
         line = expr.name.bounding_lines.first
-        arg = emit_string_literal(expr.name.lexeme, line)
-        emit_byte(:pop, line)
-        emit_bytes(:get_global, arg, line)
+        variable_depth = resolve_local(expr.name.lexeme)
+        if variable_depth == -1
+          arg = emit_string_literal(expr.name.lexeme, line)
+          emit_byte(:pop, line)
+          emit_bytes(:get_global, arg, line)
+        else
+          emit_bytes(:get_local, variable_depth, line)
+        end
       end
 
       private
@@ -169,6 +180,16 @@ module Rblox
 
       def add_expression_to_chunk(expr)
         expr.accept(self)
+      end
+
+      def resolve_local(name)
+        @locals.reverse.each.with_index do |local, i|
+          if name == local.name
+            return i
+          end
+        end
+
+        -1
       end
 
       def emit_byte(byte, line)

@@ -36,6 +36,10 @@ module Rblox
           simple_instruction("OP_FALSE", offset)
         when Opcode[:pop]
           simple_instruction("OP_POP", offset)
+        when Opcode[:get_local]
+          byte_instruction("OP_GET_LOCAL", chunk, offset)
+        when Opcode[:set_local]
+          byte_instruction("OP_SET_LOCAL", chunk, offset)
         when Opcode[:get_global]
           constant_instruction("OP_GET_GLOBAL", chunk, offset)
         when Opcode[:define_global]
@@ -95,6 +99,12 @@ module Rblox
       def simple_instruction(name, offset)
         io.puts name
         offset + 1
+      end
+
+      def byte_instruction(name, chunk, offset)
+        slot = chunk.contents_at(offset + 1)
+        io.puts "%-16s %4d\n" % [name, slot]
+        offset + 2
       end
     end
   end

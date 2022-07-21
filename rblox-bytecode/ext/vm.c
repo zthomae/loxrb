@@ -117,6 +117,16 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     case OP_POP:
       VM_pop(vm);
       break;
+    case OP_GET_LOCAL: {
+      uint8_t slot = vm_read_byte(vm);
+      VM_push(vm, vm->stack[slot]);
+      break;
+    }
+    case OP_SET_LOCAL: {
+      uint8_t slot = vm_read_byte(vm);
+      vm->stack[slot] = vm_stack_peek(vm, 0);
+      break;
+    }
     case OP_GET_GLOBAL: {
       ObjString* name = vm_read_string(vm);
       Value value;
