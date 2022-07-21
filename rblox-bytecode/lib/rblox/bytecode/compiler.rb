@@ -21,11 +21,14 @@ module Rblox
       end
 
       def visit_block_stmt(stmt)
-        within_block do
-          stmt.statements.each do |statement|
-            statement.accept(self)
-          end
+        @scope_depth += 1
+        stmt.statements.each do |statement|
+          statement.accept(self)
         end
+        @scope_depth -= 1
+        locals_to_remove, locals_to_keep = @locals.partition { |local| local.depth > @scope_depth }
+        locals_to_remove.each { |local| emit_byte(:pop, stmt.bounding_lines.last) }
+        @locals = locals_to_keep
       end
 
       def visit_expression_stmt(stmt)
@@ -39,18 +42,43 @@ module Rblox
       end
 
       def visit_var_stmt(stmt)
-        # Now that's what I call dynamic typing
-        global = emit_string_literal(stmt.name.lexeme, stmt.name.line)
+        if @scope_depth == 0
+          # Now that's what I call dynamic typing
+          global = emit_string_literal(stmt.name.lexeme, stmt.name.line)
 
-        if stmt.initializer.nil?
-          emit_byte(:nil, stmt.bounding_lines.first)
+          if stmt.initializer.nil?
+            emit_byte(:nil, stmt.bounding_lines.first)
+          else
+            stmt.initializer.accept(self)
+          end
+
+          # Using the last bounding line to match what was just emitted
+          emit_bytes(:define_global, global, stmt.bounding_lines.last)
+          emit_byte(:pop, stmt.bounding_lines.last)
         else
-          stmt.initializer.accept(self)
-        end
+          if stmt.initializer.nil?
+            emit_byte(:nil, stmt.bounding_lines.first)
+          else
+            stmt.initializer.accept(self)
+          end
 
-        # Using the last bounding line to match what was just emitted
-        emit_bytes(:define_global, global, stmt.bounding_lines.last)
-        emit_byte(:pop, stmt.bounding_lines.last)
+          if @locals.size > 255
+            @error_handler.compile_error(@token, "Too many local variables in function.")
+            return
+          end
+
+          @locals.reverse.each do |local|
+            if local.depth != -1 && local.depth < @scope_depth
+              break
+            end
+
+            if local.name == stmt.name.lexeme
+              @error_handler.compile_error(@token, "Already a variable with this name in scope.")
+            end
+          end
+
+          @locals << Local.new(stmt.name.lexeme, @scope_depth)
+        end
       end
 
       def visit_assign_expr(expr)
@@ -168,13 +196,6 @@ module Rblox
 
       def emit_return(line)
         emit_byte(:return, line)
-      end
-
-      def within_block
-        @scope_depth += 1
-        result = yield
-        @scope_depth -= 1
-        result
       end
     end
   end
