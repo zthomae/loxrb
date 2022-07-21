@@ -1,10 +1,14 @@
 module Rblox
   module Bytecode
     class Compiler
+      Local = Struct.new(:name, :depth)
+
       def initialize(vm, chunk, error_handler)
         @vm = vm
         @chunk = chunk
         @error_handler = error_handler
+        @locals = []
+        @scope_depth = 0
       end
 
       def compile(statements)
@@ -14,6 +18,14 @@ module Rblox
 
         # Since this is synthetic, we make it appear as if it comes from the previous line
         emit_return(statements.last&.bounding_lines&.last || 0)
+      end
+
+      def visit_block_stmt(stmt)
+        within_block do
+          stmt.statements.each do |statement|
+            statement.accept(self)
+          end
+        end
       end
 
       def visit_expression_stmt(stmt)
@@ -156,6 +168,13 @@ module Rblox
 
       def emit_return(line)
         emit_byte(:return, line)
+      end
+
+      def within_block
+        @scope_depth += 1
+        result = yield
+        @scope_depth -= 1
+        result
       end
     end
   end
