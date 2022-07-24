@@ -13,7 +13,7 @@ module Rblox
         @function = function
         @function_type = function_type
         @error_handler = error_handler
-        @locals = []
+        @locals = [Local.new("", 0)]
         @scope_depth = 0
       end
 
@@ -240,7 +240,7 @@ module Rblox
               @error_handler.compile_error(token, "Can't read local variable in its own initializer.")
             end
 
-            return i
+            return i - 1
           end
         end
 
