@@ -36,6 +36,13 @@ module Rblox
         emit_byte(:pop, stmt.bounding_lines.last)
       end
 
+      def visit_if_stmt(stmt)
+        stmt.condition.accept(self)
+        then_jump = emit_jump(:jump_if_false, stmt.then_branch.bounding_lines.first)
+        stmt.then_branch.accept(self)
+        patch_jump(then_jump)
+      end
+
       def visit_print_stmt(stmt)
         stmt.expression.accept(self)
         emit_byte(:print, stmt.bounding_lines.first)
@@ -220,6 +227,27 @@ module Rblox
       def emit_string_literal(token, value, line)
         obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.bytesize)
         emit_constant(:object, token, obj_string, line)
+      end
+
+      def emit_jump(instruction, line)
+        emit_byte(instruction, line)
+        emit_byte(0xff, line)
+        emit_byte(0xff, line)
+        @chunk[:count] - 2
+      end
+
+      def patch_jump(offset)
+        # -2 to adjust for the bytecode for the jump offset itself.
+        jump = @chunk[:count] - offset - 2
+
+        # TODO: Verify that the jump offset isn't too far to store in 2 bytes
+        # (only a TODO because I have to get a token here to emit a compiler error...)
+        # if jump > 0xffff
+        #   @error_handler.compile_error(token, "Too much code to jump over.")
+        # end
+
+        @chunk.patch_contents_at(offset, (jump >> 8) & 0xff)
+        @chunk.patch_contents_at(offset + 1, jump & 0xff)
       end
 
       def emit_return(line)

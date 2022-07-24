@@ -113,6 +113,7 @@ module Rblox
       :not,
       :negate,
       :print,
+      :jump_if_false,
       :return
     ]
 
@@ -137,6 +138,10 @@ module Rblox
 
       def contents_at(offset)
         (self[:code] + (offset * FFI.type_size(FFI::TYPE_UINT8))).read(:uint8)
+      end
+
+      def patch_contents_at(offset, value)
+        (self[:code] + (offset * FFI.type_size(FFI::TYPE_UINT8))).write(:uint8, value)
       end
 
       def constant_at(offset)

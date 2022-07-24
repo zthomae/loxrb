@@ -66,6 +66,8 @@ module Rblox
           simple_instruction("OP_NEGATE", offset)
         when Opcode[:print]
           simple_instruction("OP_PRINT", offset)
+        when Opcode[:jump_if_false]
+          jump_instruction("JUMP_IF_FALSE", 1, chunk, offset)
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else
@@ -105,6 +107,12 @@ module Rblox
         slot = chunk.contents_at(offset + 1)
         io.puts "%-16s %4d\n" % [name, slot]
         offset + 2
+      end
+
+      def jump_instruction(name, sign, chunk, offset)
+        jump = (chunk.contents_at(offset + 1) << 8) | chunk.contents_at(offset + 2)
+        io.puts "%-16s %4d -> %d\n" % [name, offset, offset + 3 + sign * jump]
+        offset + 3
       end
     end
   end

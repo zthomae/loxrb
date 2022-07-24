@@ -89,6 +89,11 @@ static inline uint8_t vm_read_byte(VM* vm) {
   return *vm->ip++;
 }
 
+static inline uint16_t vm_read_short(VM* vm) {
+  vm->ip += 2;
+  return (uint16_t)((vm->ip[-2] << 8) | vm->ip[-1]);
+}
+
 static inline Value vm_read_constant(VM* vm) {
   return vm->chunk->constants.values[vm_read_byte(vm)];
 }
@@ -234,6 +239,13 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     case OP_PRINT: {
       Value_print(VM_pop(vm));
       printf("\n");
+      break;
+    }
+    case OP_JUMP_IF_FALSE: {
+      uint16_t offset = vm_read_short(vm);
+      if (vm_is_falsey(vm_stack_peek(vm, 0))) {
+        vm->ip += offset;
+      }
       break;
     }
     case OP_RETURN:
