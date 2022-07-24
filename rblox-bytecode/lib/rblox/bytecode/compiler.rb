@@ -39,8 +39,13 @@ module Rblox
       def visit_if_stmt(stmt)
         stmt.condition.accept(self)
         then_jump = emit_jump(:jump_if_false, stmt.then_branch.bounding_lines.first)
+        emit_byte(:pop, stmt.then_branch.bounding_lines.last)
         stmt.then_branch.accept(self)
+        else_jump = emit_jump(:jump, stmt.then_branch.bounding_lines.last)
         patch_jump(then_jump)
+        emit_byte(:pop, stmt.then_branch.bounding_lines.last)
+        stmt.else_branch&.accept(self)
+        patch_jump(else_jump)
       end
 
       def visit_print_stmt(stmt)

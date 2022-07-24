@@ -113,6 +113,7 @@ module Rblox
       :not,
       :negate,
       :print,
+      :jump,
       :jump_if_false,
       :return
     ]

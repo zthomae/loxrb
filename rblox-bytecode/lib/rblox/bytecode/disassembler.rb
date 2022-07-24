@@ -66,8 +66,10 @@ module Rblox
           simple_instruction("OP_NEGATE", offset)
         when Opcode[:print]
           simple_instruction("OP_PRINT", offset)
+        when Opcode[:jump]
+          jump_instruction("OP_JUMP", 1, chunk, offset)
         when Opcode[:jump_if_false]
-          jump_instruction("JUMP_IF_FALSE", 1, chunk, offset)
+          jump_instruction("OP_JUMP_IF_FALSE", 1, chunk, offset)
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else

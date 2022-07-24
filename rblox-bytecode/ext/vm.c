@@ -241,6 +241,11 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       printf("\n");
       break;
     }
+    case OP_JUMP: {
+      uint16_t offset = vm_read_short(vm);
+      vm->ip += offset;
+      break;
+    }
     case OP_JUMP_IF_FALSE: {
       uint16_t offset = vm_read_short(vm);
       if (vm_is_falsey(vm_stack_peek(vm, 0))) {
