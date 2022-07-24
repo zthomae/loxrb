@@ -17,5 +17,9 @@ void Object_print(Value value) {
 }
 
 static void object_print_function(ObjFunction* function) {
+  if (function->name == NULL) {
+    printf("<script>");
+    return;
+  }
   printf("<fn %s>", function->name->chars);
 }
