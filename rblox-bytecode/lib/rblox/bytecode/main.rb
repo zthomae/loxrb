@@ -63,11 +63,6 @@ module Rblox
         @had_error = true
       end
 
-      def resolution_error(name, message)
-        report(name.line, " at '#{name.lexeme}'", message)
-        @had_error = true
-      end
-
       def had_error?
         !!@had_error
       end
