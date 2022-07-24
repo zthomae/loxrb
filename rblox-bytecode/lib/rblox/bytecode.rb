@@ -115,6 +115,7 @@ module Rblox
       :print,
       :jump,
       :jump_if_false,
+      :loop,
       :return
     ]
 

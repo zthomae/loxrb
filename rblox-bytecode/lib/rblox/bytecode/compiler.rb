@@ -97,6 +97,17 @@ module Rblox
         end
       end
 
+      def visit_while_stmt(stmt)
+        loop_start = @chunk[:count]
+        stmt.condition.accept(self)
+        exit_jump = emit_jump(:jump_if_false, stmt.condition.bounding_lines.last)
+        emit_byte(:pop, stmt.condition.bounding_lines.last)
+        stmt.body.accept(self)
+        emit_loop(loop_start, stmt.condition.bounding_lines.first)
+        patch_jump(exit_jump)
+        emit_byte(:pop, stmt.bounding_lines.last)
+      end
+
       def visit_assign_expr(expr)
         line = expr.name.bounding_lines.first
         variable_depth = resolve_local(expr.name, expr.name.lexeme)
@@ -272,6 +283,21 @@ module Rblox
 
         @chunk.patch_contents_at(offset, (jump >> 8) & 0xff)
         @chunk.patch_contents_at(offset + 1, jump & 0xff)
+      end
+
+      def emit_loop(loop_start, line)
+        emit_byte(:loop, line)
+
+        offset = @chunk[:count] - loop_start + 2
+
+        # TODO: Verify that the jump offset isn't too far to store in 2 bytes
+        # (only a TODO because I have to get a token here to emit a compiler error...)
+        # if offset > 0xffff
+        #   @error_handler.compile_error(token, "Loop body too large.")
+        # end
+
+        emit_byte((offset >> 8) & 0xff, line)
+        emit_byte(offset & 0xff, line)
       end
 
       def emit_return(line)

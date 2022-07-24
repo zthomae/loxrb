@@ -253,6 +253,11 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       }
       break;
     }
+    case OP_LOOP: {
+      uint16_t offset = vm_read_short(vm);
+      vm->ip -= offset;
+      break;
+    }
     case OP_RETURN:
       return INTERPRET_OK;
     default:
