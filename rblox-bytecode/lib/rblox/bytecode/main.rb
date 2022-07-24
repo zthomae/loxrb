@@ -28,7 +28,7 @@ module Rblox
           return if had_error?
 
           if debug_mode
-            disassembler.disassemble_chunk(function[:chunk], "code")
+            disassembler.disassemble_function(function)
             puts ""
           end
 

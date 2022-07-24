@@ -5,6 +5,11 @@ module Rblox
         @io = io
       end
 
+      def disassemble_function(function)
+        function_name = function[:name][:chars] || "<script>"
+        disassemble_chunk(function[:chunk], function_name)
+      end
+
       def disassemble_chunk(chunk, name)
         io.puts "== #{name} =="
 
