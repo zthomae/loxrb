@@ -44,10 +44,10 @@ module Rblox
         emit_byte(:pop, approximate_last_then_line)
         stmt.then_branch.accept(self)
         else_jump = emit_jump(:jump, approximate_last_then_line)
-        patch_jump(then_jump)
+        patch_jump(then_jump, approximate_first_then_line)
         emit_byte(:pop, approximate_last_then_line)
         stmt.else_branch&.accept(self)
-        patch_jump(else_jump)
+        patch_jump(else_jump, approximate_last_then_line)
       end
 
       def visit_print_stmt(stmt)
@@ -104,7 +104,7 @@ module Rblox
         emit_byte(:pop, stmt.condition.bounding_lines.last)
         stmt.body.accept(self)
         emit_loop(loop_start, stmt.condition.bounding_lines.first)
-        patch_jump(exit_jump)
+        patch_jump(exit_jump, stmt.condition.bounding_lines.last)
         emit_byte(:pop, stmt.bounding_lines.last)
       end
 
@@ -178,14 +178,14 @@ module Rblox
           end_jump = emit_jump(:jump_if_false, expr.operator.line)
           emit_byte(:pop, expr.operator.line)
           expr.right.accept(self)
-          patch_jump(end_jump)
+          patch_jump(end_jump, expr.operator.line)
         else
           else_jump = emit_jump(:jump_if_false, expr.operator.line)
           end_jump = emit_jump(:jump, expr.operator.line)
-          patch_jump(else_jump)
+          patch_jump(else_jump, expr.operator.line)
           emit_byte(:pop, expr.operator.line)
           expr.right.accept(self)
-          patch_jump(end_jump)
+          patch_jump(end_jump, expr.operator.line)
         end
       end
 
@@ -271,15 +271,13 @@ module Rblox
         @chunk[:count] - 2
       end
 
-      def patch_jump(offset)
+      def patch_jump(offset, line)
         # -2 to adjust for the bytecode for the jump offset itself.
         jump = @chunk[:count] - offset - 2
 
-        # TODO: Verify that the jump offset isn't too far to store in 2 bytes
-        # (only a TODO because I have to get a token here to emit a compiler error...)
-        # if jump > 0xffff
-        #   @error_handler.compile_error(token, "Too much code to jump over.")
-        # end
+        if jump > 0xffff
+          @error_handler.tokenless_compile_error(line, "Too much code to jump over.")
+        end
 
         @chunk.patch_contents_at(offset, (jump >> 8) & 0xff)
         @chunk.patch_contents_at(offset + 1, jump & 0xff)
@@ -290,11 +288,9 @@ module Rblox
 
         offset = @chunk[:count] - loop_start + 2
 
-        # TODO: Verify that the jump offset isn't too far to store in 2 bytes
-        # (only a TODO because I have to get a token here to emit a compiler error...)
-        # if offset > 0xffff
-        #   @error_handler.compile_error(token, "Loop body too large.")
-        # end
+        if offset > 0xffff
+          @error_handler.tokenless_compile_error(line, "Loop body too large.")
+        end
 
         emit_byte((offset >> 8) & 0xff, line)
         emit_byte(offset & 0xff, line)

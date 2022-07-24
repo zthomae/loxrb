@@ -63,6 +63,11 @@ module Rblox
         @had_error = true
       end
 
+      def tokenless_compile_error(line, message)
+        warn("[line #{line}] Error: #{message}")
+        @had_error = true
+      end
+
       def had_error?
         !!@had_error
       end
