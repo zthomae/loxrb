@@ -98,7 +98,7 @@ module Rblox
       end
 
       def visit_while_stmt(stmt)
-        loop_start = @chunk[:count]
+        loop_start = current_chunk[:count]
         stmt.condition.accept(self)
         exit_jump = emit_jump(:jump_if_false, stmt.condition.bounding_lines.last)
         emit_byte(:pop, stmt.condition.bounding_lines.last)
@@ -268,25 +268,25 @@ module Rblox
         emit_byte(instruction, line)
         emit_byte(0xff, line)
         emit_byte(0xff, line)
-        @chunk[:count] - 2
+        current_chunk[:count] - 2
       end
 
       def patch_jump(offset, line)
         # -2 to adjust for the bytecode for the jump offset itself.
-        jump = @chunk[:count] - offset - 2
+        jump = current_chunk[:count] - offset - 2
 
         if jump > 0xffff
           @error_handler.tokenless_compile_error(line, "Too much code to jump over.")
         end
 
-        @chunk.patch_contents_at(offset, (jump >> 8) & 0xff)
-        @chunk.patch_contents_at(offset + 1, jump & 0xff)
+        current_chunk.patch_contents_at(offset, (jump >> 8) & 0xff)
+        current_chunk.patch_contents_at(offset + 1, jump & 0xff)
       end
 
       def emit_loop(loop_start, line)
         emit_byte(:loop, line)
 
-        offset = @chunk[:count] - loop_start + 2
+        offset = current_chunk[:count] - loop_start + 2
 
         if offset > 0xffff
           @error_handler.tokenless_compile_error(line, "Loop body too large.")
