@@ -24,6 +24,10 @@ module Rblox
     class Obj < FFI::Struct
       layout :type, ObjType, :next, Obj.ptr
 
+      def as_function
+        ObjFunction.new(self.to_ptr)
+      end
+
       def as_string
         ObjString.new(self.to_ptr)
       end
@@ -157,6 +161,12 @@ module Rblox
 
     attach_function :chunk_add_number, :Chunk_add_number, [Chunk.ptr, :double], :int
     attach_function :chunk_add_object, :Chunk_add_object, [Chunk.ptr, :pointer], :int
+
+    ### FUNCTIONS ###
+
+    class ObjFunction < FFI::Struct
+      layout :obj, Obj, :arity, :int, :chunk, Chunk, :name, ObjString.ptr
+    end
 
     ### VM ###
 

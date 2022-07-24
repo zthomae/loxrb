@@ -55,6 +55,13 @@ void Memory_free_objects(VM* vm) {
 
 static void memory_free_object(Obj* object) {
   switch (object->type) {
+    case OBJ_FUNCTION: {
+      ObjFunction* function = (ObjFunction*)object;
+      Chunk_free(&function->chunk);
+      Memory_free(function, sizeof(ObjFunction));
+      // function name is an ObjString, so we leave it for the garbage collector
+      break;
+    }
     case OBJ_STRING: {
       ObjString* string = (ObjString*)object;
       Memory_free_array(string->chars, sizeof(char), string->length + 1);

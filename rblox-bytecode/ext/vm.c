@@ -18,6 +18,7 @@ static void vm_runtime_error(VM* vm, const char* format, ...);
 static void vm_concatenate(VM* vm);
 static ObjString* vm_allocate_string(VM* vm, char* chars, int length, uint32_t hash);
 static ObjString* vm_allocate_new_string(VM* vm);
+static ObjFunction* vm_allocate_new_function(VM* vm);
 static uint32_t vm_hash_string(char* chars, int length);
 
 void VM_init(VM* vm) {
@@ -73,6 +74,14 @@ ObjString* VM_take_string(VM* vm, char* chars, int length) {
   }
 
   return vm_allocate_string(vm, chars, length, hash);
+}
+
+ObjFunction* VM_new_function(VM* vm) {
+  ObjFunction* function = vm_allocate_new_function(vm);
+  function->arity = 0;
+  function->name = NULL;
+  Chunk_init(&function->chunk);
+  return function;
 }
 
 void VM_free(VM* vm) {
@@ -340,4 +349,8 @@ static uint32_t vm_hash_string(char* key, int length) {
     hash *= 16777619;
   }
   return hash;
+}
+
+static ObjFunction* vm_allocate_new_function(VM* vm) {
+  return (ObjFunction*)vm_allocate_new(vm, sizeof(ObjFunction), OBJ_FUNCTION);
 }
