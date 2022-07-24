@@ -6,19 +6,19 @@ module Rblox
         @disassembler = disassembler
       end
 
-      def interpret(chunk)
+      def interpret(function)
         interpret_result = nil
 
         if debug_mode?
-          Rblox::Bytecode.vm_init_chunk(@vm, chunk)
+          Rblox::Bytecode.vm_init_function(@vm, function)
           loop do
-            @disassembler.disassemble_instruction(chunk, @vm.current_offset)
+            @disassembler.disassemble_instruction(function[:chunk], @vm.current_offset)
             interpret_result = Rblox::Bytecode.vm_interpret_next_instruction(@vm)
             pp @vm.stack_contents
             break if interpret_result != :incomplete
           end
         else
-          interpret_result = Rblox::Bytecode.vm_interpret(@vm, chunk)
+          interpret_result = Rblox::Bytecode.vm_interpret(@vm, function)
         end
 
         interpret_result

@@ -170,12 +170,16 @@ module Rblox
 
     ### VM ###
 
+    class CallFrame < FFI::Struct
+      layout :function, ObjFunction.ptr, :ip, :pointer, :slots, Value.ptr
+    end
+
     InterpretResult = enum :interpret_result, [:incomplete, :ok, :compile_error, :runtime_error]
 
     class VM < FFI::Struct
-      layout :chunk, Chunk.ptr,
-        :ip, :pointer,
-        :stack, [Value, 256],
+      layout :frames, [CallFrame, 64],
+        :frame_count, :int,
+        :stack, [Value, 64 * 256],
         :stack_top, Value.ptr,
         :globals, Table,
         :strings, Table,
@@ -204,8 +208,16 @@ module Rblox
         end
       end
 
+      def current_frame
+        self[:frames][self[:frame_count] - 1]
+      end
+
+      def current_function
+        current_frame[:function]
+      end
+
       def current_offset
-        self[:ip].to_i - self[:chunk][:code].to_i
+        current_frame[:ip].to_i - current_function[:chunk][:code].to_i
       end
 
       def stack_contents
@@ -217,8 +229,8 @@ module Rblox
     end
 
     attach_function :vm_init, :VM_init, [VM.ptr], :void
-    attach_function :vm_init_chunk, :VM_init_chunk, [VM.ptr, Chunk.ptr], :void
-    attach_function :vm_interpret, :VM_interpret, [VM.ptr, Chunk.ptr], InterpretResult
+    attach_function :vm_init_function, :VM_init_function, [VM.ptr, ObjFunction.ptr], :void
+    attach_function :vm_interpret, :VM_interpret, [VM.ptr, ObjFunction.ptr], InterpretResult
     attach_function :vm_interpret_next_instruction, :VM_interpret_next_instruction, [VM.ptr], InterpretResult
     attach_function :vm_copy_string, :VM_copy_string, [VM.ptr, :pointer, :int], ObjString.ptr
     attach_function :vm_new_function, :VM_new_function, [VM.ptr], ObjFunction.ptr

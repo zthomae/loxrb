@@ -9,6 +9,7 @@
 #include "value.h"
 #include "vm.h"
 
+static CallFrame* vm_current_frame(VM* vm);
 static void vm_reset_stack(VM* vm);
 static InterpretResult vm_run(VM* vm);
 static inline InterpretResult vm_run_instruction(VM* vm);
@@ -28,13 +29,14 @@ void VM_init(VM* vm) {
   Table_init(&vm->strings);
 }
 
-void VM_init_chunk(VM* vm, Chunk* chunk) {
-  vm->chunk = chunk;
-  vm->ip = vm->chunk->code;
+void VM_init_function(VM* vm, ObjFunction* function) {
+  CallFrame* new_frame = &vm->frames[vm->frame_count++];
+  new_frame->function = function;
+  new_frame->ip = function->chunk.code;
 }
 
-InterpretResult VM_interpret(VM* vm, Chunk* chunk) {
-  VM_init_chunk(vm, chunk);
+InterpretResult VM_interpret(VM* vm, ObjFunction* function) {
+  VM_init_function(vm, function);
   return vm_run(vm);
 }
 
@@ -90,32 +92,38 @@ void VM_free(VM* vm) {
   Memory_free_objects(vm);
 }
 
+static CallFrame* vm_current_frame(VM* vm) {
+  return &vm->frames[vm->frame_count - 1];
+}
+
 static void vm_reset_stack(VM* vm) {
   vm->stack_top = vm->stack;
+  vm->frame_count = 0;
 }
 
-static inline uint8_t vm_read_byte(VM* vm) {
-  return *vm->ip++;
+static inline uint8_t vm_read_byte(CallFrame* call_frame) {
+  return *call_frame->ip++;
 }
 
-static inline uint16_t vm_read_short(VM* vm) {
-  vm->ip += 2;
-  return (uint16_t)((vm->ip[-2] << 8) | vm->ip[-1]);
+static inline uint16_t vm_read_short(CallFrame* call_frame) {
+  call_frame->ip += 2;
+  return (uint16_t)((call_frame->ip[-2] << 8) | call_frame->ip[-1]);
 }
 
-static inline Value vm_read_constant(VM* vm) {
-  return vm->chunk->constants.values[vm_read_byte(vm)];
+static inline Value vm_read_constant(CallFrame* call_frame) {
+  return call_frame->function->chunk.constants.values[vm_read_byte(call_frame)];
 }
 
-static inline ObjString* vm_read_string(VM* vm) {
-  return Object_as_string(vm_read_constant(vm));
+static inline ObjString* vm_read_string(CallFrame* call_frame) {
+  return Object_as_string(vm_read_constant(call_frame));
 }
 
 static inline InterpretResult vm_run_instruction(VM* vm) {
+  CallFrame* call_frame = vm_current_frame(vm);
   uint8_t instruction;
-  switch (instruction = vm_read_byte(vm)) {
+  switch (instruction = vm_read_byte(call_frame)) {
     case OP_CONSTANT: {
-      Value constant = vm_read_constant(vm);
+      Value constant = vm_read_constant(call_frame);
       VM_push(vm, constant);
       break;
     }
@@ -132,17 +140,17 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       VM_pop(vm);
       break;
     case OP_GET_LOCAL: {
-      uint8_t slot = vm_read_byte(vm);
+      uint8_t slot = vm_read_byte(call_frame);
       VM_push(vm, vm->stack[slot]);
       break;
     }
     case OP_SET_LOCAL: {
-      uint8_t slot = vm_read_byte(vm);
+      uint8_t slot = vm_read_byte(call_frame);
       vm->stack[slot] = vm_stack_peek(vm, 0);
       break;
     }
     case OP_GET_GLOBAL: {
-      ObjString* name = vm_read_string(vm);
+      ObjString* name = vm_read_string(call_frame);
       Value value;
       if (!Table_get(&vm->globals, name, &value)) {
         vm_runtime_error(vm, "Undefined variable '%s'.", name->chars);
@@ -152,13 +160,13 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       break;
     }
     case OP_DEFINE_GLOBAL: {
-      ObjString* name = vm_read_string(vm);
+      ObjString* name = vm_read_string(call_frame);
       Table_set(&vm->globals, name, vm_stack_peek(vm, 0));
       VM_pop(vm);
       break;
     }
     case OP_SET_GLOBAL: {
-      ObjString* name = vm_read_string(vm);
+      ObjString* name = vm_read_string(call_frame);
       if (Table_set(&vm->globals, name, vm_stack_peek(vm, 0))) {
         Table_delete(&vm->globals, name);
         vm_runtime_error(vm, "Undefined variable '%s'.", name->chars);
@@ -251,20 +259,20 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       break;
     }
     case OP_JUMP: {
-      uint16_t offset = vm_read_short(vm);
-      vm->ip += offset;
+      uint16_t offset = vm_read_short(call_frame);
+      call_frame->ip += offset;
       break;
     }
     case OP_JUMP_IF_FALSE: {
-      uint16_t offset = vm_read_short(vm);
+      uint16_t offset = vm_read_short(call_frame);
       if (vm_is_falsey(vm_stack_peek(vm, 0))) {
-        vm->ip += offset;
+        call_frame->ip += offset;
       }
       break;
     }
     case OP_LOOP: {
-      uint16_t offset = vm_read_short(vm);
-      vm->ip -= offset;
+      uint16_t offset = vm_read_short(call_frame);
+      call_frame->ip -= offset;
       break;
     }
     case OP_RETURN:
@@ -299,8 +307,11 @@ static void vm_runtime_error(VM* vm, const char* format, ...) {
   va_end(args);
   fputs("\n", stderr);
 
-  size_t instruction = vm->ip - vm->chunk->code - 1;
-  int line = vm->chunk->lines[instruction];
+  CallFrame* call_frame = vm_current_frame(vm);
+  Chunk chunk = call_frame->function->chunk;
+
+  size_t instruction = call_frame->ip - chunk.code - 1;
+  int line = chunk.lines[instruction];
   fprintf(stderr, "[line %d] in script\n", line);
   vm_reset_stack(vm);
 }

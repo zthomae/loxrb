@@ -6,11 +6,18 @@
 #include "table.h"
 #include "value.h"
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * 256)
 
 typedef struct {
-  Chunk* chunk;
+  ObjFunction* function;
   uint8_t* ip;
+  Value* slots;
+} CallFrame;
+
+typedef struct {
+  CallFrame frames[FRAMES_MAX];
+  int frame_count;
   Value stack[STACK_MAX];
   Value* stack_top;
   Table globals;
@@ -26,8 +33,8 @@ typedef enum {
 } InterpretResult;
 
 void VM_init(VM* vm);
-void VM_init_chunk(VM* vm, Chunk* chunk);
-InterpretResult VM_interpret(VM* vm, Chunk* chunk);
+void VM_init_function(VM* vm, ObjFunction* function);
+InterpretResult VM_interpret(VM* vm, ObjFunction* function);
 InterpretResult VM_interpret_next_instruction(VM* vm);
 void VM_push(VM* vm, Value value);
 Value VM_pop(VM* vm);

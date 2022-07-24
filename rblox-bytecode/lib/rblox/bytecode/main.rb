@@ -33,7 +33,7 @@ module Rblox
           end
 
           interpreter = Interpreter.new(@vm, disassembler: disassembler)
-          interpret_result = interpreter.interpret(function[:chunk])
+          interpret_result = interpreter.interpret(function)
           if interpret_result != :ok
             @had_runtime_error = true
           end
