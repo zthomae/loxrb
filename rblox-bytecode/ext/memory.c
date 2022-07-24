@@ -5,8 +5,6 @@
 #include "object.h"
 #include "vm.h"
 
-static void memory_free_object(Obj* objecct);
-
 void *Memory_reallocate(void *array, size_t old_size, size_t new_size) {
   if (new_size == 0) {
     free(array);
@@ -48,12 +46,12 @@ void Memory_free_objects(VM* vm) {
   Obj* object = vm->objects;
   while (object != NULL) {
     Obj* next = object->next;
-    memory_free_object(object);
+    Memory_free_object(object);
     object = next;
   }
 }
 
-static void memory_free_object(Obj* object) {
+void Memory_free_object(Obj* object) {
   switch (object->type) {
     case OBJ_FUNCTION: {
       ObjFunction* function = (ObjFunction*)object;

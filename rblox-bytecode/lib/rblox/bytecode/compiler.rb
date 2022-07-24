@@ -3,9 +3,15 @@ module Rblox
     class Compiler
       Local = Struct.new(:name, :depth)
 
-      def initialize(vm, chunk, error_handler)
+      module FunctionType
+        FUNCTION = :FUNCTION
+        SCRIPT = :SCRIPT
+      end
+
+      def initialize(vm, function, function_type, error_handler)
         @vm = vm
-        @chunk = chunk
+        @function = function
+        @function_type = function_type
         @error_handler = error_handler
         @locals = []
         @scope_depth = 0
@@ -215,7 +221,7 @@ module Rblox
       private
 
       def current_chunk
-        @chunk
+        @function[:chunk]
       end
 
       def add_statement_to_chunk(stmt)

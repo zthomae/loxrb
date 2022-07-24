@@ -193,6 +193,17 @@ module Rblox
         end
       end
 
+      def with_new_function
+        begin
+          function = Rblox::Bytecode.vm_new_function(self)
+          yield function
+        ensure
+          if function
+            Rblox::Bytecode.memory_free_object(Rblox::Bytecode::Obj.new(function.to_ptr))
+          end
+        end
+      end
+
       def current_offset
         self[:ip].to_i - self[:chunk][:code].to_i
       end
@@ -210,6 +221,9 @@ module Rblox
     attach_function :vm_interpret, :VM_interpret, [VM.ptr, Chunk.ptr], InterpretResult
     attach_function :vm_interpret_next_instruction, :VM_interpret_next_instruction, [VM.ptr], InterpretResult
     attach_function :vm_copy_string, :VM_copy_string, [VM.ptr, :pointer, :int], ObjString.ptr
+    attach_function :vm_new_function, :VM_new_function, [VM.ptr], ObjFunction.ptr
     attach_function :vm_free, :VM_free, [VM.ptr], :void
+
+    attach_function :memory_free_object, :Memory_free_object, [Obj.ptr], :void
   end
 end

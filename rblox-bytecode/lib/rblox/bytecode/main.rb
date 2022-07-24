@@ -21,19 +21,19 @@ module Rblox
           disassembler = Rblox::Bytecode::Disassembler.new($stdout)
         end
 
-        Rblox::Bytecode::Chunk.with_new do |chunk|
-          compiler = Compiler.new(@vm, chunk, self)
+        @vm.with_new_function do |function|
+          compiler = Compiler.new(@vm, function, Compiler::FunctionType::SCRIPT, self)
           compiler.compile(statements)
 
           return if had_error?
 
           if debug_mode
-            disassembler.disassemble_chunk(chunk, "code")
+            disassembler.disassemble_chunk(function[:chunk], "code")
             puts ""
           end
 
           interpreter = Interpreter.new(@vm, disassembler: disassembler)
-          interpret_result = interpreter.interpret(chunk)
+          interpret_result = interpreter.interpret(function[:chunk])
           if interpret_result != :ok
             @had_runtime_error = true
           end
