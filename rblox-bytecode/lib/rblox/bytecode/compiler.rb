@@ -161,6 +161,23 @@ module Rblox
         end
       end
 
+      def visit_logical_expr(expr)
+        expr.left.accept(self)
+        if expr.operator.type == Rblox::Parser::TokenType::AND
+          end_jump = emit_jump(:jump_if_false, expr.operator.line)
+          emit_byte(:pop, expr.operator.line)
+          expr.right.accept(self)
+          patch_jump(end_jump)
+        else
+          else_jump = emit_jump(:jump_if_false, expr.operator.line)
+          end_jump = emit_jump(:jump, expr.operator.line)
+          patch_jump(else_jump)
+          emit_byte(:pop, expr.operator.line)
+          expr.right.accept(self)
+          patch_jump(end_jump)
+        end
+      end
+
       def visit_unary_expr(expr)
         add_expression_to_chunk(expr.right)
 
