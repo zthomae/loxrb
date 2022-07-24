@@ -33,6 +33,7 @@ void VM_init_function(VM* vm, ObjFunction* function) {
   CallFrame* new_frame = &vm->frames[vm->frame_count++];
   new_frame->function = function;
   new_frame->ip = function->chunk.code;
+  new_frame->slots = vm->stack;
 }
 
 InterpretResult VM_interpret(VM* vm, ObjFunction* function) {
@@ -141,12 +142,12 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       break;
     case OP_GET_LOCAL: {
       uint8_t slot = vm_read_byte(call_frame);
-      VM_push(vm, vm->stack[slot]);
+      VM_push(vm, call_frame->slots[slot]);
       break;
     }
     case OP_SET_LOCAL: {
       uint8_t slot = vm_read_byte(call_frame);
-      vm->stack[slot] = vm_stack_peek(vm, 0);
+      call_frame->slots[slot] = vm_stack_peek(vm, 0);
       break;
     }
     case OP_GET_GLOBAL: {

@@ -12,7 +12,7 @@
 typedef struct {
   ObjFunction* function;
   uint8_t* ip;
-  Value* slots;
+  Value* slots; // Points into the VM's stack to the first slot this function can use
 } CallFrame;
 
 typedef struct {
