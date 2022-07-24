@@ -37,13 +37,15 @@ module Rblox
       end
 
       def visit_if_stmt(stmt)
+        approximate_first_then_line = stmt.then_branch.bounding_lines.first || stmt.condition.bounding_lines.last
+        approximate_last_then_line = stmt.then_branch.bounding_lines.last || stmt.else_branch&.bounding_lines&.first || stmt.bounding_lines.last
         stmt.condition.accept(self)
-        then_jump = emit_jump(:jump_if_false, stmt.then_branch.bounding_lines.first)
-        emit_byte(:pop, stmt.then_branch.bounding_lines.last)
+        then_jump = emit_jump(:jump_if_false, approximate_first_then_line)
+        emit_byte(:pop, approximate_last_then_line)
         stmt.then_branch.accept(self)
-        else_jump = emit_jump(:jump, stmt.then_branch.bounding_lines.last)
+        else_jump = emit_jump(:jump, approximate_last_then_line)
         patch_jump(then_jump)
-        emit_byte(:pop, stmt.then_branch.bounding_lines.last)
+        emit_byte(:pop, approximate_last_then_line)
         stmt.else_branch&.accept(self)
         patch_jump(else_jump)
       end
