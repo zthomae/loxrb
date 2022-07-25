@@ -345,12 +345,25 @@ static void vm_runtime_error(VM* vm, const char* format, ...) {
   va_end(args);
   fputs("\n", stderr);
 
-  CallFrame* call_frame = vm_current_frame(vm);
-  Chunk chunk = call_frame->function->chunk;
+  // CallFrame* call_frame = vm_current_frame(vm);
+  // Chunk chunk = call_frame->function->chunk;
 
-  size_t instruction = call_frame->ip - chunk.code - 1;
-  int line = chunk.lines[instruction];
-  fprintf(stderr, "[line %d] in script\n", line);
+  // size_t instruction = call_frame->ip - chunk.code - 1;
+  // int line = chunk.lines[instruction];
+  // fprintf(stderr, "[line %d] in script\n", line);
+
+  for (int i = vm->frame_count - 1; i >= 0; i--) {
+    CallFrame* frame = &vm->frames[i];
+    ObjFunction* function = frame->function;
+    size_t instruction = frame->ip - function->chunk.code - 1;
+    fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
+    if (function->name == NULL) {
+      fprintf(stderr, "script\n");
+    } else {
+      fprintf(stderr, "%s()\n", function->name->chars);
+    }
+  }
+
   vm_reset_stack(vm);
 }
 
