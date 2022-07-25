@@ -60,6 +60,9 @@ void Memory_free_object(Obj* object) {
       // function name is an ObjString, so we leave it for the garbage collector
       break;
     }
+    case OBJ_NATIVE:
+      Memory_free(object, sizeof(ObjNative));
+      break;
     case OBJ_STRING: {
       ObjString* string = (ObjString*)object;
       Memory_free_array(string->chars, sizeof(char), string->length + 1);

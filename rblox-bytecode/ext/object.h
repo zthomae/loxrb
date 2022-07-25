@@ -7,6 +7,7 @@
 
 typedef enum {
   OBJ_FUNCTION,
+  OBJ_NATIVE,
   OBJ_STRING,
 } ObjType;
 
@@ -27,6 +28,13 @@ typedef struct {
   ObjString* name;
 } ObjFunction;
 
+typedef Value (*NativeFn)(int arg_count, Value* args);
+
+typedef struct {
+  Obj obj;
+  NativeFn function;
+} ObjNative;
+
 struct ObjString {
   Obj obj;
   int length;
@@ -46,12 +54,21 @@ inline bool Object_is_function(Value value) {
   return Object_is_type(value, OBJ_FUNCTION);
 }
 
+inline bool Object_is_native(Value value) {
+  return Object_is_type(value, OBJ_NATIVE);
+}
+
 inline bool Object_is_string(Value value) {
   return Object_is_type(value, OBJ_STRING);
 }
 
 inline ObjFunction* Object_as_function(Value value) {
   return (ObjFunction*)Value_as_obj(value);
+}
+
+inline NativeFn Object_as_native(Value value) {
+  ObjNative* native = (ObjNative*)Value_as_obj(value);
+  return native->function;
 }
 
 inline ObjString* Object_as_string(Value value) {

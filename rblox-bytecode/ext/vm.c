@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "common.h"
 #include "memory.h"
@@ -20,15 +21,23 @@ static void vm_concatenate(VM* vm);
 static ObjString* vm_allocate_string(VM* vm, char* chars, int length, uint32_t hash);
 static ObjString* vm_allocate_new_string(VM* vm);
 static ObjFunction* vm_allocate_new_function(VM* vm);
+static ObjNative* vm_allocate_new_native(VM* vm, NativeFn function);
 static uint32_t vm_hash_string(char* chars, int length);
 static bool vm_call(VM* vm, ObjFunction* function, int arg_count);
 static bool vm_call_value(VM* vm, Value callee, int arg_count);
+static void vm_define_native(VM* vm, char* name, NativeFn function);
+
+static Value vm_clock_native(int arg_count, Value* args) {
+  return Value_make_number((double)clock() / CLOCKS_PER_SEC);
+}
 
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
   vm->objects = NULL;
   Table_init(&vm->globals);
   Table_init(&vm->strings);
+
+  vm_define_native(vm, "clock", vm_clock_native);
 }
 
 void VM_init_function(VM* vm, ObjFunction* function) {
@@ -340,6 +349,13 @@ static bool vm_call_value(VM* vm, Value callee, int arg_count) {
     switch (Object_type(callee)) {
       case OBJ_FUNCTION:
         return vm_call(vm, Object_as_function(callee), arg_count);
+      case OBJ_NATIVE: {
+        NativeFn native = Object_as_native(callee);
+        Value result = native(arg_count, vm->stack_top - arg_count);
+        vm->stack_top -= arg_count + 1;
+        VM_push(vm, result);
+        return true;
+      }
       default:
         break;
     }
@@ -425,4 +441,18 @@ static uint32_t vm_hash_string(char* key, int length) {
 
 static ObjFunction* vm_allocate_new_function(VM* vm) {
   return (ObjFunction*)vm_allocate_new(vm, sizeof(ObjFunction), OBJ_FUNCTION);
+}
+
+static ObjNative* vm_allocate_new_native(VM* vm, NativeFn function) {
+  ObjNative* native = (ObjNative*)vm_allocate_new(vm, sizeof(ObjNative), OBJ_NATIVE);
+  native->function = function;
+  return native;
+}
+
+static void vm_define_native(VM* vm, char* name, NativeFn function) {
+  VM_push(vm, Value_make_obj((Obj*)VM_copy_string(vm, name, (int)strlen(name))));
+  VM_push(vm, Value_make_obj((Obj*)vm_allocate_new_native(vm, function)));
+  Table_set(&vm->globals, Object_as_string(vm_stack_peek(vm, 1)), vm_stack_peek(vm, 0));
+  VM_pop(vm);
+  VM_pop(vm);
 }

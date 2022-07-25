@@ -19,7 +19,7 @@ module Rblox
 
     ValueType = enum :value_type, [:bool, :nil, :number, :obj]
 
-    ObjType = enum :obj_type, [:function, :string]
+    ObjType = enum :obj_type, [:function, :native, :string]
 
     class Obj < FFI::Struct
       layout :type, ObjType, :next, Obj.ptr
@@ -36,6 +36,8 @@ module Rblox
         case self[:type]
         when :function
           "<fn #{self.as_function[:name][:chars]}>"
+        when :native
+          "<native fn>"
         when :string
           self.as_string[:chars]
         else

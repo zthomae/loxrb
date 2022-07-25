@@ -10,6 +10,9 @@ void Object_print(Value value) {
     case OBJ_FUNCTION:
       object_print_function(Object_as_function(value));
       break;
+    case OBJ_NATIVE:
+      printf("<native fn>");
+      break;
     case OBJ_STRING:
       printf("%s", Object_as_cstring(value));
       break;
