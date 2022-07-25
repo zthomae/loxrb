@@ -77,6 +77,19 @@ module Rblox
         emit_byte(:print, stmt.bounding_lines.first)
       end
 
+      def visit_return_stmt(stmt)
+        if @function_type == FunctionType::SCRIPT
+          @error_handler.compile_error(stmt.keyword, "Can't return from top-level code.")
+        end
+
+        if stmt.value.nil?
+          emit_return(stmt.keyword.line)
+        else
+          stmt.value.accept(self)
+          emit_byte(:return, stmt.bounding_lines.last)
+        end
+      end
+
       def visit_var_stmt(stmt)
         if global_scope?
           global = declare_global(stmt.name)
@@ -380,6 +393,8 @@ module Rblox
       end
 
       def emit_return(line)
+        # TODO: return a value
+        emit_byte(:nil, line)
         emit_byte(:return, line)
       end
     end

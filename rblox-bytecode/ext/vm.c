@@ -282,8 +282,18 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       }
       break;
     }
-    case OP_RETURN:
-      return INTERPRET_OK;
+    case OP_RETURN: {
+      Value result = VM_pop(vm);
+      vm->frame_count--;
+      if (vm->frame_count == 0) {
+        //VM_pop(vm);
+        return INTERPRET_OK;
+      }
+
+      vm->stack_top = call_frame->slots;
+      VM_push(vm, result);
+      break;
+    }
     default:
       return INTERPRET_RUNTIME_ERROR;
   }
