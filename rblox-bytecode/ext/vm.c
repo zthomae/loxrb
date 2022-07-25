@@ -21,6 +21,8 @@ static ObjString* vm_allocate_string(VM* vm, char* chars, int length, uint32_t h
 static ObjString* vm_allocate_new_string(VM* vm);
 static ObjFunction* vm_allocate_new_function(VM* vm);
 static uint32_t vm_hash_string(char* chars, int length);
+static bool vm_call(VM* vm, ObjFunction* function, int arg_count);
+static bool vm_call_value(VM* vm, Value callee, int arg_count);
 
 void VM_init(VM* vm) {
   vm_reset_stack(vm);
@@ -30,10 +32,7 @@ void VM_init(VM* vm) {
 }
 
 void VM_init_function(VM* vm, ObjFunction* function) {
-  CallFrame* new_frame = &vm->frames[vm->frame_count++];
-  new_frame->function = function;
-  new_frame->ip = function->chunk.code;
-  new_frame->slots = vm->stack;
+  vm_call(vm, function, 0);
 }
 
 InterpretResult VM_interpret(VM* vm, ObjFunction* function) {
@@ -276,6 +275,13 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       call_frame->ip -= offset;
       break;
     }
+    case OP_CALL: {
+      int arg_count = vm_read_byte(call_frame);
+      if (!vm_call_value(vm, vm_stack_peek(vm, arg_count), arg_count)) {
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      break;
+    }
     case OP_RETURN:
       return INTERPRET_OK;
     default:
@@ -299,6 +305,37 @@ static Value vm_stack_peek(VM* vm, int distance) {
 
 static bool vm_is_falsey(Value value) {
   return Value_is_nil(value) || (Value_is_boolean(value) && !Value_as_boolean(value));
+}
+
+static bool vm_call(VM* vm, ObjFunction* function, int arg_count) {
+  if (arg_count != function->arity) {
+    vm_runtime_error(vm, "Expected %d arguments but got %d.", function->arity, arg_count);
+    return false;
+  }
+
+  if (vm->frame_count == FRAMES_MAX) {
+    vm_runtime_error(vm, "Stack overflow.");
+    return false;
+  }
+
+  CallFrame* frame = &vm->frames[vm->frame_count++];
+  frame->function = function;
+  frame->ip = function->chunk.code;
+  frame->slots = vm->stack_top - arg_count; // The book subtracts one more here...
+  return true;
+}
+
+static bool vm_call_value(VM* vm, Value callee, int arg_count) {
+  if (Value_is_obj(callee)) {
+    switch (Object_type(callee)) {
+      case OBJ_FUNCTION:
+        return vm_call(vm, Object_as_function(callee), arg_count);
+      default:
+        break;
+    }
+  }
+  vm_runtime_error(vm, "Can only call functions and classes.");
+  return false;
 }
 
 static void vm_runtime_error(VM* vm, const char* format, ...) {

@@ -143,6 +143,19 @@ module Rblox
         end
       end
 
+      def visit_call_expr(expr)
+        expr.callee.accept(self)
+        arg_count = 0
+        expr.arguments.each do |argument|
+          argument.accept(self)
+          if arg_count == 255
+            @error_handler.compile_error(argument, "Can't have more than 255 arguments.")
+          end
+          arg_count += 1
+        end
+        emit_bytes(:call, arg_count, expr.bounding_lines.first)
+      end
+
       def visit_grouping_expr(expr)
         add_expression_to_chunk(expr.expression)
       end

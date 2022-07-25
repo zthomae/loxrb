@@ -125,6 +125,7 @@ module Rblox
       :jump,
       :jump_if_false,
       :loop,
+      :call,
       :return
     ]
 

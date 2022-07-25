@@ -77,6 +77,8 @@ module Rblox
           jump_instruction("OP_JUMP_IF_FALSE", 1, chunk, offset)
         when Opcode[:loop]
           jump_instruction("OP_LOOP", -1, chunk, offset)
+        when Opcode[:call]
+          byte_instruction("OP_CALL", chunk, offset)
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else
