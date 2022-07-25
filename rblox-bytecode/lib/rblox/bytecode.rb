@@ -31,6 +31,17 @@ module Rblox
       def as_string
         ObjString.new(self.to_ptr)
       end
+
+      def print
+        case self[:type]
+        when :function
+          "<fn #{self.as_function[:name][:chars]}>"
+        when :string
+          self.as_string[:chars]
+        else
+          raise "Unsupported object type #{self[:type]}"
+        end
+      end
     end
 
     class ValueU < FFI::Union
@@ -49,15 +60,7 @@ module Rblox
         when :number
           self[:as][:number]
         when :obj
-          obj = self[:as][:obj]
-          case obj[:type]
-          when :function
-            "<fn #{obj.as_function[:name][:chars]}>"
-          when :string
-            obj.as_string[:chars]
-          else
-            raise "Unsupported object type #{obj[:type]}"
-          end
+          self[:as][:obj].print
         else
           raise "Unsupported value type #{self[:type]}"
         end

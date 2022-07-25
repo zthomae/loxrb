@@ -96,12 +96,7 @@ module Rblox
         when Float
           io.puts "%-16s %4d '%g'" % [name, constant_index, constant]
         when Rblox::Bytecode::Obj
-          case constant[:type]
-          when :string
-            io.puts "%-16s %4d '%s'" % [name, constant_index, constant.as_string[:chars]]
-          else
-            io.puts "%-16s %4d '%s'" % [name, constant_index, "Unsupported type: #{constant[:type]}"]
-          end
+          io.puts "%-16s %4d '%s'" % [name, constant_index, constant.print]
         end
 
         offset + 2

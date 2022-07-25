@@ -8,13 +8,13 @@ module Rblox
         SCRIPT = :SCRIPT
       end
 
-      def initialize(vm, function, function_type, error_handler)
+      def initialize(vm, function, function_type, error_handler, scope_depth = 0)
         @vm = vm
         @function = function
         @function_type = function_type
         @error_handler = error_handler
         @locals = [Local.new("", 0)]
-        @scope_depth = 0
+        @scope_depth = scope_depth
       end
 
       def compile(statements)
@@ -24,14 +24,16 @@ module Rblox
 
         # Since this is synthetic, we make it appear as if it comes from the previous line
         emit_return(statements.last&.bounding_lines&.last || 0)
+
+        @function
       end
 
       def visit_block_stmt(stmt)
-        @scope_depth += 1
+        begin_scope
         stmt.statements.each do |statement|
           statement.accept(self)
         end
-        @scope_depth -= 1
+        end_scope
         locals_to_remove, locals_to_keep = @locals.partition { |local| local.depth > @scope_depth }
         locals_to_remove.each { |local| emit_byte(:pop, stmt.bounding_lines.last) }
         @locals = locals_to_keep
@@ -40,6 +42,20 @@ module Rblox
       def visit_expression_stmt(stmt)
         stmt.expression.accept(self)
         emit_byte(:pop, stmt.bounding_lines.last)
+      end
+
+      def visit_function_stmt(stmt)
+        if global_scope?
+          global = declare_global(stmt.name)
+          compile_function(stmt, FunctionType::FUNCTION)
+          # Using the last bounding line to match what was just emitted
+          define_global(global, stmt.bounding_lines.last)
+        else
+          declare_local(stmt.name)
+          # Mark functions as initialized immediately
+          mark_new_local_initialized
+          compile_function(stmt, FunctionType::FUNCTION)
+        end
       end
 
       def visit_if_stmt(stmt)
@@ -70,7 +86,7 @@ module Rblox
         else
           declare_local(stmt.name)
           emit_var_initializer(stmt)
-          mark_initialized(@locals[-1])
+          mark_new_local_initialized
         end
       end
 
@@ -189,34 +205,6 @@ module Rblox
         end
       end
 
-      private
-
-      def current_chunk
-        @function[:chunk]
-      end
-
-      def add_statement_to_chunk(stmt)
-        stmt.accept(self)
-      end
-
-      def add_expression_to_chunk(expr)
-        expr.accept(self)
-      end
-
-      def global_scope?
-        @scope_depth == 0
-      end
-
-      def declare_global(name)
-        # Now that's what I call dynamic typing
-        emit_string_literal(name, name.lexeme, name.line)
-      end
-
-      def define_global(global, line)
-        emit_bytes(:define_global, global, line)
-        emit_byte(:pop, line)
-      end
-
       def declare_local(name)
         if @locals.size > 255
           @error_handler.compile_error(name, "Too many local variables in function.")
@@ -234,6 +222,46 @@ module Rblox
         end
 
         @locals << Local.new(name.lexeme, -1)
+      end
+
+      def mark_new_local_initialized
+        mark_initialized(@locals[-1])
+      end
+
+      private
+
+      def current_chunk
+        @function[:chunk]
+      end
+
+      def add_statement_to_chunk(stmt)
+        stmt.accept(self)
+      end
+
+      def add_expression_to_chunk(expr)
+        expr.accept(self)
+      end
+
+      def begin_scope
+        @scope_depth += 1
+      end
+
+      def end_scope
+        @scope_depth -= 1
+      end
+
+      def global_scope?
+        @scope_depth == 0
+      end
+
+      def declare_global(name)
+        # Now that's what I call dynamic typing
+        emit_string_literal(name, name.lexeme, name.line)
+      end
+
+      def define_global(global, line)
+        emit_bytes(:define_global, global, line)
+        emit_byte(:pop, line)
       end
 
       def resolve_local(token, name)
@@ -260,7 +288,27 @@ module Rblox
       end
 
       def mark_initialized(local)
+        if global_scope?
+          raise "Programmer error: mark_initialized called in global scope"
+        end
+
         local.depth = @scope_depth
+      end
+
+      def compile_function(stmt, function_type)
+        function = Rblox::Bytecode.vm_new_function(@vm)
+        function[:name] = Rblox::Bytecode.vm_copy_string(@vm, stmt.name.lexeme, stmt.name.lexeme.bytesize)
+        compiler = Compiler.new(@vm, function, function_type, @error_handler, @scope_depth + 1)
+        stmt.params.each do |param|
+          function[:arity] += 1
+          if function[:arity] > 255
+            @error_handler.compile_error(param, "Can't have more than 255 parameters.")
+          end
+          compiler.declare_local(param)
+          compiler.mark_new_local_initialized
+        end
+        function = compiler.compile(stmt.body)
+        emit_constant(:object, stmt.name, function, stmt.name.line)
       end
 
       def emit_byte(byte, line)
