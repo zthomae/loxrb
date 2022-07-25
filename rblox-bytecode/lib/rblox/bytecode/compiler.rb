@@ -63,43 +63,14 @@ module Rblox
 
       def visit_var_stmt(stmt)
         if @scope_depth == 0
-          # Now that's what I call dynamic typing
-          global = emit_string_literal(stmt.name, stmt.name.lexeme, stmt.name.line)
-
-          if stmt.initializer.nil?
-            emit_byte(:nil, stmt.bounding_lines.first)
-          else
-            stmt.initializer.accept(self)
-          end
-
+          global = declare_global(stmt.name)
+          emit_var_initializer(stmt)
           # Using the last bounding line to match what was just emitted
-          emit_bytes(:define_global, global, stmt.bounding_lines.last)
-          emit_byte(:pop, stmt.bounding_lines.last)
+          define_global(global, stmt.bounding_lines.last)
         else
-          if @locals.size > 255
-            @error_handler.compile_error(stmt.name, "Too many local variables in function.")
-            return
-          end
-
-          @locals.reverse.each do |local|
-            if local.depth != -1 && local.depth < @scope_depth
-              break
-            end
-
-            if local.name == stmt.name.lexeme
-              @error_handler.compile_error(stmt.name, "Already a variable with this name in this scope.")
-            end
-          end
-
-          @locals << Local.new(stmt.name.lexeme, -1)
-
-          if stmt.initializer.nil?
-            emit_byte(:nil, stmt.bounding_lines.first)
-          else
-            stmt.initializer.accept(self)
-          end
-
-          @locals[-1].depth = @scope_depth
+          declare_local(stmt.name)
+          emit_var_initializer(stmt)
+          mark_initialized(@locals[-1])
         end
       end
 
@@ -232,6 +203,35 @@ module Rblox
         expr.accept(self)
       end
 
+      def declare_global(name)
+        # Now that's what I call dynamic typing
+        emit_string_literal(name, name.lexeme, name.line)
+      end
+
+      def define_global(global, line)
+        emit_bytes(:define_global, global, line)
+        emit_byte(:pop, line)
+      end
+
+      def declare_local(name)
+        if @locals.size > 255
+          @error_handler.compile_error(name, "Too many local variables in function.")
+          return
+        end
+
+        @locals.reverse.each do |local|
+          if local.depth != -1 && local.depth < @scope_depth
+            break
+          end
+
+          if local.name == name.lexeme
+            @error_handler.compile_error(name, "Already a variable with this name in this scope.")
+          end
+        end
+
+        @locals << Local.new(name.lexeme, -1)
+      end
+
       def resolve_local(token, name)
         (@locals.length - 1).downto(0).each do |i|
           local = @locals[i]
@@ -245,6 +245,18 @@ module Rblox
         end
 
         -1
+      end
+
+      def emit_var_initializer(stmt)
+        if stmt.initializer.nil?
+          emit_byte(:nil, stmt.bounding_lines.first)
+        else
+          stmt.initializer.accept(self)
+        end
+      end
+
+      def mark_initialized(local)
+        local.depth = @scope_depth
       end
 
       def emit_byte(byte, line)
