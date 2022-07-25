@@ -62,7 +62,7 @@ module Rblox
       end
 
       def visit_var_stmt(stmt)
-        if @scope_depth == 0
+        if global_scope?
           global = declare_global(stmt.name)
           emit_var_initializer(stmt)
           # Using the last bounding line to match what was just emitted
@@ -201,6 +201,10 @@ module Rblox
 
       def add_expression_to_chunk(expr)
         expr.accept(self)
+      end
+
+      def global_scope?
+        @scope_depth == 0
       end
 
       def declare_global(name)
