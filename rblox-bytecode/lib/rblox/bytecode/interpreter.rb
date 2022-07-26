@@ -12,7 +12,8 @@ module Rblox
         if debug_mode?
           Rblox::Bytecode.vm_init_function(@vm, function)
           loop do
-            @disassembler.disassemble_instruction(function[:chunk], @vm.current_offset)
+            current_function = @vm.current_frame[:function]
+            @disassembler.disassemble_instruction(current_function[:chunk], @vm.current_offset)
             interpret_result = Rblox::Bytecode.vm_interpret_next_instruction(@vm)
             pp @vm.stack_contents
             break if interpret_result != :incomplete
