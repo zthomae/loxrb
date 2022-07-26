@@ -38,4 +38,10 @@ RSpec.describe Rblox::Bytecode do
   it "executes a logical and arithmetic expression with Main in" do
     subject.run("!(5 - 4 > 3 * 2 == !nil);", debug_mode: false)
   end
+
+  it "repeatedly runs no-ops" do
+    10.times do
+      expect { subject.run("") }.not_to raise_error
+    end
+  end
 end
