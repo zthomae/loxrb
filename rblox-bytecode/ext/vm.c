@@ -300,7 +300,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         return INTERPRET_OK;
       }
 
-      vm->stack_top = call_frame->slots;
+      vm->stack_top = call_frame->slots - 1;
       VM_push(vm, result);
       break;
     }
