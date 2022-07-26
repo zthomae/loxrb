@@ -41,6 +41,7 @@ void VM_init(VM* vm) {
 }
 
 void VM_init_function(VM* vm, ObjFunction* function) {
+  VM_push(vm, Value_make_obj((Obj*)function));
   vm_call(vm, function, 0);
 }
 
@@ -295,7 +296,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       Value result = VM_pop(vm);
       vm->frame_count--;
       if (vm->frame_count == 0) {
-        //VM_pop(vm);
+        VM_pop(vm);
         return INTERPRET_OK;
       }
 
