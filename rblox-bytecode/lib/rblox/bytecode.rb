@@ -35,7 +35,12 @@ module Rblox
       def print
         case self[:type]
         when :function
-          "<fn #{self.as_function[:name][:chars]}>"
+          function_name = self.as_function[:name][:chars]
+          if function_name
+            "<fn #{function_name}>"
+          else
+            "<script>"
+          end
         when :native
           "<native fn>"
         when :string
