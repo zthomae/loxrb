@@ -347,11 +347,16 @@ module Rblox
       end
 
       def emit_constant(type, token, value, line)
+        make_constant(type, token, value).tap do |constant|
+          emit_bytes(:constant, constant, line)
+        end
+      end
+
+      def make_constant(type, token, value)
         constant = Rblox::Bytecode.public_send("chunk_add_#{type}", current_chunk, value)
         if constant > 255
           @error_handler.compile_error(token, "Too many constants in one chunk.")
         end
-        emit_bytes(:constant, constant, line)
         constant
       end
 
