@@ -10,7 +10,7 @@
 #define STACK_MAX (FRAMES_MAX * 256)
 
 typedef struct {
-  ObjFunction* function;
+  ObjClosure* closure;
   uint8_t* ip;
   Value* slots; // Points into the VM's stack to the first slot this function can use
 } CallFrame;

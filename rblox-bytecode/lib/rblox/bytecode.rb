@@ -19,10 +19,14 @@ module Rblox
 
     ValueType = enum :value_type, [:bool, :nil, :number, :obj]
 
-    ObjType = enum :obj_type, [:function, :native, :string]
+    ObjType = enum :obj_type, [:closure, :function, :native, :string]
 
     class Obj < FFI::Struct
       layout :type, ObjType, :next, Obj.ptr
+
+      def as_closure
+        ObjClosure.new(self.to_ptr)
+      end
 
       def as_function
         ObjFunction.new(self.to_ptr)
@@ -34,8 +38,8 @@ module Rblox
 
       def print
         case self[:type]
-        when :function
-          function_name = self.as_function[:name][:chars]
+        when :closure
+          function_name = self.as_closure[:function][:name][:chars]
           if function_name
             "<fn #{function_name}>"
           else
@@ -78,15 +82,7 @@ module Rblox
       layout :capacity, :int, :count, :int, :values, :pointer
 
       def constant_at(offset)
-        value = Value.new(self[:values] + (offset * Value.size))
-        case value[:type]
-        when :number
-          value[:as][:number]
-        when :obj
-          value[:as][:obj]
-        else
-          raise "Unsupported value type #{value[:type]}"
-        end
+        Value.new(self[:values] + (offset * Value.size))
       end
     end
 
@@ -133,6 +129,7 @@ module Rblox
       :jump_if_false,
       :loop,
       :call,
+      :closure,
       :return
     ]
 
@@ -181,10 +178,14 @@ module Rblox
       layout :obj, Obj, :arity, :int, :chunk, Chunk, :name, ObjString.ptr
     end
 
+    class ObjClosure < FFI::Struct
+      layout :obj, Obj, :function, ObjFunction.ptr
+    end
+
     ### VM ###
 
     class CallFrame < FFI::Struct
-      layout :function, ObjFunction.ptr, :ip, :pointer, :slots, Value.ptr
+      layout :closure, ObjClosure.ptr, :ip, :pointer, :slots, Value.ptr
     end
 
     InterpretResult = enum :interpret_result, [:incomplete, :ok, :compile_error, :runtime_error]
@@ -226,7 +227,7 @@ module Rblox
       end
 
       def current_function
-        current_frame[:function]
+        current_frame[:closure][:function]
       end
 
       def current_offset

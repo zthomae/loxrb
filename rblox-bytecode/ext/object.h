@@ -6,6 +6,7 @@
 #include "value.h"
 
 typedef enum {
+  OBJ_CLOSURE,
   OBJ_FUNCTION,
   OBJ_NATIVE,
   OBJ_STRING,
@@ -42,6 +43,11 @@ struct ObjString {
   uint32_t hash;
 };
 
+typedef struct {
+  Obj obj;
+  ObjFunction* function;
+} ObjClosure;
+
 inline ObjType Object_type(Value value) {
   return Value_as_obj(value)->type;
 }
@@ -62,6 +68,10 @@ inline bool Object_is_string(Value value) {
   return Object_is_type(value, OBJ_STRING);
 }
 
+inline bool Object_is_closure(Value value) {
+  return Object_is_type(value, OBJ_CLOSURE);
+}
+
 inline ObjFunction* Object_as_function(Value value) {
   return (ObjFunction*)Value_as_obj(value);
 }
@@ -77,6 +87,10 @@ inline ObjString* Object_as_string(Value value) {
 
 inline char* Object_as_cstring(Value value) {
   return Object_as_string(value)->chars;
+}
+
+inline ObjClosure* Object_as_closure(Value value) {
+  return (ObjClosure*)Value_as_obj(value);
 }
 
 void Object_print(Value value);

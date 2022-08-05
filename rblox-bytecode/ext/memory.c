@@ -53,6 +53,11 @@ void Memory_free_objects(VM* vm) {
 
 void Memory_free_object(Obj* object) {
   switch (object->type) {
+    case OBJ_CLOSURE: {
+      // Don't free function, because the closure doesn't own this
+      Memory_free(object, sizeof(ObjClosure));
+      break;
+    }
     case OBJ_FUNCTION: {
       ObjFunction* function = (ObjFunction*)object;
       Chunk_free(&function->chunk);

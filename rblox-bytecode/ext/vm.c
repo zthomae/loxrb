@@ -22,8 +22,9 @@ static ObjString* vm_allocate_string(VM* vm, char* chars, int length, uint32_t h
 static ObjString* vm_allocate_new_string(VM* vm);
 static ObjFunction* vm_allocate_new_function(VM* vm);
 static ObjNative* vm_allocate_new_native(VM* vm, NativeFn function);
+static ObjClosure* vm_allocate_new_closure(VM* vm, ObjFunction* function);
 static uint32_t vm_hash_string(char* chars, int length);
-static bool vm_call(VM* vm, ObjFunction* function, int arg_count);
+static bool vm_call(VM* vm, ObjClosure* closure, int arg_count);
 static bool vm_call_value(VM* vm, Value callee, int arg_count);
 static void vm_define_native(VM* vm, char* name, NativeFn function);
 
@@ -41,8 +42,9 @@ void VM_init(VM* vm) {
 }
 
 void VM_init_function(VM* vm, ObjFunction* function) {
-  VM_push(vm, Value_make_obj((Obj*)function));
-  vm_call(vm, function, 0);
+  ObjClosure* closure = vm_allocate_new_closure(vm, function);
+  VM_push(vm, Value_make_obj((Obj*)closure));
+  vm_call(vm, closure, 0);
 }
 
 InterpretResult VM_interpret(VM* vm, ObjFunction* function) {
@@ -121,7 +123,7 @@ static inline uint16_t vm_read_short(CallFrame* call_frame) {
 }
 
 static inline Value vm_read_constant(CallFrame* call_frame) {
-  return call_frame->function->chunk.constants.values[vm_read_byte(call_frame)];
+  return call_frame->closure->function->chunk.constants.values[vm_read_byte(call_frame)];
 }
 
 static inline ObjString* vm_read_string(CallFrame* call_frame) {
@@ -292,6 +294,12 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       }
       break;
     }
+    case OP_CLOSURE: {
+      ObjFunction* function = Object_as_function(vm_read_constant(call_frame));
+      ObjClosure* closure = vm_allocate_new_closure(vm, function);
+      VM_push(vm, Value_make_obj((Obj*)closure));
+      break;
+    }
     case OP_RETURN: {
       Value result = VM_pop(vm);
       vm->frame_count--;
@@ -327,9 +335,9 @@ static bool vm_is_falsey(Value value) {
   return Value_is_nil(value) || (Value_is_boolean(value) && !Value_as_boolean(value));
 }
 
-static bool vm_call(VM* vm, ObjFunction* function, int arg_count) {
-  if (arg_count != function->arity) {
-    vm_runtime_error(vm, "Expected %d arguments but got %d.", function->arity, arg_count);
+static bool vm_call(VM* vm, ObjClosure* closure, int arg_count) {
+  if (arg_count != closure->function->arity) {
+    vm_runtime_error(vm, "Expected %d arguments but got %d.", closure->function->arity, arg_count);
     return false;
   }
 
@@ -339,8 +347,8 @@ static bool vm_call(VM* vm, ObjFunction* function, int arg_count) {
   }
 
   CallFrame* frame = &vm->frames[vm->frame_count++];
-  frame->function = function;
-  frame->ip = function->chunk.code;
+  frame->closure = closure;
+  frame->ip = closure->function->chunk.code;
   frame->slots = vm->stack_top - arg_count; // The book subtracts one more here...
   return true;
 }
@@ -348,8 +356,8 @@ static bool vm_call(VM* vm, ObjFunction* function, int arg_count) {
 static bool vm_call_value(VM* vm, Value callee, int arg_count) {
   if (Value_is_obj(callee)) {
     switch (Object_type(callee)) {
-      case OBJ_FUNCTION:
-        return vm_call(vm, Object_as_function(callee), arg_count);
+      case OBJ_CLOSURE:
+        return vm_call(vm, Object_as_closure(callee), arg_count);
       case OBJ_NATIVE: {
         NativeFn native = Object_as_native(callee);
         Value result = native(arg_count, vm->stack_top - arg_count);
@@ -381,7 +389,7 @@ static void vm_runtime_error(VM* vm, const char* format, ...) {
 
   for (int i = vm->frame_count - 1; i >= 0; i--) {
     CallFrame* frame = &vm->frames[i];
-    ObjFunction* function = frame->function;
+    ObjFunction* function = frame->closure->function;
     size_t instruction = frame->ip - function->chunk.code - 1;
     fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
     if (function->name == NULL) {
@@ -448,6 +456,12 @@ static ObjNative* vm_allocate_new_native(VM* vm, NativeFn function) {
   ObjNative* native = (ObjNative*)vm_allocate_new(vm, sizeof(ObjNative), OBJ_NATIVE);
   native->function = function;
   return native;
+}
+
+static ObjClosure* vm_allocate_new_closure(VM* vm, ObjFunction* function) {
+  ObjClosure* closure = (ObjClosure*)vm_allocate_new(vm, sizeof(ObjClosure), OBJ_CLOSURE);
+  closure->function = function;
+  return closure;
 }
 
 static void vm_define_native(VM* vm, char* name, NativeFn function) {

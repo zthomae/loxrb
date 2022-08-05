@@ -331,7 +331,7 @@ module Rblox
           compiler.mark_new_local_initialized
         end
         function = compiler.compile(stmt.body)
-        emit_constant(:object, stmt.name, function, stmt.name.line)
+        emit_bytes(:closure, make_constant(:object, stmt.name, function), stmt.name.line)
       end
 
       def emit_byte(byte, line)

@@ -79,6 +79,12 @@ module Rblox
           jump_instruction("OP_LOOP", -1, chunk, offset)
         when Opcode[:call]
           byte_instruction("OP_CALL", chunk, offset)
+        when Opcode[:closure]
+          offset += 1
+          constant_index = chunk.contents_at(offset += 1)
+          constant = chunk.constant_at(constant_index)
+          io.puts "%-16s %4d '%s'" % ["OP_CLOSURE", constant_index, Rblox::Bytecode.value_print(constant)]
+          offset
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else
@@ -93,7 +99,7 @@ module Rblox
 
       def constant_instruction(name, chunk, offset)
         constant_index = chunk.contents_at(offset + 1)
-        constant = chunk.constant_at(constant_index)
+        constant = chunk.constant_at(constant_index).value
         case constant
         when Float
           io.puts "%-16s %4d '%g'" % [name, constant_index, constant]
