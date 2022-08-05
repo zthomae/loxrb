@@ -118,8 +118,7 @@ module Rblox
         line = expr.name.bounding_lines.first
         variable_depth = resolve_local(expr.name, expr.name.lexeme)
         if variable_depth == -1
-          arg = emit_string_literal(expr.name, expr.name.lexeme, line)
-          emit_byte(:pop, line)
+          arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
           expr.value.accept(self)
           emit_bytes(:set_global, arg, line)
         else
@@ -178,7 +177,8 @@ module Rblox
         when Float
           emit_constant(:number, expr.value, expr.value.literal, expr.value.line)
         when String
-          emit_string_literal(expr.value, expr.value.literal, expr.value.line)
+          _, obj_string = make_identifier_constant(expr.value, expr.value.literal)
+          emit_constant(:object, expr.value, obj_string, expr.value.line)
         else
           case expr.value.type
           when Rblox::Parser::TokenType::TRUE
@@ -223,8 +223,7 @@ module Rblox
         line = expr.name.bounding_lines.first
         variable_depth = resolve_local(expr.name, expr.name.lexeme)
         if variable_depth == -1
-          arg = emit_string_literal(expr.name, expr.name.lexeme, line)
-          emit_byte(:pop, line)
+          arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
           emit_bytes(:get_global, arg, line)
         else
           emit_bytes(:get_local, variable_depth, line)
@@ -281,13 +280,11 @@ module Rblox
       end
 
       def declare_global(name)
-        # Now that's what I call dynamic typing
-        emit_string_literal(name, name.lexeme, name.line)
+        make_identifier_constant(name, name.lexeme)[0]
       end
 
       def define_global(global, line)
         emit_bytes(:define_global, global, line)
-        emit_byte(:pop, line)
       end
 
       def resolve_local(token, name)
@@ -360,9 +357,9 @@ module Rblox
         constant
       end
 
-      def emit_string_literal(token, value, line)
+      def make_identifier_constant(token, value)
         obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.bytesize)
-        emit_constant(:object, token, obj_string, line)
+        [make_constant(:object, token, obj_string), obj_string]
       end
 
       def emit_jump(instruction, line)
