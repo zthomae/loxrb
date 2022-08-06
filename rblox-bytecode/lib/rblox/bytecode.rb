@@ -13,7 +13,11 @@ module Rblox
   module Bytecode
     extend FFI::Library
 
-    ffi_lib File.join(File.dirname(__FILE__), "../../ext/vm.so")
+    if RUBY_PLATFORM.include?("darwin")
+      ffi_lib File.join(File.dirname(__FILE__), "../../ext/vm.bundle")
+    else
+      ffi_lib File.join(File.dirname(__FILE__), "../../ext/vm.so")
+    end
 
     ### VALUES ###
 

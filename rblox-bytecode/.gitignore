@@ -12,4 +12,5 @@
 
 ext/*.o
 ext/*.so
+ext/*.bundle
 ext/Makefile
