@@ -5,11 +5,13 @@ set -vx
 
 pushd ../rblox-parser
 rm -rf pkg
+bundle install
 rake build
 popd
 
 pushd ../rblox-test
 rm -rf pkg
+bundle install
 rake build
 popd
 
