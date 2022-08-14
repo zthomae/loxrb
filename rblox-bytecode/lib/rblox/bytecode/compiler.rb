@@ -120,15 +120,19 @@ module Rblox
       end
 
       def visit_assign_expr(expr)
+        expr.value.accept(self)
         line = expr.name.bounding_lines.first
         variable_depth = resolve_local(expr.name, expr.name.lexeme)
-        if variable_depth == -1
-          arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
-          expr.value.accept(self)
-          emit_bytes(:set_global, arg, line)
-        else
-          expr.value.accept(self)
+        if variable_depth != -1
           emit_bytes(:set_local, variable_depth, line)
+        else
+          upvalue = resolve_upvalue(expr.name, expr.name.lexeme)
+          if upvalue != -1
+            emit_bytes(:set_upvalue, upvalue, line)
+          else
+            arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
+            emit_bytes(:set_global, arg, line)
+          end
         end
       end
 
@@ -263,13 +267,27 @@ module Rblox
         mark_initialized(@locals[-1])
       end
 
+      def resolve_local(token, name)
+        (@locals.length - 1).downto(0).each do |i|
+          local = @locals[i]
+          if name == local.name
+            if local.depth == -1
+              @error_handler.compile_error(token, "Can't read local variable in its own initializer.")
+            end
+
+            return i - 1
+          end
+        end
+
+        -1
+      end
+
       def resolve_upvalue(token, name)
         return -1 if @enclosing.nil?
 
-        local = resolve_local(token, name)
+        local = @enclosing.resolve_local(token, name)
         return add_upvalue(token, local, true) if local != -1
 
-        # Don't forget: this will call @enclosing.resolve_local
         upvalue = @enclosing.resolve_upvalue(token, name)
         return add_upvalue(token, upvalue, false) if upvalue != -1
 
@@ -314,35 +332,21 @@ module Rblox
         emit_bytes(:define_global, global, line)
       end
 
-      def resolve_local(token, name)
-        (@locals.length - 1).downto(0).each do |i|
-          local = @locals[i]
-          if name == local.name
-            if local.depth == -1
-              @error_handler.compile_error(token, "Can't read local variable in its own initializer.")
-            end
-
-            return i - 1
-          end
-        end
-
-        -1
-      end
-
       def add_upvalue(token, index, is_local)
-        upvalue_count = @function[:upvalue_count]
+        upvalue = @function[:upvalue_count]
         @upvalues.each.with_index do |upvalue, i|
           if upvalue.index == index && upvalue.is_local == is_local
             return i
           end
         end
 
-        if upvalue_count == 255
+        if upvalue == 255
           @error_handler.compile_error(token, "Too many closure variables in function.")
           return 0
         end
         @upvalues << Upvalue.new(index, is_local)
         @function[:upvalue_count] += 1
+        upvalue
       end
 
       def emit_var_initializer(stmt)
@@ -373,7 +377,7 @@ module Rblox
           compiler.declare_local(param)
           compiler.mark_new_local_initialized
         end
-        function = compiler.compile(stmt.body)
+        compiler.compile(stmt.body)
         emit_bytes(:closure, make_constant(:object, stmt.name, function), stmt.name.line)
         (0...function[:upvalue_count]).each do |i|
           emit_byte(compiler.upvalues[i].is_local ? 1 : 0, stmt.name.line)

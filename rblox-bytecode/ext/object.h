@@ -10,6 +10,7 @@ typedef enum {
   OBJ_FUNCTION,
   OBJ_NATIVE,
   OBJ_STRING,
+  OBJ_UPVALUE,
 } ObjType;
 
 // Obj is like a base class for all objects. Specializations must all
@@ -46,7 +47,14 @@ struct ObjString {
 
 typedef struct {
   Obj obj;
+  Value* location;
+} ObjUpvalue;
+
+typedef struct {
+  Obj obj;
   ObjFunction* function;
+  ObjUpvalue** upvalues;
+  int upvalue_count;
 } ObjClosure;
 
 inline ObjType Object_type(Value value) {

@@ -23,7 +23,7 @@ module Rblox
 
     ValueType = enum :value_type, [:bool, :nil, :number, :obj]
 
-    ObjType = enum :obj_type, [:closure, :function, :native, :string]
+    ObjType = enum :obj_type, [:closure, :function, :native, :string, :upvalue]
 
     class Obj < FFI::Struct
       layout :type, ObjType, :next, Obj.ptr
@@ -192,7 +192,7 @@ module Rblox
     end
 
     class ObjClosure < FFI::Struct
-      layout :obj, Obj, :function, ObjFunction.ptr
+      layout :obj, Obj, :function, ObjFunction.ptr, :upvalues, :pointer, :upvalue_count, :int
     end
 
     ### VM ###

@@ -54,7 +54,10 @@ void Memory_free_objects(VM* vm) {
 void Memory_free_object(Obj* object) {
   switch (object->type) {
     case OBJ_CLOSURE: {
-      // Don't free function, because the closure doesn't own this
+      ObjClosure* closure = (ObjClosure*)object;
+      // Don't free the upvalues themselves, because the closure doesn't own them
+      Memory_free_array(closure->upvalues, sizeof(ObjUpvalue*), closure->upvalue_count);
+      // Don't free function, because the closure doesn't own this either
       Memory_free(object, sizeof(ObjClosure));
       break;
     }
@@ -72,6 +75,10 @@ void Memory_free_object(Obj* object) {
       ObjString* string = (ObjString*)object;
       Memory_free_array(string->chars, sizeof(char), string->length + 1);
       Memory_free(object, sizeof(ObjString));
+      break;
+    }
+    case OBJ_UPVALUE: {
+      Memory_free(object, sizeof(ObjUpvalue));
       break;
     }
   }

@@ -19,6 +19,9 @@ void Object_print(Value value) {
     case OBJ_STRING:
       printf("%s", Object_as_cstring(value));
       break;
+    case OBJ_UPVALUE:
+      printf("upvalue");
+      break;
   }
 }
 

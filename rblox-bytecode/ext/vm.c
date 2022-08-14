@@ -27,6 +27,7 @@ static uint32_t vm_hash_string(char* chars, int length);
 static bool vm_call(VM* vm, ObjClosure* closure, int arg_count);
 static bool vm_call_value(VM* vm, Value callee, int arg_count);
 static void vm_define_native(VM* vm, char* name, NativeFn function);
+static ObjUpvalue* vm_capture_upvalue(VM* vm, Value* local);
 
 static Value vm_clock_native(int arg_count, Value* args) {
   return Value_make_number((double)clock() / CLOCKS_PER_SEC);
@@ -189,6 +190,16 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       }
       break;
     }
+    case OP_GET_UPVALUE: {
+      uint8_t slot = vm_read_byte(call_frame);
+      VM_push(vm, *call_frame->closure->upvalues[slot]->location);
+      break;
+    }
+    case OP_SET_UPVALUE: {
+      uint8_t slot = vm_read_byte(call_frame);
+      *call_frame->closure->upvalues[slot]->location = vm_stack_peek(vm, 0);
+      break;
+    }
     case OP_EQUAL: {
       Value b = VM_pop(vm);
       Value a = VM_pop(vm);
@@ -301,6 +312,15 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       ObjFunction* function = Object_as_function(vm_read_constant(call_frame));
       ObjClosure* closure = vm_allocate_new_closure(vm, function);
       VM_push(vm, Value_make_obj((Obj*)closure));
+      for (int i = 0; i < closure->upvalue_count; i++) {
+        uint8_t is_local = vm_read_byte(call_frame);
+        uint8_t index = vm_read_byte(call_frame);
+        if (is_local) {
+          closure->upvalues[i] = vm_capture_upvalue(vm, call_frame->slots + index);
+        } else {
+          closure->upvalues[i] = call_frame->closure->upvalues[index];
+        }
+      }
       break;
     }
     case OP_RETURN: {
@@ -442,6 +462,12 @@ static ObjString* vm_allocate_new_string(VM* vm) {
   return (ObjString*)vm_allocate_new(vm, sizeof(ObjString), OBJ_STRING);
 }
 
+static ObjUpvalue* vm_allocate_new_upvalue(VM* vm, Value* slot) {
+  ObjUpvalue* upvalue = (ObjUpvalue*)vm_allocate_new(vm, sizeof(ObjUpvalue), OBJ_UPVALUE);
+  upvalue->location = slot;
+  return upvalue;
+}
+
 static uint32_t vm_hash_string(char* key, int length) {
   uint32_t hash = 2166136261u;
   for (int i = 0; i < length; i++) {
@@ -462,8 +488,14 @@ static ObjNative* vm_allocate_new_native(VM* vm, NativeFn function) {
 }
 
 static ObjClosure* vm_allocate_new_closure(VM* vm, ObjFunction* function) {
+  ObjUpvalue** upvalues = Memory_allocate(sizeof(ObjUpvalue*), function->upvalue_count);
+  for (int i = 0; i < function->upvalue_count; i++) {
+    upvalues[i] = NULL;
+  }
   ObjClosure* closure = (ObjClosure*)vm_allocate_new(vm, sizeof(ObjClosure), OBJ_CLOSURE);
   closure->function = function;
+  closure->upvalues = upvalues;
+  closure->upvalue_count = function->upvalue_count;
   return closure;
 }
 
@@ -473,4 +505,9 @@ static void vm_define_native(VM* vm, char* name, NativeFn function) {
   Table_set(&vm->globals, Object_as_string(vm_stack_peek(vm, 1)), vm_stack_peek(vm, 0));
   VM_pop(vm);
   VM_pop(vm);
+}
+
+static ObjUpvalue* vm_capture_upvalue(VM* vm, Value* local) {
+  ObjUpvalue* created_upvalue = vm_allocate_new_upvalue(vm, local);
+  return created_upvalue;
 }

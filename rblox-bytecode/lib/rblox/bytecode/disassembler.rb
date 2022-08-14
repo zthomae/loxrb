@@ -91,12 +91,12 @@ module Rblox
 
           function = constant[:as][:obj].as_function
           (0...function[:upvalue_count]).each do
-            is_local = chunk.contents_at(offset += 1)
-            index = chunk.contents_at(offset += 1)
-            io.puts "%04d      |                     %s %d\n" % [offset - 2, is_local ? "local" : "upvalue", index]
+            is_local = chunk.contents_at(offset)
+            index = chunk.contents_at(offset + 1)
+            io.puts "%04d      |                     %s %d\n" % [offset, is_local ? "local" : "upvalue", index]
           end
 
-          offset
+          offset + 2
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else
