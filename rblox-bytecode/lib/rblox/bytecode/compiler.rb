@@ -318,7 +318,7 @@ module Rblox
       def end_scope(line)
         @scope_depth -= 1
         locals_to_remove, locals_to_keep = @locals.partition { |local| local.depth > @scope_depth }
-        locals_to_remove.each do |local|
+        locals_to_remove.reverse.each do |local|
           if local.is_captured
             emit_byte(:close_upvalue, line)
           else
