@@ -267,7 +267,7 @@ module Rblox
               @error_handler.compile_error(token, "Can't read local variable in its own initializer.")
             end
 
-            return i - 1
+            return i
           end
         end
 

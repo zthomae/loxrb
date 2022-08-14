@@ -339,7 +339,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         return INTERPRET_OK;
       }
 
-      vm->stack_top = call_frame->slots - 1;
+      vm->stack_top = call_frame->slots;
       VM_push(vm, result);
       break;
     }
@@ -380,7 +380,7 @@ static bool vm_call(VM* vm, ObjClosure* closure, int arg_count) {
   CallFrame* frame = &vm->frames[vm->frame_count++];
   frame->closure = closure;
   frame->ip = closure->function->chunk.code;
-  frame->slots = vm->stack_top - arg_count; // The book subtracts one more here...
+  frame->slots = vm->stack_top - arg_count - 1;
   return true;
 }
 
