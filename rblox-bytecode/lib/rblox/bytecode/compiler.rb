@@ -276,6 +276,10 @@ module Rblox
         -1
       end
 
+      def upvalues
+        @upvalues.dup
+      end
+
       private
 
       def current_chunk
@@ -372,8 +376,8 @@ module Rblox
         function = compiler.compile(stmt.body)
         emit_bytes(:closure, make_constant(:object, stmt.name, function), stmt.name.line)
         (0...function[:upvalue_count]).each do |i|
-          emit_byte(@upvalues[i].is_local ? 1 : 0, stmt.name.line)
-          emit_byte(@upvalues[i].index, stmt.name.line)
+          emit_byte(compiler.upvalues[i].is_local ? 1 : 0, stmt.name.line)
+          emit_byte(compiler.upvalues[i].index, stmt.name.line)
         end
       end
 
