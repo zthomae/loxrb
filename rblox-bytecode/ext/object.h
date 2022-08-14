@@ -25,6 +25,7 @@ struct Obj {
 typedef struct {
   Obj obj;
   int arity;
+  int upvalue_count;
   Chunk chunk;
   ObjString* name;
 } ObjFunction;

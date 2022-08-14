@@ -119,6 +119,8 @@ module Rblox
       :get_global,
       :define_global,
       :set_global,
+      :get_upvalue,
+      :set_upvalue,
       :equal,
       :greater,
       :less,
@@ -179,7 +181,7 @@ module Rblox
     ### FUNCTIONS ###
 
     class ObjFunction < FFI::Struct
-      layout :obj, Obj, :arity, :int, :chunk, Chunk, :name, ObjString.ptr
+      layout :obj, Obj, :arity, :int, :upvalue_count, :int, :chunk, Chunk, :name, ObjString.ptr
     end
 
     class ObjClosure < FFI::Struct

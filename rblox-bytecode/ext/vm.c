@@ -95,6 +95,7 @@ ObjString* VM_take_string(VM* vm, char* chars, int length) {
 ObjFunction* VM_new_function(VM* vm) {
   ObjFunction* function = vm_allocate_new_function(vm);
   function->arity = 0;
+  function->upvalue_count = 0;
   function->name = NULL;
   Chunk_init(&function->chunk);
   return function;

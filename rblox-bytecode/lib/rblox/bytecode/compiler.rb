@@ -3,18 +3,23 @@ module Rblox
     class Compiler
       Local = Struct.new(:name, :depth)
 
+      Upvalue = Struct.new(:index, :is_local)
+
       module FunctionType
         FUNCTION = :FUNCTION
         SCRIPT = :SCRIPT
       end
 
-      def initialize(vm, function, function_type, error_handler, scope_depth = 0)
+      def initialize(vm, function, function_type, error_handler, enclosing = nil, scope_depth = 0)
         @vm = vm
         @function = function
         @function_type = function_type
         @error_handler = error_handler
-        @locals = [Local.new("", 0)]
+        @enclosing = enclosing
         @scope_depth = scope_depth
+
+        @locals = [Local.new("", 0)]
+        @upvalues = []
       end
 
       def compile(statements)
@@ -222,11 +227,16 @@ module Rblox
       def visit_variable_expr(expr)
         line = expr.name.bounding_lines.first
         variable_depth = resolve_local(expr.name, expr.name.lexeme)
-        if variable_depth == -1
-          arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
-          emit_bytes(:get_global, arg, line)
-        else
+        if variable_depth != -1
           emit_bytes(:get_local, variable_depth, line)
+        else
+          upvalue = resolve_upvalue(expr.name, expr.name.lexeme)
+          if upvalue != -1
+            emit_bytes(:get_upvalue, upvalue, line)
+          else
+            arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
+            emit_bytes(:get_global, arg, line)
+          end
         end
       end
 
@@ -251,6 +261,19 @@ module Rblox
 
       def mark_new_local_initialized
         mark_initialized(@locals[-1])
+      end
+
+      def resolve_upvalue(token, name)
+        return -1 if @enclosing.nil?
+
+        local = resolve_local(token, name)
+        return add_upvalue(token, local, true) if local != -1
+
+        # Don't forget: this will call @enclosing.resolve_local
+        upvalue = @enclosing.resolve_upvalue(token, name)
+        return add_upvalue(token, upvalue, false) if upvalue != -1
+
+        -1
       end
 
       private
@@ -302,6 +325,22 @@ module Rblox
         -1
       end
 
+      def add_upvalue(token, index, is_local)
+        upvalue_count = @function[:upvalue_count]
+        @upvalues.each.with_index do |upvalue, i|
+          if upvalue.index == index && upvalue.is_local == is_local
+            return i
+          end
+        end
+
+        if upvalue_count == 255
+          @error_handler.compile_error(token, "Too many closure variables in function.")
+          return 0
+        end
+        @upvalues << Upvalue.new(index, is_local)
+        @function[:upvalue_count] += 1
+      end
+
       def emit_var_initializer(stmt)
         if stmt.initializer.nil?
           emit_byte(:nil, stmt.bounding_lines.first)
@@ -321,7 +360,7 @@ module Rblox
       def compile_function(stmt, function_type)
         function = Rblox::Bytecode.vm_new_function(@vm)
         function[:name] = Rblox::Bytecode.vm_copy_string(@vm, stmt.name.lexeme, stmt.name.lexeme.bytesize)
-        compiler = Compiler.new(@vm, function, function_type, @error_handler, @scope_depth + 1)
+        compiler = Compiler.new(@vm, function, function_type, @error_handler, self, @scope_depth + 1)
         stmt.params.each do |param|
           function[:arity] += 1
           if function[:arity] > 255
@@ -332,6 +371,10 @@ module Rblox
         end
         function = compiler.compile(stmt.body)
         emit_bytes(:closure, make_constant(:object, stmt.name, function), stmt.name.line)
+        (0...function[:upvalue_count]).each do |i|
+          emit_byte(@upvalues[i].is_local ? 1 : 0, stmt.name.line)
+          emit_byte(@upvalues[i].index, stmt.name.line)
+        end
       end
 
       def emit_byte(byte, line)

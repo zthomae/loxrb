@@ -51,6 +51,10 @@ module Rblox
           constant_instruction("OP_DEFINE_GLOBAL", chunk, offset)
         when Opcode[:set_global]
           constant_instruction("OP_SET_GLOBAL", chunk, offset)
+        when Opcode[:get_upvalue]
+          byte_instruction("OP_GET_UPVALUE", chunk, offset)
+        when Opcode[:set_upvalue]
+          byte_instruction("OP_SET_UPVALUE", chunk, offset)
         when Opcode[:equal]
           simple_instruction("OP_EQUAL", offset)
         when Opcode[:greater]
@@ -83,7 +87,18 @@ module Rblox
           offset += 1
           constant_index = chunk.contents_at(offset += 1)
           constant = chunk.constant_at(constant_index)
-          io.puts "%-16s %4d '%s'" % ["OP_CLOSURE", constant_index, Rblox::Bytecode.value_print(constant)]
+          io.print "%-16s %4d '" % ["OP_CLOSURE", constant_index]
+          puts constant.to_ptr
+          Rblox::Bytecode.value_print(constant)
+          io.puts "'"
+
+          function = chunk.constant_at(constant.value)[:as][:obj].as_function
+          (0...function[:upvalue_count]).each do
+            is_local = chunk.contents_at(offset += 1)
+            index = chunk.contents_at(offset += 1)
+            io.puts "%04d      |                     %s %d\n" % [offset - 2, is_local ? "local" : "upvalue", index]
+          end
+
           offset
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
