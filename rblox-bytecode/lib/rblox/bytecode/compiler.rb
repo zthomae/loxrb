@@ -353,7 +353,7 @@ module Rblox
           end
         end
 
-        if upvalue == 255
+        if upvalue == 256
           @error_handler.compile_error(token, "Too many closure variables in function.")
           return 0
         end
