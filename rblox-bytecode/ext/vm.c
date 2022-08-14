@@ -28,6 +28,7 @@ static bool vm_call(VM* vm, ObjClosure* closure, int arg_count);
 static bool vm_call_value(VM* vm, Value callee, int arg_count);
 static void vm_define_native(VM* vm, char* name, NativeFn function);
 static ObjUpvalue* vm_capture_upvalue(VM* vm, Value* local);
+static void vm_close_upvalues(VM* vm, Value* last);
 
 static Value vm_clock_native(int arg_count, Value* args) {
   return Value_make_number((double)clock() / CLOCKS_PER_SEC);
@@ -115,6 +116,7 @@ static CallFrame* vm_current_frame(VM* vm) {
 static void vm_reset_stack(VM* vm) {
   vm->stack_top = vm->stack;
   vm->frame_count = 0;
+  vm->open_upvalues = NULL;
 }
 
 static inline uint8_t vm_read_byte(CallFrame* call_frame) {
@@ -323,8 +325,14 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       }
       break;
     }
+    case OP_CLOSE_UPVALUE: {
+      vm_close_upvalues(vm, vm->stack_top - 1);
+      VM_pop(vm);
+      break;
+    }
     case OP_RETURN: {
       Value result = VM_pop(vm);
+      vm_close_upvalues(vm, call_frame->slots);
       vm->frame_count--;
       if (vm->frame_count == 0) {
         VM_pop(vm);
@@ -465,6 +473,8 @@ static ObjString* vm_allocate_new_string(VM* vm) {
 static ObjUpvalue* vm_allocate_new_upvalue(VM* vm, Value* slot) {
   ObjUpvalue* upvalue = (ObjUpvalue*)vm_allocate_new(vm, sizeof(ObjUpvalue), OBJ_UPVALUE);
   upvalue->location = slot;
+  upvalue->closed = Value_make_nil();
+  upvalue->next = NULL;
   return upvalue;
 }
 
@@ -508,6 +518,33 @@ static void vm_define_native(VM* vm, char* name, NativeFn function) {
 }
 
 static ObjUpvalue* vm_capture_upvalue(VM* vm, Value* local) {
+  ObjUpvalue* previous_upvalue = NULL;
+  ObjUpvalue* upvalue = vm->open_upvalues;
+  while (upvalue != NULL && upvalue->location > local) {
+    previous_upvalue = upvalue;
+    upvalue = upvalue->next;
+  }
+  if (upvalue != NULL && upvalue->location == local) {
+    return upvalue;
+  }
+
   ObjUpvalue* created_upvalue = vm_allocate_new_upvalue(vm, local);
+  created_upvalue->next = upvalue;
+
+  if (previous_upvalue == NULL) {
+    vm->open_upvalues = created_upvalue;
+  } else {
+    previous_upvalue->next = created_upvalue;
+  }
+
   return created_upvalue;
+}
+
+static void vm_close_upvalues(VM* vm, Value* last) {
+  while (vm->open_upvalues != NULL && vm->open_upvalues->location >= last) {
+    ObjUpvalue* upvalue = vm->open_upvalues;
+    upvalue->closed = *upvalue->location;
+    upvalue->location = &upvalue->closed;
+    vm->open_upvalues = upvalue->next;
+  }
 }

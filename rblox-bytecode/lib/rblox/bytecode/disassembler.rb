@@ -97,6 +97,8 @@ module Rblox
           end
 
           offset + 2
+        when Opcode[:close_upvalue]
+          simple_instruction("OP_CLOSE_UPVALUE", offset)
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
         else

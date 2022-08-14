@@ -1,7 +1,7 @@
 module Rblox
   module Bytecode
     class Compiler
-      Local = Struct.new(:name, :depth)
+      Local = Struct.new(:name, :depth, :is_captured)
 
       Upvalue = Struct.new(:index, :is_local)
 
@@ -18,7 +18,7 @@ module Rblox
         @enclosing = enclosing
         @scope_depth = scope_depth
 
-        @locals = [Local.new("", 0)]
+        @locals = [Local.new("", 0, false)]
         @upvalues = []
       end
 
@@ -38,10 +38,7 @@ module Rblox
         stmt.statements.each do |statement|
           statement.accept(self)
         end
-        end_scope
-        locals_to_remove, locals_to_keep = @locals.partition { |local| local.depth > @scope_depth }
-        locals_to_remove.each { |local| emit_byte(:pop, stmt.bounding_lines.last) }
-        @locals = locals_to_keep
+        end_scope(stmt.bounding_lines.last)
       end
 
       def visit_expression_stmt(stmt)
@@ -260,7 +257,7 @@ module Rblox
           end
         end
 
-        @locals << Local.new(name.lexeme, -1)
+        @locals << Local.new(name.lexeme, -1, false)
       end
 
       def mark_new_local_initialized
@@ -286,12 +283,19 @@ module Rblox
         return -1 if @enclosing.nil?
 
         local = @enclosing.resolve_local(token, name)
-        return add_upvalue(token, local, true) if local != -1
+        if local != -1
+          @enclosing.capture_local(local)
+          return add_upvalue(token, local, true)
+        end
 
         upvalue = @enclosing.resolve_upvalue(token, name)
         return add_upvalue(token, upvalue, false) if upvalue != -1
 
         -1
+      end
+
+      def capture_local(index)
+        @locals[index].is_captured = true
       end
 
       def upvalues
@@ -316,8 +320,17 @@ module Rblox
         @scope_depth += 1
       end
 
-      def end_scope
+      def end_scope(line)
         @scope_depth -= 1
+        locals_to_remove, locals_to_keep = @locals.partition { |local| local.depth > @scope_depth }
+        locals_to_remove.each do |local|
+          if local.is_captured
+            emit_byte(:close_upvalue, line)
+          else
+            emit_byte(:pop, line)
+          end
+        end
+        @locals = locals_to_keep
       end
 
       def global_scope?

@@ -143,6 +143,7 @@ module Rblox
       :loop,
       :call,
       :closure,
+      :close_upvalue,
       :return
     ]
 
@@ -195,6 +196,10 @@ module Rblox
       layout :obj, Obj, :function, ObjFunction.ptr, :upvalues, :pointer, :upvalue_count, :int
     end
 
+    class ObjUpvalue < FFI::Struct
+      layout :obj, Obj, :location, Value.ptr, :closed, Value, :next, ObjUpvalue.ptr
+    end
+
     ### VM ###
 
     class CallFrame < FFI::Struct
@@ -210,6 +215,7 @@ module Rblox
         :stack_top, Value.ptr,
         :globals, Table,
         :strings, Table,
+        :open_upvalues, ObjUpvalue.ptr,
         :objects, Obj.ptr
 
       def self.with_new
