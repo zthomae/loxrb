@@ -4,7 +4,8 @@ $LOAD_PATH.unshift("#{__dir__}/../lib")
 
 require "rblox/bytecode"
 
-debug_mode = !ENV["RBLOX_DEBUG_MODE"].nil? && !ENV["RBLOX_DEBUG_MODE"].empty?
+debug_mode_var = ENV["RBLOX_DEBUG_MODE"]
+debug_mode = !debug_mode_var.nil? && !debug_mode_var.empty? && !["0", "false"].include?(debug_mode_var.downcase)
 
 if ARGV.length > 1
   puts "Usage: rblox-bytecode [script]"
