@@ -94,9 +94,10 @@ module Rblox
             is_local = chunk.contents_at(offset)
             index = chunk.contents_at(offset + 1)
             io.puts "%04d      |                     %s %d\n" % [offset, is_local ? "local" : "upvalue", index]
+            offset += 2
           end
 
-          offset + 2
+          offset
         when Opcode[:close_upvalue]
           simple_instruction("OP_CLOSE_UPVALUE", offset)
         when Opcode[:return]
