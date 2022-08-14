@@ -28,7 +28,7 @@ module Rblox
         end
 
         # Since this is synthetic, we make it appear as if it comes from the previous line
-        emit_return(statements.last&.bounding_lines&.last || 0)
+        emit_return(nil, statements.last&.bounding_lines&.last || 0)
 
         @function
       end
@@ -84,12 +84,7 @@ module Rblox
           @error_handler.compile_error(stmt.keyword, "Can't return from top-level code.")
         end
 
-        if stmt.value.nil?
-          emit_return(stmt.keyword.line)
-        else
-          stmt.value.accept(self)
-          emit_byte(:return, stmt.bounding_lines.last)
-        end
+        emit_return(stmt.value, stmt.keyword.line)
       end
 
       def visit_var_stmt(stmt)
@@ -458,9 +453,12 @@ module Rblox
         emit_byte(offset & 0xff, line)
       end
 
-      def emit_return(line)
-        # TODO: return a value
-        emit_byte(:nil, line)
+      def emit_return(value, line)
+        if value.nil?
+          emit_byte(:nil, line)
+        else
+          value.accept(self)
+        end
         emit_byte(:return, line)
       end
     end
