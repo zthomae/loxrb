@@ -42,7 +42,9 @@ void VM_init(VM* vm) {
 }
 
 void VM_init_function(VM* vm, ObjFunction* function) {
+  VM_push(vm, Value_make_obj((Obj*)function));
   ObjClosure* closure = vm_allocate_new_closure(vm, function);
+  VM_pop(vm);
   VM_push(vm, Value_make_obj((Obj*)closure));
   vm_call(vm, closure, 0);
 }
