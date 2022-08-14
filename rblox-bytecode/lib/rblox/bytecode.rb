@@ -40,10 +40,17 @@ module Rblox
         ObjString.new(self.to_ptr)
       end
 
-      def print
+      def to_s
         case self[:type]
         when :closure
           function_name = self.as_closure[:function][:name][:chars]
+          if function_name
+            "<fn #{function_name}>"
+          else
+            "<script>"
+          end
+        when :function
+          function_name = self.as_function[:name][:chars]
           if function_name
             "<fn #{function_name}>"
           else
@@ -66,16 +73,16 @@ module Rblox
     class Value < FFI::Struct
       layout :type, ValueType, :as, ValueU
 
-      def value
+      def to_s
         case self[:type]
         when :bool
-          self[:as][:boolean]
+          self[:as][:boolean].to_s
         when :nil
-          nil
+          "nil"
         when :number
-          self[:as][:number]
+          self[:as][:number].to_s
         when :obj
-          self[:as][:obj].print
+          self[:as][:obj].to_s
         else
           raise "Unsupported value type #{self[:type]}"
         end
@@ -243,7 +250,7 @@ module Rblox
       def stack_contents
         num_elements = (self[:stack_top].to_ptr.address - self[:stack].to_ptr.address) / Value.size
         contents = []
-        (0...num_elements).each { |i| contents << self[:stack][i].value }
+        (0...num_elements).each { |i| contents << self[:stack][i].to_s }
         contents
       end
     end

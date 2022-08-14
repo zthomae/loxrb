@@ -84,15 +84,12 @@ module Rblox
         when Opcode[:call]
           byte_instruction("OP_CALL", chunk, offset)
         when Opcode[:closure]
-          offset += 1
-          constant_index = chunk.contents_at(offset += 1)
+          constant_index = chunk.contents_at(offset + 1)
+          offset += 2
           constant = chunk.constant_at(constant_index)
-          io.print "%-16s %4d '" % ["OP_CLOSURE", constant_index]
-          puts constant.to_ptr
-          Rblox::Bytecode.value_print(constant)
-          io.puts "'"
+          io.puts "%-16s %4d '%s'" % ["OP_CLOSURE", constant_index, constant.to_s]
 
-          function = chunk.constant_at(constant.value)[:as][:obj].as_function
+          function = constant[:as][:obj].as_function
           (0...function[:upvalue_count]).each do
             is_local = chunk.contents_at(offset += 1)
             index = chunk.contents_at(offset += 1)
@@ -114,12 +111,12 @@ module Rblox
 
       def constant_instruction(name, chunk, offset)
         constant_index = chunk.contents_at(offset + 1)
-        constant = chunk.constant_at(constant_index).value
-        case constant
-        when Float
-          io.puts "%-16s %4d '%g'" % [name, constant_index, constant]
-        when Rblox::Bytecode::Obj
-          io.puts "%-16s %4d '%s'" % [name, constant_index, constant.print]
+        constant = chunk.constant_at(constant_index)
+        case constant[:type]
+        when :number
+          io.puts "%-16s %4d '%g'" % [name, constant_index, constant[:as][:number]]
+        when :obj
+          io.puts "%-16s %4d '%s'" % [name, constant_index, constant[:as][:obj].to_s]
         end
 
         offset + 2
