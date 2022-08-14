@@ -91,7 +91,7 @@ module Rblox
 
           function = constant[:as][:obj].as_function
           (0...function[:upvalue_count]).each do
-            is_local = chunk.contents_at(offset)
+            is_local = chunk.contents_at(offset) == 1
             index = chunk.contents_at(offset + 1)
             io.puts "%04d      |                     %s %d\n" % [offset, is_local ? "local" : "upvalue", index]
             offset += 2
