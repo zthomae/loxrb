@@ -25,7 +25,7 @@ typedef struct {
   ObjUpvalue* open_upvalues;
   Obj* objects;
   bool stress_gc;
-} VM;
+} Vm;
 
 typedef enum {
   INTERPRET_INCOMPLETE,
@@ -34,15 +34,15 @@ typedef enum {
   INTERPRET_RUNTIME_ERROR
 } InterpretResult;
 
-void VM_init(VM* vm);
-void VM_init_function(VM* vm, ObjFunction* function);
-InterpretResult VM_interpret(VM* vm, ObjFunction* function);
-InterpretResult VM_interpret_next_instruction(VM* vm);
-void VM_push(VM* vm, Value value);
-Value VM_pop(VM* vm);
+void Vm_init(Vm* vm);
+void Vm_init_function(Vm* vm, ObjFunction* function);
+InterpretResult Vm_interpret(Vm* vm, ObjFunction* function);
+InterpretResult Vm_interpret_next_instruction(Vm* vm);
+void Vm_push(Vm* vm, Value value);
+Value Vm_pop(Vm* vm);
 
-ObjFunction* VM_new_function(VM* vm);
+ObjFunction* Vm_new_function(Vm* vm);
 
-void VM_free(VM* vm);
+void Vm_free(Vm* vm);
 
 #endif

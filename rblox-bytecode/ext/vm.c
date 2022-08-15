@@ -11,25 +11,25 @@
 #include "vm.h"
 #include "vmmemory.h"
 
-static CallFrame* vm_current_frame(VM* vm);
-static void vm_reset_stack(VM* vm);
-static InterpretResult vm_run(VM* vm);
-static inline InterpretResult vm_run_instruction(VM* vm);
-static Value vm_stack_peek(VM* vm, int distance);
+static CallFrame* vm_current_frame(Vm* vm);
+static void vm_reset_stack(Vm* vm);
+static InterpretResult vm_run(Vm* vm);
+static inline InterpretResult vm_run_instruction(Vm* vm);
+static Value vm_stack_peek(Vm* vm, int distance);
 static bool vm_is_falsey(Value value);
-static void vm_runtime_error(VM* vm, const char* format, ...);
-static void vm_concatenate(VM* vm);
-static bool vm_call(VM* vm, ObjClosure* closure, int arg_count);
-static bool vm_call_value(VM* vm, Value callee, int arg_count);
-static void vm_define_native(VM* vm, char* name, NativeFn function);
-static ObjUpvalue* vm_capture_upvalue(VM* vm, Value* local);
-static void vm_close_upvalues(VM* vm, Value* last);
+static void vm_runtime_error(Vm* vm, const char* format, ...);
+static void vm_concatenate(Vm* vm);
+static bool vm_call(Vm* vm, ObjClosure* closure, int arg_count);
+static bool vm_call_value(Vm* vm, Value callee, int arg_count);
+static void vm_define_native(Vm* vm, char* name, NativeFn function);
+static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local);
+static void vm_close_upvalues(Vm* vm, Value* last);
 
 static Value vm_clock_native(int arg_count, Value* args) {
   return Value_make_number((double)clock() / CLOCKS_PER_SEC);
 }
 
-void VM_init(VM* vm) {
+void Vm_init(Vm* vm) {
   vm_reset_stack(vm);
   vm->objects = NULL;
   vm->stress_gc = false;
@@ -39,34 +39,34 @@ void VM_init(VM* vm) {
   vm_define_native(vm, "clock", vm_clock_native);
 }
 
-void VM_init_function(VM* vm, ObjFunction* function) {
-  VM_push(vm, Value_make_obj((Obj*)function));
+void Vm_init_function(Vm* vm, ObjFunction* function) {
+  Vm_push(vm, Value_make_obj((Obj*)function));
   ObjClosure* closure = VmMemory_allocate_new_closure(vm, function);
-  VM_pop(vm);
-  VM_push(vm, Value_make_obj((Obj*)closure));
+  Vm_pop(vm);
+  Vm_push(vm, Value_make_obj((Obj*)closure));
   vm_call(vm, closure, 0);
 }
 
-InterpretResult VM_interpret(VM* vm, ObjFunction* function) {
-  VM_init_function(vm, function);
+InterpretResult Vm_interpret(Vm* vm, ObjFunction* function) {
+  Vm_init_function(vm, function);
   return vm_run(vm);
 }
 
-InterpretResult VM_interpret_next_instruction(VM* vm) {
+InterpretResult Vm_interpret_next_instruction(Vm* vm) {
   return vm_run_instruction(vm);
 }
 
-void VM_push(VM* vm, Value value) {
+void Vm_push(Vm* vm, Value value) {
   *vm->stack_top = value;
   *vm->stack_top++;
 }
 
-Value VM_pop(VM* vm) {
+Value Vm_pop(Vm* vm) {
   *vm->stack_top--;
   return *vm->stack_top;
 }
 
-ObjFunction* VM_new_function(VM* vm) {
+ObjFunction* Vm_new_function(Vm* vm) {
   ObjFunction* function = VmMemory_allocate_new_function(vm);
   function->arity = 0;
   function->upvalue_count = 0;
@@ -75,17 +75,17 @@ ObjFunction* VM_new_function(VM* vm) {
   return function;
 }
 
-void VM_free(VM* vm) {
+void Vm_free(Vm* vm) {
   Table_free(&vm->strings);
   Table_free(&vm->globals);
   VmMemory_free_objects(vm);
 }
 
-static CallFrame* vm_current_frame(VM* vm) {
+static CallFrame* vm_current_frame(Vm* vm) {
   return &vm->frames[vm->frame_count - 1];
 }
 
-static void vm_reset_stack(VM* vm) {
+static void vm_reset_stack(Vm* vm) {
   vm->stack_top = vm->stack;
   vm->frame_count = 0;
   vm->open_upvalues = NULL;
@@ -108,30 +108,30 @@ static inline ObjString* vm_read_string(CallFrame* call_frame) {
   return Object_as_string(vm_read_constant(call_frame));
 }
 
-static inline InterpretResult vm_run_instruction(VM* vm) {
+static inline InterpretResult vm_run_instruction(Vm* vm) {
   CallFrame* call_frame = vm_current_frame(vm);
   uint8_t instruction;
   switch (instruction = vm_read_byte(call_frame)) {
     case OP_CONSTANT: {
       Value constant = vm_read_constant(call_frame);
-      VM_push(vm, constant);
+      Vm_push(vm, constant);
       break;
     }
     case OP_NIL:
-      VM_push(vm, Value_make_nil());
+      Vm_push(vm, Value_make_nil());
       break;
     case OP_TRUE:
-      VM_push(vm, Value_make_boolean(true));
+      Vm_push(vm, Value_make_boolean(true));
       break;
     case OP_FALSE:
-      VM_push(vm, Value_make_boolean(false));
+      Vm_push(vm, Value_make_boolean(false));
       break;
     case OP_POP:
-      VM_pop(vm);
+      Vm_pop(vm);
       break;
     case OP_GET_LOCAL: {
       uint8_t slot = vm_read_byte(call_frame);
-      VM_push(vm, call_frame->slots[slot]);
+      Vm_push(vm, call_frame->slots[slot]);
       break;
     }
     case OP_SET_LOCAL: {
@@ -146,13 +146,13 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         vm_runtime_error(vm, "Undefined variable '%s'.", name->chars);
         return INTERPRET_RUNTIME_ERROR;
       }
-      VM_push(vm, value);
+      Vm_push(vm, value);
       break;
     }
     case OP_DEFINE_GLOBAL: {
       ObjString* name = vm_read_string(call_frame);
       Table_set(&vm->globals, name, vm_stack_peek(vm, 0));
-      VM_pop(vm);
+      Vm_pop(vm);
       break;
     }
     case OP_SET_GLOBAL: {
@@ -166,7 +166,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     }
     case OP_GET_UPVALUE: {
       uint8_t slot = vm_read_byte(call_frame);
-      VM_push(vm, *call_frame->closure->upvalues[slot]->location);
+      Vm_push(vm, *call_frame->closure->upvalues[slot]->location);
       break;
     }
     case OP_SET_UPVALUE: {
@@ -175,9 +175,9 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
       break;
     }
     case OP_EQUAL: {
-      Value b = VM_pop(vm);
-      Value a = VM_pop(vm);
-      VM_push(vm, Value_make_boolean(Value_equals(a, b)));
+      Value b = Vm_pop(vm);
+      Value a = Vm_pop(vm);
+      Vm_push(vm, Value_make_boolean(Value_equals(a, b)));
       break;
     }
     case OP_GREATER: {
@@ -185,9 +185,9 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         vm_runtime_error(vm, "Operands must be numbers.");
         return INTERPRET_RUNTIME_ERROR;
       }
-      double b = Value_as_number(VM_pop(vm));
-      double a = Value_as_number(VM_pop(vm));
-      VM_push(vm, Value_make_boolean(a > b));
+      double b = Value_as_number(Vm_pop(vm));
+      double a = Value_as_number(Vm_pop(vm));
+      Vm_push(vm, Value_make_boolean(a > b));
       break;
     }
     case OP_LESS: {
@@ -195,18 +195,18 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         vm_runtime_error(vm, "Operands must be numbers.");
         return INTERPRET_RUNTIME_ERROR;
       }
-      double b = Value_as_number(VM_pop(vm));
-      double a = Value_as_number(VM_pop(vm));
-      VM_push(vm, Value_make_boolean(a < b));
+      double b = Value_as_number(Vm_pop(vm));
+      double a = Value_as_number(Vm_pop(vm));
+      Vm_push(vm, Value_make_boolean(a < b));
       break;
     }
     case OP_ADD: {
       if (Object_is_string(vm_stack_peek(vm, 0)) && Object_is_string(vm_stack_peek(vm, 1))) {
         vm_concatenate(vm);
       } else if (Value_is_number(vm_stack_peek(vm, 0)) && Value_is_number(vm_stack_peek(vm, 1))) {
-        double b = Value_as_number(VM_pop(vm));
-        double a = Value_as_number(VM_pop(vm));
-        VM_push(vm, Value_make_number(a + b));
+        double b = Value_as_number(Vm_pop(vm));
+        double a = Value_as_number(Vm_pop(vm));
+        Vm_push(vm, Value_make_number(a + b));
       } else {
         vm_runtime_error(vm, "Operands must be two numbers or two strings.");
         return INTERPRET_RUNTIME_ERROR;
@@ -218,9 +218,9 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         vm_runtime_error(vm, "Operands must be numbers.");
         return INTERPRET_RUNTIME_ERROR;
       }
-      double b = Value_as_number(VM_pop(vm));
-      double a = Value_as_number(VM_pop(vm));
-      VM_push(vm, Value_make_number(a - b));
+      double b = Value_as_number(Vm_pop(vm));
+      double a = Value_as_number(Vm_pop(vm));
+      Vm_push(vm, Value_make_number(a - b));
       break;
     }
     case OP_MULTIPLY: {
@@ -228,9 +228,9 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         vm_runtime_error(vm, "Operands must be numbers.");
         return INTERPRET_RUNTIME_ERROR;
       }
-      double b = Value_as_number(VM_pop(vm));
-      double a = Value_as_number(VM_pop(vm));
-      VM_push(vm, Value_make_number(a * b));
+      double b = Value_as_number(Vm_pop(vm));
+      double a = Value_as_number(Vm_pop(vm));
+      Vm_push(vm, Value_make_number(a * b));
       break;
     }
     case OP_DIVIDE: {
@@ -238,23 +238,23 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
         vm_runtime_error(vm, "Operands must be numbers.");
         return INTERPRET_RUNTIME_ERROR;
       }
-      double b = Value_as_number(VM_pop(vm));
-      double a = Value_as_number(VM_pop(vm));
-      VM_push(vm, Value_make_number(a / b));
+      double b = Value_as_number(Vm_pop(vm));
+      double a = Value_as_number(Vm_pop(vm));
+      Vm_push(vm, Value_make_number(a / b));
       break;
     }
     case OP_NOT:
-      VM_push(vm, Value_make_boolean(vm_is_falsey(VM_pop(vm))));
+      Vm_push(vm, Value_make_boolean(vm_is_falsey(Vm_pop(vm))));
       break;
     case OP_NEGATE:
       if (!Value_is_number(vm_stack_peek(vm, 0))) {
         vm_runtime_error(vm, "Operand must be a number.");
         return INTERPRET_RUNTIME_ERROR;
       }
-      VM_push(vm, Value_make_number(-Value_as_number(VM_pop(vm))));
+      Vm_push(vm, Value_make_number(-Value_as_number(Vm_pop(vm))));
       break;
     case OP_PRINT: {
-      Value_print(VM_pop(vm));
+      Value_print(Vm_pop(vm));
       printf("\n");
       break;
     }
@@ -285,7 +285,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     case OP_CLOSURE: {
       ObjFunction* function = Object_as_function(vm_read_constant(call_frame));
       ObjClosure* closure = VmMemory_allocate_new_closure(vm, function);
-      VM_push(vm, Value_make_obj((Obj*)closure));
+      Vm_push(vm, Value_make_obj((Obj*)closure));
       for (int i = 0; i < closure->upvalue_count; i++) {
         uint8_t is_local = vm_read_byte(call_frame);
         uint8_t index = vm_read_byte(call_frame);
@@ -299,20 +299,20 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
     }
     case OP_CLOSE_UPVALUE: {
       vm_close_upvalues(vm, vm->stack_top - 1);
-      VM_pop(vm);
+      Vm_pop(vm);
       break;
     }
     case OP_RETURN: {
-      Value result = VM_pop(vm);
+      Value result = Vm_pop(vm);
       vm_close_upvalues(vm, call_frame->slots);
       vm->frame_count--;
       if (vm->frame_count == 0) {
-        VM_pop(vm);
+        Vm_pop(vm);
         return INTERPRET_OK;
       }
 
       vm->stack_top = call_frame->slots;
-      VM_push(vm, result);
+      Vm_push(vm, result);
       break;
     }
     default:
@@ -321,7 +321,7 @@ static inline InterpretResult vm_run_instruction(VM* vm) {
   return INTERPRET_INCOMPLETE;
 }
 
-static InterpretResult vm_run(VM* vm) {
+static InterpretResult vm_run(Vm* vm) {
   for (;;) {
     InterpretResult result = vm_run_instruction(vm);
     if (result != INTERPRET_INCOMPLETE) {
@@ -330,7 +330,7 @@ static InterpretResult vm_run(VM* vm) {
   }
 }
 
-static Value vm_stack_peek(VM* vm, int distance) {
+static Value vm_stack_peek(Vm* vm, int distance) {
   return vm->stack_top[-1 - distance];
 }
 
@@ -338,7 +338,7 @@ static bool vm_is_falsey(Value value) {
   return Value_is_nil(value) || (Value_is_boolean(value) && !Value_as_boolean(value));
 }
 
-static bool vm_call(VM* vm, ObjClosure* closure, int arg_count) {
+static bool vm_call(Vm* vm, ObjClosure* closure, int arg_count) {
   if (arg_count != closure->function->arity) {
     vm_runtime_error(vm, "Expected %d arguments but got %d.", closure->function->arity, arg_count);
     return false;
@@ -356,7 +356,7 @@ static bool vm_call(VM* vm, ObjClosure* closure, int arg_count) {
   return true;
 }
 
-static bool vm_call_value(VM* vm, Value callee, int arg_count) {
+static bool vm_call_value(Vm* vm, Value callee, int arg_count) {
   if (Value_is_obj(callee)) {
     switch (Object_type(callee)) {
       case OBJ_CLOSURE:
@@ -365,7 +365,7 @@ static bool vm_call_value(VM* vm, Value callee, int arg_count) {
         NativeFn native = Object_as_native(callee);
         Value result = native(arg_count, vm->stack_top - arg_count);
         vm->stack_top -= arg_count + 1;
-        VM_push(vm, result);
+        Vm_push(vm, result);
         return true;
       }
       default:
@@ -376,7 +376,7 @@ static bool vm_call_value(VM* vm, Value callee, int arg_count) {
   return false;
 }
 
-static void vm_runtime_error(VM* vm, const char* format, ...) {
+static void vm_runtime_error(Vm* vm, const char* format, ...) {
   va_list args;
   va_start(args, format);
   vfprintf(stderr, format, args);
@@ -405,9 +405,9 @@ static void vm_runtime_error(VM* vm, const char* format, ...) {
   vm_reset_stack(vm);
 }
 
-static void vm_concatenate(VM *vm) {
-  ObjString* b = Object_as_string(VM_pop(vm));
-  ObjString* a = Object_as_string(VM_pop(vm));
+static void vm_concatenate(Vm* vm) {
+  ObjString* b = Object_as_string(Vm_pop(vm));
+  ObjString* a = Object_as_string(Vm_pop(vm));
 
   int length = a->length + b->length;
   char* chars = Memory_allocate_chars(length + 1);
@@ -416,18 +416,18 @@ static void vm_concatenate(VM *vm) {
   chars[length] = '\0';
 
   ObjString* result = VmMemory_take_string(vm, chars, length);
-  VM_push(vm, Value_make_obj((Obj*)result));
+  Vm_push(vm, Value_make_obj((Obj*)result));
 }
 
-static void vm_define_native(VM* vm, char* name, NativeFn function) {
-  VM_push(vm, Value_make_obj((Obj*)VmMemory_copy_string(vm, name, (int)strlen(name))));
-  VM_push(vm, Value_make_obj((Obj*)VmMemory_allocate_new_native(vm, function)));
+static void vm_define_native(Vm* vm, char* name, NativeFn function) {
+  Vm_push(vm, Value_make_obj((Obj*)VmMemory_copy_string(vm, name, (int)strlen(name))));
+  Vm_push(vm, Value_make_obj((Obj*)VmMemory_allocate_new_native(vm, function)));
   Table_set(&vm->globals, Object_as_string(vm_stack_peek(vm, 1)), vm_stack_peek(vm, 0));
-  VM_pop(vm);
-  VM_pop(vm);
+  Vm_pop(vm);
+  Vm_pop(vm);
 }
 
-static ObjUpvalue* vm_capture_upvalue(VM* vm, Value* local) {
+static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local) {
   ObjUpvalue* previous_upvalue = NULL;
   ObjUpvalue* upvalue = vm->open_upvalues;
   while (upvalue != NULL && upvalue->location > local) {
@@ -450,7 +450,7 @@ static ObjUpvalue* vm_capture_upvalue(VM* vm, Value* local) {
   return created_upvalue;
 }
 
-static void vm_close_upvalues(VM* vm, Value* last) {
+static void vm_close_upvalues(Vm* vm, Value* last) {
   while (vm->open_upvalues != NULL && vm->open_upvalues->location >= last) {
     ObjUpvalue* upvalue = vm->open_upvalues;
     upvalue->closed = *upvalue->location;
