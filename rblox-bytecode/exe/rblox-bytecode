@@ -4,8 +4,13 @@ $LOAD_PATH.unshift("#{__dir__}/../lib")
 
 require "rblox/bytecode"
 
-debug_mode_var = ENV["RBLOX_DEBUG_MODE"]
-debug_mode = !debug_mode_var.nil? && !debug_mode_var.empty? && !["0", "false"].include?(debug_mode_var.downcase)
+def read_bool_env_var(variable)
+  value = ENV[variable]
+  !value.nil? && !value.empty? && !["0", "false"].include?(value.downcase)
+end
+
+debug_mode = read_bool_env_var("RBLOX_DEBUG_MODE")
+stress_gc = read_bool_env_var("RBLOX_STRESS_GC")
 
 if ARGV.length > 1
   puts "Usage: rblox-bytecode [script]"
@@ -13,10 +18,10 @@ if ARGV.length > 1
 elsif ARGV.length == 1
   file_path = ARGV[0]
   contents = File.read(file_path)
-  main = Rblox::Bytecode::Main.new
-  main.run(contents, debug_mode: debug_mode)
+  main = Rblox::Bytecode::Main.new(debug_mode: debug_mode, stress_gc: stress_gc)
+  main.run(contents)
   exit 65 if main.had_error?
   exit 70 if main.had_runtime_error?
 else
-  Rblox::Bytecode::Repl.new($stdin, Rblox::Bytecode::Main.new, debug_mode: debug_mode).run
+  Rblox::Bytecode::Repl.new($stdin, Rblox::Bytecode::Main.new(debug_mode: debug_mode, stress_gc: stress_gc)).run
 end

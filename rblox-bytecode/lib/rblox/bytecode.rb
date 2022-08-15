@@ -216,7 +216,8 @@ module Rblox
         :globals, Table,
         :strings, Table,
         :open_upvalues, ObjUpvalue.ptr,
-        :objects, Obj.ptr
+        :objects, Obj.ptr,
+        :stress_gc, :bool
 
       def self.with_new
         FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1) do |p|

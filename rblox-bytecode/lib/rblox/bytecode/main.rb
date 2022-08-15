@@ -3,12 +3,14 @@ require "rblox/parser"
 module Rblox
   module Bytecode
     class Main
-      def initialize
+      def initialize(debug_mode: false, stress_gc: false)
         @vm = Rblox::Bytecode::VM.new(FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1)[0])
         Rblox::Bytecode.vm_init(@vm)
+        @debug_mode = debug_mode
+        @vm[:stress_gc] = stress_gc
       end
 
-      def run(source, debug_mode: false)
+      def run(source)
         scanner = Rblox::Parser::Scanner.new(source, self)
         tokens = scanner.scan_tokens
 
@@ -81,6 +83,10 @@ module Rblox
       end
 
       private
+
+      def debug_mode
+        !!@debug_mode
+      end
 
       def report(line, where, message)
         warn("[line #{line}] Error#{where}: #{message}")
