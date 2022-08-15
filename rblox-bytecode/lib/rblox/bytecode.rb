@@ -266,7 +266,7 @@ module Rblox
     attach_function :vm_init_function, :VM_init_function, [VM.ptr, ObjFunction.ptr], :void
     attach_function :vm_interpret, :VM_interpret, [VM.ptr, ObjFunction.ptr], InterpretResult
     attach_function :vm_interpret_next_instruction, :VM_interpret_next_instruction, [VM.ptr], InterpretResult
-    attach_function :vm_copy_string, :VM_copy_string, [VM.ptr, :pointer, :int], ObjString.ptr
+    attach_function :vm_memory_copy_string, :VmMemory_copy_string, [VM.ptr, :pointer, :int], ObjString.ptr
     attach_function :vm_new_function, :VM_new_function, [VM.ptr], ObjFunction.ptr
     attach_function :vm_free, :VM_free, [VM.ptr], :void
 

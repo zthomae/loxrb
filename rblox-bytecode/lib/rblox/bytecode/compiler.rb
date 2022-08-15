@@ -375,7 +375,7 @@ module Rblox
 
       def compile_function(stmt, function_type)
         function = Rblox::Bytecode.vm_new_function(@vm)
-        function[:name] = Rblox::Bytecode.vm_copy_string(@vm, stmt.name.lexeme, stmt.name.lexeme.bytesize)
+        function[:name] = Rblox::Bytecode.vm_memory_copy_string(@vm, stmt.name.lexeme, stmt.name.lexeme.bytesize)
         compiler = Compiler.new(@vm, function, function_type, @error_handler, self, @scope_depth + 1)
         stmt.params.each do |param|
           function[:arity] += 1
@@ -417,7 +417,7 @@ module Rblox
       end
 
       def make_identifier_constant(token, value)
-        obj_string = Rblox::Bytecode.vm_copy_string(@vm, value, value.bytesize)
+        obj_string = Rblox::Bytecode.vm_memory_copy_string(@vm, value, value.bytesize)
         [make_constant(:object, token, obj_string), obj_string]
       end
 

@@ -41,9 +41,6 @@ InterpretResult VM_interpret_next_instruction(VM* vm);
 void VM_push(VM* vm, Value value);
 Value VM_pop(VM* vm);
 
-ObjString* VM_copy_string(VM* vm, char* chars, int length);
-ObjString* VM_take_string(VM* vm, char* chars, int length);
-
 ObjFunction* VM_new_function(VM* vm);
 
 void VM_free(VM* vm);

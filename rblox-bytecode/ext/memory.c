@@ -3,7 +3,6 @@
 #include "common.h"
 #include "memory.h"
 #include "object.h"
-#include "vm.h"
 
 void *Memory_reallocate(void *array, size_t old_size, size_t new_size) {
   if (new_size == 0) {
@@ -40,15 +39,6 @@ void* Memory_allocate(size_t size, size_t count) {
 
 char* Memory_allocate_chars(size_t count) {
   return (char*)Memory_allocate(sizeof(char), count);
-}
-
-void Memory_free_objects(VM* vm) {
-  Obj* object = vm->objects;
-  while (object != NULL) {
-    Obj* next = object->next;
-    Memory_free_object(object);
-    object = next;
-  }
 }
 
 void Memory_free_object(Obj* object) {
