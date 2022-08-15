@@ -3,11 +3,21 @@ require "rblox/parser"
 module Rblox
   module Bytecode
     class Main
-      def initialize(debug_mode: false, stress_gc: false)
+      VmOptions = Struct.new(:log_disassembly, :log_gc, :stress_gc, keyword_init: true) do
+        def self.default
+          new(log_disassembly: false, log_gc: false, stress_gc: false)
+        end
+      end
+
+      def initialize(vm_options = nil)
+        @vm_options = vm_options || VmOptions.default
         @vm = Rblox::Bytecode::VM.new(FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1)[0])
         Rblox::Bytecode.vm_init(@vm)
-        @debug_mode = debug_mode
-        @vm[:stress_gc] = stress_gc
+        @vm[:log_gc] = @vm_options.log_gc
+        @vm[:stress_gc] = @vm_options.stress_gc
+        if @vm_options.log_disassembly
+          @disassembler = Rblox::Bytecode::Disassembler.new($stdout)
+        end
       end
 
       def run(source)
@@ -19,22 +29,18 @@ module Rblox
 
         return if had_error?
 
-        if debug_mode
-          disassembler = Rblox::Bytecode::Disassembler.new($stdout)
-        end
-
         @vm.with_new_function do |function|
           compiler = Compiler.new(@vm, function, Compiler::FunctionType::SCRIPT, self)
           compiler.compile(statements)
 
           return if had_error?
 
-          if debug_mode
-            disassembler.disassemble_function(function)
+          if log_disassembly?
+            @disassembler.disassemble_function(function)
             puts "[DEBUG] "
           end
 
-          interpreter = Interpreter.new(@vm, disassembler: disassembler)
+          interpreter = Interpreter.new(@vm, disassembler: @disassembler)
           interpret_result = interpreter.interpret(function)
           if interpret_result != :ok
             @had_runtime_error = true
@@ -82,11 +88,11 @@ module Rblox
         @had_error = false
       end
 
-      private
-
-      def debug_mode
-        !!@debug_mode
+      def log_disassembly?
+        @vm_options.log_disassembly
       end
+
+      private
 
       def report(line, where, message)
         warn("[line #{line}] Error#{where}: #{message}")

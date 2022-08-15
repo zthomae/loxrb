@@ -9,7 +9,7 @@ module Rblox
       def interpret(function)
         interpret_result = nil
 
-        if debug_mode?
+        if log_disassembly?
           Rblox::Bytecode.vm_init_function(@vm, function)
           loop do
             @disassembler.disassemble_instruction(@vm.current_function[:chunk], @vm.current_offset)
@@ -26,12 +26,8 @@ module Rblox
 
       private
 
-      def debug_mode?
+      def log_disassembly?
         !!@disassembler
-      end
-
-      def execute(statement)
-
       end
     end
   end

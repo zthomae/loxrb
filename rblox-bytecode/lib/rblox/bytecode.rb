@@ -217,6 +217,7 @@ module Rblox
         :strings, Table,
         :open_upvalues, ObjUpvalue.ptr,
         :objects, Obj.ptr,
+        :log_gc, :bool,
         :stress_gc, :bool
 
       def self.with_new

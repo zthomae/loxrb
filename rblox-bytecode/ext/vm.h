@@ -24,6 +24,7 @@ typedef struct {
   Table strings;
   ObjUpvalue* open_upvalues;
   Obj* objects;
+  bool log_gc;
   bool stress_gc;
 } Vm;
 
