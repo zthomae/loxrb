@@ -14,7 +14,7 @@ module Rblox
           loop do
             @disassembler.disassemble_instruction(@vm.current_function[:chunk], @vm.current_offset)
             interpret_result = Rblox::Bytecode.vm_interpret_next_instruction(@vm)
-            pp @vm.stack_contents
+            puts "[DEBUG] Stack contents: #{@vm.stack_contents}"
             break if interpret_result != :incomplete
           end
         else

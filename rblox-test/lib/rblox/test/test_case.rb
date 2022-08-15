@@ -59,9 +59,6 @@ module Rblox
         (1..lines.length).each do |line_num|
           line = lines[line_num - 1]
           match = OutputPatterns::NONTEST.match(line)
-          if !match.nil?
-            return TestParseOutput.new(false, expectations)
-          end
           return TestParseOutput.new(false, expectations) unless match.nil?
 
           match = OutputPatterns::EXPECTED_OUTPUT.match(line)
@@ -223,6 +220,9 @@ module Rblox
         if !output_lines.empty? && output_lines.last == ""
           output_lines.pop
         end
+
+        # Remove debug lines from output
+        output_lines = output_lines.reject { |line| /^\[DEBUG\] /.match(line) }
 
         index = 0
         while index < output_lines.length

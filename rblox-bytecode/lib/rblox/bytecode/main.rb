@@ -29,7 +29,7 @@ module Rblox
 
           if debug_mode
             disassembler.disassemble_function(function)
-            puts ""
+            puts "[DEBUG] "
           end
 
           interpreter = Interpreter.new(@vm, disassembler: disassembler)

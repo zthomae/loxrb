@@ -11,7 +11,7 @@ module Rblox
       end
 
       def disassemble_chunk(chunk, name)
-        io.puts "== #{name} =="
+        io.puts "[DEBUG] == #{name} =="
 
         offset = 0
         count = chunk[:count]
@@ -21,7 +21,7 @@ module Rblox
       end
 
       def disassemble_instruction(chunk, offset)
-        io.print "%04d " % offset
+        io.print "[DEBUG] %04d " % offset
         current_line = chunk.line_at(offset)
         if offset > 0 && current_line == chunk.line_at(offset - 1)
           io.print "   | "
@@ -93,7 +93,7 @@ module Rblox
           (0...function[:upvalue_count]).each do
             is_local = chunk.contents_at(offset) == 1
             index = chunk.contents_at(offset + 1)
-            io.puts "%04d      |                     %s %d\n" % [offset, is_local ? "local" : "upvalue", index]
+            io.puts "[DEBUG] %04d      |                     %s %d\n" % [offset, is_local ? "local" : "upvalue", index]
             offset += 2
           end
 
@@ -119,7 +119,7 @@ module Rblox
         when :number
           io.puts "%-16s %4d '%g'" % [name, constant_index, constant[:as][:number]]
         when :obj
-          io.puts "%-16s %4d '%s'" % [name, constant_index, constant[:as][:obj].to_s]
+          io.puts "%-16s %4d '%s'" % [name, constant_index, constant[:as][:obj].to_s.dump]
         end
 
         offset + 2
