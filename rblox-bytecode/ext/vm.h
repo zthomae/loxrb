@@ -38,8 +38,6 @@ void Vm_init(Vm* vm);
 void Vm_init_function(Vm* vm, ObjFunction* function);
 InterpretResult Vm_interpret(Vm* vm, ObjFunction* function);
 InterpretResult Vm_interpret_next_instruction(Vm* vm);
-void Vm_push(Vm* vm, Value value);
-Value Vm_pop(Vm* vm);
 
 ObjFunction* Vm_new_function(Vm* vm);
 
