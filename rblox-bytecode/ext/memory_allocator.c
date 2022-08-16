@@ -8,7 +8,7 @@ void MemoryAllocator_init(MemoryAllocator* memory_allocator) {
   memory_allocator->stress_gc = false;
 }
 
-void* MemoryAllocator_reallocate(MemoryAllocator* memory_allocator, void *array, size_t old_size, size_t new_size) {
+void* MemoryAllocator_reallocate(MemoryAllocator* memory_allocator, void* array, size_t old_size, size_t new_size) {
   if (new_size == 0) {
     free(array);
     return NULL;
@@ -19,7 +19,7 @@ void* MemoryAllocator_reallocate(MemoryAllocator* memory_allocator, void *array,
   return result;
 }
 
-void MemoryAllocator_free(MemoryAllocator* memory_allocator, void *ptr, size_t size) {
+void MemoryAllocator_free(MemoryAllocator* memory_allocator, void* ptr, size_t size) {
   MemoryAllocator_reallocate(memory_allocator, ptr, size, 0);
 }
 
@@ -27,13 +27,13 @@ int MemoryAllocator_get_increased_capacity(int old_capacity) {
   return old_capacity < 8 ? 8 : old_capacity * 2;
 }
 
-void* MemoryAllocator_grow_array(MemoryAllocator* memory_allocator, void *array, size_t item_size, int old_capacity, int new_capacity) {
+void* MemoryAllocator_grow_array(MemoryAllocator* memory_allocator, void* array, size_t item_size, int old_capacity, int new_capacity) {
   size_t old_size = item_size * old_capacity;
   size_t new_size = item_size * new_capacity;
   return MemoryAllocator_reallocate(memory_allocator, array, old_size, new_size);
 }
 
-void MemoryAllocator_free_array(MemoryAllocator* memory_allocator, void *array, size_t item_size, int capacity) {
+void MemoryAllocator_free_array(MemoryAllocator* memory_allocator, void* array, size_t item_size, int capacity) {
   MemoryAllocator_reallocate(memory_allocator, array, item_size * capacity, 0);
 }
 
