@@ -11,15 +11,16 @@
 static Entry* table_find_entry(Entry* entries, int capacity, ObjString* key);
 static void table_adjust_capacity(Table* table, int new_capacity);
 
-void Table_init(Table* table) {
+void Table_init(Table* table, MemoryAllocator* memory_allocator) {
   table->count = 0;
   table->capacity = 0;
   table->entries = NULL;
+  table->memory_allocator = memory_allocator;
 }
 
 void Table_free(Table* table) {
   MemoryAllocator_free_array(table->entries, sizeof(Entry), table->capacity);
-  Table_init(table);
+  Table_init(table, table->memory_allocator);
 }
 
 bool Table_set(Table* table, ObjString* key, Value value) {

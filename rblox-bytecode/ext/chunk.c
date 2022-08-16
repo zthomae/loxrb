@@ -4,12 +4,13 @@
 #include "memory_allocator.h"
 #include "base_object.h"
 
-void Chunk_init(Chunk* chunk) {
+void Chunk_init(Chunk* chunk, MemoryAllocator* memory_allocator) {
   chunk->count = 0;
   chunk->capacity = 0;
   chunk->code = NULL;
   chunk->lines = NULL;
-  ValueArray_init(&chunk->constants);
+  chunk->memory_allocator = memory_allocator;
+  ValueArray_init(&chunk->constants, chunk->memory_allocator);
 }
 
 void Chunk_write(Chunk* chunk, uint8_t byte, int line) {
@@ -29,7 +30,7 @@ void Chunk_free(Chunk* chunk) {
   MemoryAllocator_free_array(chunk->code, sizeof(uint8_t), chunk->capacity);
   MemoryAllocator_free_array(chunk->lines, sizeof(int), chunk->capacity);
   ValueArray_free(&chunk->constants);
-  Chunk_init(chunk);
+  Chunk_init(chunk, chunk->memory_allocator);
 }
 
 int Chunk_add_number(Chunk* chunk, double number) {

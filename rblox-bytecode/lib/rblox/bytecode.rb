@@ -98,7 +98,7 @@ module Rblox
     attach_function :value_print, :Value_print, [Value], :void
 
     class ValueArray < FFI::Struct
-      layout :capacity, :int, :count, :int, :values, :pointer
+      layout :capacity, :int, :count, :int, :values, :pointer, :memory_allocator, MemoryAllocator.ptr
 
       def constant_at(offset)
         Value.new(self[:values] + (offset * Value.size))
@@ -116,7 +116,7 @@ module Rblox
     end
 
     class Table < FFI::Struct
-      layout :count, :int, :capacity, :int, :entries, Entry.ptr
+      layout :count, :int, :capacity, :int, :entries, Entry.ptr, :memory_allocator, MemoryAllocator.ptr
     end
 
     ### CHUNKS ###
@@ -154,19 +154,7 @@ module Rblox
     ]
 
     class Chunk < FFI::Struct
-      layout :capacity, :int, :count, :int, :code, :pointer, :lines, :pointer, :constants, ValueArray
-
-      def self.with_new
-        FFI::MemoryPointer.new(Rblox::Bytecode::Chunk, 1) do |p|
-          chunk = Rblox::Bytecode::Chunk.new(p[0])
-          Rblox::Bytecode.chunk_init(chunk)
-          begin
-            yield chunk
-          ensure
-            Rblox::Bytecode.chunk_free(chunk)
-          end
-        end
-      end
+      layout :capacity, :int, :count, :int, :code, :pointer, :lines, :pointer, :constants, ValueArray, :memory_allocator, MemoryAllocator.ptr
 
       def line_at(offset)
         (self[:lines] + (offset * FFI.type_size(FFI::TYPE_INT32))).read(:int)
@@ -185,9 +173,7 @@ module Rblox
       end
     end
 
-    attach_function :chunk_init, :Chunk_init, [Chunk.ptr], :void
     attach_function :chunk_write, :Chunk_write, [Chunk.ptr, :uint8, :int], :void
-    attach_function :chunk_free, :Chunk_free, [Chunk.ptr], :void
 
     attach_function :chunk_add_number, :Chunk_add_number, [Chunk.ptr, :double], :int
     attach_function :chunk_add_object, :Chunk_add_object, [Chunk.ptr, :pointer], :int
@@ -231,18 +217,6 @@ module Rblox
         :globals, Table,
         :open_upvalues, ObjUpvalue.ptr,
         :memory_manager, MemoryManager
-
-      def self.with_new
-        FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1) do |p|
-          vm = Rblox::Bytecode::VM.new(p[0])
-          Rblox::Bytecode.vm_init(vm)
-          begin
-            yield vm
-          ensure
-            Rblox::Bytecode.vm_free(vm)
-          end
-        end
-      end
 
       def with_new_function
         begin

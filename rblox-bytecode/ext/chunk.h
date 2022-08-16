@@ -4,6 +4,7 @@
 #include "common.h"
 #include "value.h"
 #include "base_object.h"
+#include "memory_allocator.h"
 
 typedef enum {
   OP_CONSTANT,
@@ -43,9 +44,10 @@ typedef struct {
   uint8_t* code;
   int* lines;
   ValueArray constants;
+  MemoryAllocator* memory_allocator;
 } Chunk;
 
-void Chunk_init(Chunk* chunk);
+void Chunk_init(Chunk* chunk, MemoryAllocator* memory_allocator);
 void Chunk_write(Chunk* chunk, uint8_t byte, int line);
 void Chunk_free(Chunk* chunk);
 int Chunk_add_number(Chunk* chunk, double number);

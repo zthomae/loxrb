@@ -33,7 +33,7 @@ static Value vm_clock_native(int arg_count, Value* args) {
 
 void Vm_init(Vm* vm) {
   vm_reset_stack(vm);
-  Table_init(&vm->globals);
+  Table_init(&vm->globals, &vm->memory_manager.memory_allocator);
   MemoryManager_init(&vm->memory_manager);
 
   vm_define_native(vm, "clock", vm_clock_native);
@@ -71,7 +71,7 @@ ObjFunction* Vm_new_function(Vm* vm) {
   function->arity = 0;
   function->upvalue_count = 0;
   function->name = NULL;
-  Chunk_init(&function->chunk);
+  Chunk_init(&function->chunk, &vm->memory_manager.memory_allocator);
   return function;
 }
 

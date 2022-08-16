@@ -11,7 +11,7 @@ static uint32_t memorymanager_hash_string(char* chars, int length);
 void MemoryManager_init(MemoryManager* memory_manager) {
   memory_manager->objects = NULL;
   MemoryAllocator_init(&memory_manager->memory_allocator);
-  Table_init(&memory_manager->strings);
+  Table_init(&memory_manager->strings, &memory_manager->memory_allocator);
 }
 
 ObjString* MemoryManager_allocate_string(MemoryManager* memory_manager, char* chars, int length, uint32_t hash) {

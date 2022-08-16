@@ -5,10 +5,11 @@
 #include "memory_allocator.h"
 #include "value.h"
 
-void ValueArray_init(ValueArray* array) {
+void ValueArray_init(ValueArray* array, MemoryAllocator* memory_allocator) {
   array->values = NULL;
   array->capacity = 0;
   array->count = 0;
+  array->memory_allocator = memory_allocator;
 }
 
 void ValueArray_write(ValueArray* array, Value value) {
@@ -24,7 +25,7 @@ void ValueArray_write(ValueArray* array, Value value) {
 
 void ValueArray_free(ValueArray* array) {
   MemoryAllocator_free_array(array->values, sizeof(Value), array->capacity);
-  ValueArray_init(array);
+  ValueArray_init(array, array->memory_allocator);
 }
 
 bool Value_equals(Value a, Value b) {

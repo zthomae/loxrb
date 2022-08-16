@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "value.h"
+#include "memory_allocator.h"
 
 typedef struct {
   ObjString* key;
@@ -13,9 +14,10 @@ typedef struct {
   int count;
   int capacity;
   Entry* entries;
+  MemoryAllocator* memory_allocator;
 } Table;
 
-void Table_init(Table* table);
+void Table_init(Table* table, MemoryAllocator* memory_allocator);
 void Table_free(Table* table);
 
 bool Table_set(Table* table, ObjString* key, Value value);
