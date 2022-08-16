@@ -41,7 +41,7 @@ inline Value Value_make_boolean(bool value) {
 }
 
 // TODO: There should only really need to be one nil value
-inline Value Value_make_nil() {
+inline Value Value_make_nil(void) {
   return (Value){VAL_NIL, {.number = 0}};
 }
 
