@@ -2,7 +2,7 @@
 
 #include "object.h"
 #include "table.h"
-#include "memory.h"
+#include "memory_allocator.h"
 #include "memory_manager.h"
 
 Obj* memorymanager_allocate_new(MemoryManager* memory_manager, size_t size, ObjType type);
@@ -45,7 +45,7 @@ ObjNative* MemoryManager_allocate_new_native(MemoryManager* memory_manager, Nati
 }
 
 ObjClosure* MemoryManager_allocate_new_closure(MemoryManager* memory_manager, ObjFunction* function) {
-  ObjUpvalue** upvalues = Memory_allocate(sizeof(ObjUpvalue*), function->upvalue_count);
+  ObjUpvalue** upvalues = MemoryAllocator_allocate(sizeof(ObjUpvalue*), function->upvalue_count);
   for (int i = 0; i < function->upvalue_count; i++) {
     upvalues[i] = NULL;
   }
@@ -63,7 +63,7 @@ ObjString* MemoryManager_copy_string(MemoryManager* memory_manager, char* chars,
     return interned;
   }
 
-  char* heap_chars = Memory_allocate_chars(length + 1);
+  char* heap_chars = MemoryAllocator_allocate_chars(length + 1);
   memcpy(heap_chars, chars, length);
   heap_chars[length] = '\0';
   return MemoryManager_allocate_string(memory_manager, heap_chars, length, hash);
@@ -73,7 +73,7 @@ ObjString* MemoryManager_take_string(MemoryManager* memory_manager, char* chars,
   uint32_t hash = memorymanager_hash_string(chars, length);
   ObjString* interned = Table_find_string(&memory_manager->strings, chars, length, hash);
   if (interned != NULL) {
-    Memory_free_array(chars, sizeof(char), length + 1);
+    MemoryAllocator_free_array(chars, sizeof(char), length + 1);
     return interned;
   }
 
@@ -84,7 +84,7 @@ void MemoryManager_free(MemoryManager* memory_manager) {
   Obj* object = memory_manager->objects;
   while (object != NULL) {
     Obj* next = object->next;
-    Memory_free_object(object);
+    MemoryAllocator_free_object(object);
     object = next;
   }
 
@@ -92,7 +92,7 @@ void MemoryManager_free(MemoryManager* memory_manager) {
 }
 
 Obj* memorymanager_allocate_new(MemoryManager* memory_manager, size_t size, ObjType type) {
-  Obj* object = (Obj*)Memory_reallocate(NULL, 0, size);
+  Obj* object = (Obj*)MemoryAllocator_reallocate(NULL, 0, size);
   object->type = type;
 
   object->next = memory_manager->objects;

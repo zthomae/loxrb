@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "memory.h"
+#include "memory_allocator.h"
 #include "object.h"
 #include "table.h"
 #include "value.h"
@@ -18,13 +18,13 @@ void Table_init(Table* table) {
 }
 
 void Table_free(Table* table) {
-  Memory_free_array(table->entries, sizeof(Entry), table->capacity);
+  MemoryAllocator_free_array(table->entries, sizeof(Entry), table->capacity);
   Table_init(table);
 }
 
 bool Table_set(Table* table, ObjString* key, Value value) {
   if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
-    int capacity = Memory_grow_capacity(table->capacity);
+    int capacity = MemoryAllocator_grow_capacity(table->capacity);
     table_adjust_capacity(table, capacity);
   }
 
@@ -132,7 +132,7 @@ static Entry* table_find_entry(Entry* entries, int capacity, ObjString* key) {
 }
 
 static void table_adjust_capacity(Table* table, int new_capacity) {
-  Entry* new_entries = Memory_allocate(sizeof(Entry), new_capacity);
+  Entry* new_entries = MemoryAllocator_allocate(sizeof(Entry), new_capacity);
   for (int i = 0; i < new_capacity; i++) {
     new_entries[i].key = NULL;
     new_entries[i].value = Value_make_nil();
@@ -153,7 +153,7 @@ static void table_adjust_capacity(Table* table, int new_capacity) {
     table->count++;
   }
 
-  Memory_free_array(table->entries, sizeof(Entry), table->capacity);
+  MemoryAllocator_free_array(table->entries, sizeof(Entry), table->capacity);
   table->entries = new_entries;
   table->capacity = new_capacity;
 }

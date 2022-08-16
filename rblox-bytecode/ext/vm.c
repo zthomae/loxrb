@@ -4,7 +4,7 @@
 #include <time.h>
 
 #include "common.h"
-#include "memory.h"
+#include "memory_allocator.h"
 #include "object.h"
 #include "table.h"
 #include "value.h"
@@ -410,7 +410,7 @@ static void vm_concatenate(Vm* vm) {
   ObjString* a = Object_as_string(vm_pop(vm));
 
   int length = a->length + b->length;
-  char* chars = Memory_allocate_chars(length + 1);
+  char* chars = MemoryAllocator_allocate_chars(length + 1);
   memcpy(chars, a->chars, a->length);
   memcpy(chars + a->length, b->chars, b->length);
   chars[length] = '\0';

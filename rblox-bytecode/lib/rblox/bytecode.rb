@@ -208,7 +208,7 @@ module Rblox
 
     attach_function :memory_manager_copy_string, :MemoryManager_copy_string, [MemoryManager.ptr, :pointer, :int], ObjString.ptr
 
-    attach_function :memory_free_object, :Memory_free_object, [Obj.ptr], :void
+    attach_function :memory_allocator_free_object, :MemoryAllocator_free_object, [Obj.ptr], :void
 
     ### VM ###
 
@@ -247,7 +247,7 @@ module Rblox
           yield function
         ensure
           if function
-            Rblox::Bytecode.memory_free_object(Rblox::Bytecode::Obj.new(function.to_ptr))
+            Rblox::Bytecode.memory_allocator_free_object(Rblox::Bytecode::Obj.new(function.to_ptr))
           end
         end
       end
