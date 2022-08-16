@@ -95,6 +95,8 @@ module Rblox
       end
     end
 
+    attach_function :value_print, :Value_print, [Value], :void
+
     class ValueArray < FFI::Struct
       layout :capacity, :int, :count, :int, :values, :pointer
 
@@ -102,8 +104,6 @@ module Rblox
         Value.new(self[:values] + (offset * Value.size))
       end
     end
-
-    attach_function :value_print, :Value_print, [Value], :void
 
     class ObjString < FFI::Struct
       layout :obj, Obj, :length, :int, :chars, :string, :hash, :uint32
