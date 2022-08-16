@@ -3,7 +3,12 @@
 #include "common.h"
 #include "memory_allocator.h"
 
+#define DEFAULT_MIN_INCREASED_CAPACITY 8
+#define DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR 2
+
 void MemoryAllocator_init(MemoryAllocator* memory_allocator) {
+  memory_allocator->min_increased_capacity = DEFAULT_MIN_INCREASED_CAPACITY;
+  memory_allocator->increased_capacity_scaling_factor = DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR;
   memory_allocator->log_gc = false;
   memory_allocator->stress_gc = false;
 }
@@ -23,8 +28,10 @@ void MemoryAllocator_free(MemoryAllocator* memory_allocator, void* ptr, size_t s
   MemoryAllocator_reallocate(memory_allocator, ptr, size, 0);
 }
 
-int MemoryAllocator_get_increased_capacity(int old_capacity) {
-  return old_capacity < 8 ? 8 : old_capacity * 2;
+int MemoryAllocator_get_increased_capacity(MemoryAllocator* memory_allocator, int old_capacity) {
+  uint8_t min_capacity = memory_allocator->min_increased_capacity;
+  uint8_t scaling_factor = memory_allocator->increased_capacity_scaling_factor;
+  return old_capacity < min_capacity ? min_capacity : old_capacity * scaling_factor;
 }
 
 void* MemoryAllocator_grow_array(MemoryAllocator* memory_allocator, void* array, size_t item_size, int old_capacity, int new_capacity) {

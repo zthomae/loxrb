@@ -22,7 +22,7 @@ module Rblox
     ### MEMORY ALLOCATOR ###
 
     class MemoryAllocator < FFI::Struct
-      layout :log_gc, :bool, :stress_gc, :bool
+      layout :min_increased_capacity, :uint8, :increased_capacity_scaling_factor, :uint8, :log_gc, :bool, :stress_gc, :bool
     end
 
     ### VALUES ###
