@@ -1,5 +1,5 @@
-#ifndef clox_base_object_h
-#define clox_base_object_h
+#ifndef clox_object_types_h
+#define clox_object_types_h
 
 // This file is broken out from object.h to avoid circular dependencies
 
@@ -20,5 +20,12 @@ struct Obj {
   ObjType type;
   struct Obj* next;
 };
+typedef struct Obj Obj;
+
+typedef struct ObjString ObjString;
+typedef struct ObjFunction ObjFunction;
+typedef struct ObjNative ObjNative;
+typedef struct ObjUpvalue ObjUpvalue;
+typedef struct ObjClosure ObjClosure;
 
 #endif

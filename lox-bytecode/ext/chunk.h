@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "value_array.h"
-#include "base_object.h"
+#include "object_types.h"
 #include "memory_allocator.h"
 
 typedef enum {

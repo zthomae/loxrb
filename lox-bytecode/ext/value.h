@@ -2,10 +2,7 @@
 #define clox_value_h
 
 #include "common.h"
-#include "base_object.h"
-
-typedef struct Obj Obj;
-typedef struct ObjString ObjString;
+#include "object_types.h"
 
 typedef enum {
   VAL_BOOL,

@@ -2,24 +2,9 @@
 #define clox_object_h
 
 #include "common.h"
-#include "base_object.h"
+#include "object_types.h"
 #include "chunk.h"
 #include "value.h"
-
-typedef struct {
-  Obj obj;
-  int arity;
-  int upvalue_count;
-  Chunk chunk;
-  ObjString* name;
-} ObjFunction;
-
-typedef Value (*NativeFn)(int arg_count, Value* args);
-
-typedef struct {
-  Obj obj;
-  NativeFn function;
-} ObjNative;
 
 struct ObjString {
   Obj obj;
@@ -28,19 +13,34 @@ struct ObjString {
   uint32_t hash;
 };
 
-typedef struct {
+struct ObjFunction {
+  Obj obj;
+  int arity;
+  int upvalue_count;
+  Chunk chunk;
+  ObjString* name;
+};
+
+typedef Value (*NativeFn)(int arg_count, Value* args);
+
+struct ObjNative {
+  Obj obj;
+  NativeFn function;
+};
+
+struct ObjUpvalue {
   Obj obj;
   Value* location;
   Value closed;
   struct ObjUpvalue* next;
-} ObjUpvalue;
+};
 
-typedef struct {
+struct ObjClosure {
   Obj obj;
   ObjFunction* function;
   ObjUpvalue** upvalues;
   int upvalue_count;
-} ObjClosure;
+};
 
 inline ObjType Object_type(Value value) {
   return Value_as_obj(value)->type;
