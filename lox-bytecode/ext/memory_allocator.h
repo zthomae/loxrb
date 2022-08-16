@@ -18,5 +18,6 @@ void* MemoryAllocator_grow_array(MemoryAllocator* memory_allocator, void* array,
 void MemoryAllocator_free_array(MemoryAllocator* memory_allocator, void* array, size_t item_size, int capacity);
 void* MemoryAllocator_allocate(MemoryAllocator* memory_allocator, size_t size, size_t count);
 char* MemoryAllocator_allocate_chars(MemoryAllocator* memory_allocator, size_t count);
+void MemoryAllocator_collect_garbage(MemoryAllocator* memory_allocator);
 
 #endif

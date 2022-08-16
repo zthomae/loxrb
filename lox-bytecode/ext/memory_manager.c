@@ -4,6 +4,7 @@
 #include "table.h"
 #include "memory_allocator.h"
 #include "memory_manager.h"
+#include "logger.h"
 
 Obj* memorymanager_allocate_new(MemoryManager* memory_manager, size_t size, ObjType type);
 static uint32_t memorymanager_hash_string(char* chars, int length);
@@ -82,6 +83,10 @@ ObjString* MemoryManager_take_string(MemoryManager* memory_manager, char* chars,
 }
 
 void MemoryManager_free_object(MemoryManager* memory_manager, Obj* object) {
+  if (memory_manager->memory_allocator.log_gc) {
+    Logger_debug("%p free type %d", (void*)object, object->type);
+  }
+
   switch (object->type) {
     case OBJ_CLOSURE: {
       ObjClosure* closure = (ObjClosure*)object;
@@ -131,6 +136,10 @@ Obj* memorymanager_allocate_new(MemoryManager* memory_manager, size_t size, ObjT
 
   object->next = memory_manager->objects;
   memory_manager->objects = object;
+
+  if (memory_manager->memory_allocator.log_gc) {
+    Logger_debug("%p allocate %zu for %d", (void*)object, size, type);
+  }
 
   return object;
 }
