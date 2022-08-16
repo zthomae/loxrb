@@ -200,6 +200,16 @@ module Rblox
       layout :obj, Obj, :location, Value.ptr, :closed, Value, :next, ObjUpvalue.ptr
     end
 
+    ### MEMORY MANAGEMENT ###
+
+    class MemoryManager < FFI::Struct
+      layout :strings, Table, :objects, Obj.ptr
+    end
+
+    attach_function :memory_manager_copy_string, :MemoryManager_copy_string, [MemoryManager.ptr, :pointer, :int], ObjString.ptr
+
+    attach_function :memory_free_object, :Memory_free_object, [Obj.ptr], :void
+
     ### VM ###
 
     class CallFrame < FFI::Struct
@@ -214,9 +224,8 @@ module Rblox
         :stack, [Value, 64 * 256],
         :stack_top, Value.ptr,
         :globals, Table,
-        :strings, Table,
         :open_upvalues, ObjUpvalue.ptr,
-        :objects, Obj.ptr,
+        :memory_manager, MemoryManager,
         :log_gc, :bool,
         :stress_gc, :bool
 
@@ -267,10 +276,7 @@ module Rblox
     attach_function :vm_init_function, :Vm_init_function, [VM.ptr, ObjFunction.ptr], :void
     attach_function :vm_interpret, :Vm_interpret, [VM.ptr, ObjFunction.ptr], InterpretResult
     attach_function :vm_interpret_next_instruction, :Vm_interpret_next_instruction, [VM.ptr], InterpretResult
-    attach_function :vm_memory_copy_string, :VmMemory_copy_string, [VM.ptr, :pointer, :int], ObjString.ptr
     attach_function :vm_new_function, :Vm_new_function, [VM.ptr], ObjFunction.ptr
     attach_function :vm_free, :Vm_free, [VM.ptr], :void
-
-    attach_function :memory_free_object, :Memory_free_object, [Obj.ptr], :void
   end
 end

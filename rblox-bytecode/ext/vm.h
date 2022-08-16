@@ -5,6 +5,7 @@
 #include "object.h"
 #include "table.h"
 #include "value.h"
+#include "memory_manager.h"
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * 256)
@@ -21,9 +22,8 @@ typedef struct {
   Value stack[STACK_MAX];
   Value* stack_top;
   Table globals;
-  Table strings;
   ObjUpvalue* open_upvalues;
-  Obj* objects;
+  MemoryManager memory_manager;
   bool log_gc;
   bool stress_gc;
 } Vm;

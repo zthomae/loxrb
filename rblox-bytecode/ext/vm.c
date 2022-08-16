@@ -9,7 +9,7 @@
 #include "table.h"
 #include "value.h"
 #include "vm.h"
-#include "vmmemory.h"
+#include "memory_manager.h"
 
 static CallFrame* vm_current_frame(Vm* vm);
 static void vm_reset_stack(Vm* vm);
@@ -33,17 +33,16 @@ static Value vm_clock_native(int arg_count, Value* args) {
 
 void Vm_init(Vm* vm) {
   vm_reset_stack(vm);
-  vm->objects = NULL;
   vm->stress_gc = false;
   Table_init(&vm->globals);
-  Table_init(&vm->strings);
+  MemoryManager_init(&vm->memory_manager);
 
   vm_define_native(vm, "clock", vm_clock_native);
 }
 
 void Vm_init_function(Vm* vm, ObjFunction* function) {
   vm_push(vm, Value_make_obj((Obj*)function));
-  ObjClosure* closure = VmMemory_allocate_new_closure(vm, function);
+  ObjClosure* closure = MemoryManager_allocate_new_closure(&vm->memory_manager, function);
   vm_pop(vm);
   vm_push(vm, Value_make_obj((Obj*)closure));
   vm_call(vm, closure, 0);
@@ -69,7 +68,7 @@ static Value vm_pop(Vm* vm) {
 }
 
 ObjFunction* Vm_new_function(Vm* vm) {
-  ObjFunction* function = VmMemory_allocate_new_function(vm);
+  ObjFunction* function = MemoryManager_allocate_new_function(&vm->memory_manager);
   function->arity = 0;
   function->upvalue_count = 0;
   function->name = NULL;
@@ -78,9 +77,8 @@ ObjFunction* Vm_new_function(Vm* vm) {
 }
 
 void Vm_free(Vm* vm) {
-  Table_free(&vm->strings);
   Table_free(&vm->globals);
-  VmMemory_free_objects(vm);
+  MemoryManager_free(&vm->memory_manager);
 }
 
 static CallFrame* vm_current_frame(Vm* vm) {
@@ -286,7 +284,7 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
     }
     case OP_CLOSURE: {
       ObjFunction* function = Object_as_function(vm_read_constant(call_frame));
-      ObjClosure* closure = VmMemory_allocate_new_closure(vm, function);
+      ObjClosure* closure = MemoryManager_allocate_new_closure(&vm->memory_manager, function);
       vm_push(vm, Value_make_obj((Obj*)closure));
       for (int i = 0; i < closure->upvalue_count; i++) {
         uint8_t is_local = vm_read_byte(call_frame);
@@ -417,13 +415,13 @@ static void vm_concatenate(Vm* vm) {
   memcpy(chars + a->length, b->chars, b->length);
   chars[length] = '\0';
 
-  ObjString* result = VmMemory_take_string(vm, chars, length);
+  ObjString* result = MemoryManager_take_string(&vm->memory_manager, chars, length);
   vm_push(vm, Value_make_obj((Obj*)result));
 }
 
 static void vm_define_native(Vm* vm, char* name, NativeFn function) {
-  vm_push(vm, Value_make_obj((Obj*)VmMemory_copy_string(vm, name, (int)strlen(name))));
-  vm_push(vm, Value_make_obj((Obj*)VmMemory_allocate_new_native(vm, function)));
+  vm_push(vm, Value_make_obj((Obj*)MemoryManager_copy_string(&vm->memory_manager, name, (int)strlen(name))));
+  vm_push(vm, Value_make_obj((Obj*)MemoryManager_allocate_new_native(&vm->memory_manager, function)));
   Table_set(&vm->globals, Object_as_string(vm_stack_peek(vm, 1)), vm_stack_peek(vm, 0));
   vm_pop(vm);
   vm_pop(vm);
@@ -440,7 +438,7 @@ static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local) {
     return upvalue;
   }
 
-  ObjUpvalue* created_upvalue = VmMemory_allocate_new_upvalue(vm, local);
+  ObjUpvalue* created_upvalue = MemoryManager_allocate_new_upvalue(&vm->memory_manager, local);
   created_upvalue->next = upvalue;
 
   if (previous_upvalue == NULL) {
