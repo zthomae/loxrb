@@ -2,26 +2,9 @@
 #define clox_object_h
 
 #include "common.h"
+#include "base_object.h"
 #include "chunk.h"
 #include "value.h"
-
-typedef enum {
-  OBJ_CLOSURE,
-  OBJ_FUNCTION,
-  OBJ_NATIVE,
-  OBJ_STRING,
-  OBJ_UPVALUE,
-} ObjType;
-
-// Obj is like a base class for all objects. Specializations must all
-// start with an Obj member, because that lets them be cast to Objs
-// for things like type checking. This works because padding at the
-// front of a struct is illegal.
-
-struct Obj {
-  ObjType type;
-  struct Obj* next;
-};
 
 typedef struct {
   Obj obj;

@@ -1,9 +1,8 @@
 #include <stdlib.h>
-#include <stdio.h> // TEMPORARY
 
 #include "chunk.h"
 #include "memory.h"
-#include "object.h"
+#include "base_object.h"
 
 void Chunk_init(Chunk* chunk) {
   chunk->count = 0;
