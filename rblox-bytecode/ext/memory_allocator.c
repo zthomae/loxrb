@@ -23,7 +23,7 @@ void MemoryAllocator_free(void *ptr, size_t size) {
   MemoryAllocator_reallocate(ptr, size, 0);
 }
 
-int MemoryAllocator_grow_capacity(int old_capacity) {
+int MemoryAllocator_get_increased_capacity(int old_capacity) {
   return old_capacity < 8 ? 8 : old_capacity * 2;
 }
 

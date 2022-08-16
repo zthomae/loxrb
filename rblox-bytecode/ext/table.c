@@ -25,7 +25,7 @@ void Table_free(Table* table) {
 
 bool Table_set(Table* table, ObjString* key, Value value) {
   if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
-    int capacity = MemoryAllocator_grow_capacity(table->capacity);
+    int capacity = MemoryAllocator_get_increased_capacity(table->capacity);
     table_adjust_capacity(table, capacity);
   }
 

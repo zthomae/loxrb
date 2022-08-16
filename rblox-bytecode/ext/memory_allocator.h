@@ -11,7 +11,7 @@ typedef struct {
 void MemoryAllocator_init(MemoryAllocator* memory_allocator);
 void* MemoryAllocator_reallocate(void *array, size_t old_size, size_t new_size);
 void MemoryAllocator_free(void *ptr, size_t size);
-int MemoryAllocator_grow_capacity(int old_capacity);
+int MemoryAllocator_get_increased_capacity(int old_capacity);
 void* MemoryAllocator_grow_array(void *array, size_t item_size, int old_capacity, int new_capacity);
 void MemoryAllocator_free_array(void *array, size_t item_size, int capacity);
 void* MemoryAllocator_allocate(size_t size, size_t count);

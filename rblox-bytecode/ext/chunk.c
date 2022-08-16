@@ -16,7 +16,7 @@ void Chunk_init(Chunk* chunk, MemoryAllocator* memory_allocator) {
 void Chunk_write(Chunk* chunk, uint8_t byte, int line) {
   if (chunk->capacity < chunk->count + 1) {
     int old_capacity = chunk->capacity;
-    chunk->capacity = MemoryAllocator_grow_capacity(old_capacity);
+    chunk->capacity = MemoryAllocator_get_increased_capacity(old_capacity);
     chunk->code = (uint8_t*) MemoryAllocator_grow_array(chunk->code, sizeof(uint8_t), old_capacity, chunk->capacity);
     chunk->lines = (int*) MemoryAllocator_grow_array(chunk->lines, sizeof(int), old_capacity, chunk->capacity);
   }
