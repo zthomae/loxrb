@@ -23,6 +23,7 @@ ObjUpvalue* MemoryManager_allocate_new_upvalue(MemoryManager* memory_manager, Va
 ObjString* MemoryManager_copy_string(MemoryManager* memory_manager, char* chars, int length);
 ObjString* MemoryManager_take_string(MemoryManager* memory_manager, char* chars, int length);
 
+void MemoryManager_free_object(MemoryManager* memory_manager, Obj* object);
 void MemoryManager_free(MemoryManager* memory_manager);
 
 #endif

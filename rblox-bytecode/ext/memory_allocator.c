@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "memory_allocator.h"
-#include "object.h"
 
 void MemoryAllocator_init(MemoryAllocator* memory_allocator) {
   memory_allocator->log_gc = false;
@@ -44,37 +43,4 @@ void* MemoryAllocator_allocate(size_t size, size_t count) {
 
 char* MemoryAllocator_allocate_chars(size_t count) {
   return (char*)MemoryAllocator_allocate(sizeof(char), count);
-}
-
-void MemoryAllocator_free_object(Obj* object) {
-  switch (object->type) {
-    case OBJ_CLOSURE: {
-      ObjClosure* closure = (ObjClosure*)object;
-      // Don't free the upvalues themselves, because the closure doesn't own them
-      MemoryAllocator_free_array(closure->upvalues, sizeof(ObjUpvalue*), closure->upvalue_count);
-      // Don't free function, because the closure doesn't own this either
-      MemoryAllocator_free(object, sizeof(ObjClosure));
-      break;
-    }
-    case OBJ_FUNCTION: {
-      ObjFunction* function = (ObjFunction*)object;
-      Chunk_free(&function->chunk);
-      MemoryAllocator_free(function, sizeof(ObjFunction));
-      // function name is an ObjString, so we leave it for the garbage collector
-      break;
-    }
-    case OBJ_NATIVE:
-      MemoryAllocator_free(object, sizeof(ObjNative));
-      break;
-    case OBJ_STRING: {
-      ObjString* string = (ObjString*)object;
-      MemoryAllocator_free_array(string->chars, sizeof(char), string->length + 1);
-      MemoryAllocator_free(object, sizeof(ObjString));
-      break;
-    }
-    case OBJ_UPVALUE: {
-      MemoryAllocator_free(object, sizeof(ObjUpvalue));
-      break;
-    }
-  }
 }
