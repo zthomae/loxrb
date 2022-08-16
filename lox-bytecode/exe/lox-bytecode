@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift("#{__dir__}/../lib")
+
+require "lox/bytecode"
+
+def read_bool_env_var(variable)
+  value = ENV[variable]
+  !value.nil? && !value.empty? && !["0", "false"].include?(value.downcase)
+end
+
+log_disassembly = read_bool_env_var("LOXRB_LOG_DISASSEMBLY")
+log_gc = read_bool_env_var("LOXRB_LOG_GC")
+stress_gc = read_bool_env_var("LOXRB_STRESS_GC")
+debug_mode = read_bool_env_var("LOXRB_DEBUG_MODE")
+
+vm_options = Lox::Bytecode::Main::VmOptions.new(
+  log_disassembly: log_disassembly || debug_mode,
+  log_gc: log_gc || debug_mode,
+  stress_gc: stress_gc || debug_mode
+)
+
+if ARGV.length > 1
+  puts "Usage: lox-bytecode [script]"
+  exit 64
+elsif ARGV.length == 1
+  file_path = ARGV[0]
+  contents = File.read(file_path)
+  main = Lox::Bytecode::Main.new(vm_options)
+  main.run(contents)
+  exit 65 if main.had_error?
+  exit 70 if main.had_runtime_error?
+else
+  Lox::Bytecode::Repl.new($stdin, Lox::Bytecode::Main.new(vm_options)).run
+end
