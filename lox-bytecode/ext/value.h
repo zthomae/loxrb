@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "base_object.h"
-#include "memory_allocator.h"
 
 typedef struct Obj Obj;
 typedef struct ObjString ObjString;
@@ -23,17 +22,6 @@ typedef struct {
     Obj* obj;
   } as;
 } Value;
-
-typedef struct {
-  int capacity;
-  int count;
-  Value* values;
-  MemoryAllocator* memory_allocator;
-} ValueArray;
-
-void ValueArray_init(ValueArray* array, MemoryAllocator* memory_allocator);
-void ValueArray_write(ValueArray* array, Value value);
-void ValueArray_free(ValueArray* array);
 
 bool Value_equals(Value a, Value b);
 void Value_print(Value value);

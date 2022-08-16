@@ -2,7 +2,7 @@
 #define clox_chunk_h
 
 #include "common.h"
-#include "value.h"
+#include "value_array.h"
 #include "base_object.h"
 #include "memory_allocator.h"
 

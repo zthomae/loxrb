@@ -1,8 +1,10 @@
 #include <stdlib.h>
 
+#include "common.h"
 #include "chunk.h"
 #include "memory_allocator.h"
 #include "base_object.h"
+#include "value_array.h"
 
 void Chunk_init(Chunk* chunk, MemoryAllocator* memory_allocator) {
   chunk->count = 0;
