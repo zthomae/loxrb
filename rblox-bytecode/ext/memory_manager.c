@@ -10,6 +10,7 @@ static uint32_t memorymanager_hash_string(char* chars, int length);
 
 void MemoryManager_init(MemoryManager* memory_manager) {
   memory_manager->objects = NULL;
+  MemoryAllocator_init(&memory_manager->memory_allocator);
   Table_init(&memory_manager->strings);
 }
 

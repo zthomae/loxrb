@@ -6,6 +6,7 @@
 #include "table.h"
 
 typedef struct {
+  MemoryAllocator memory_allocator;
   Table strings;
   Obj* objects;
 } MemoryManager;

@@ -24,8 +24,6 @@ typedef struct {
   Table globals;
   ObjUpvalue* open_upvalues;
   MemoryManager memory_manager;
-  bool log_gc;
-  bool stress_gc;
 } Vm;
 
 typedef enum {

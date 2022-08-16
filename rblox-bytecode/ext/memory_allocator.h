@@ -4,6 +4,12 @@
 #include "common.h"
 #include "object.h"
 
+typedef struct {
+  bool log_gc;
+  bool stress_gc;
+} MemoryAllocator;
+
+void MemoryAllocator_init(MemoryAllocator* memory_allocator);
 void* MemoryAllocator_reallocate(void *array, size_t old_size, size_t new_size);
 void MemoryAllocator_free(void *ptr, size_t size);
 int MemoryAllocator_grow_capacity(int old_capacity);

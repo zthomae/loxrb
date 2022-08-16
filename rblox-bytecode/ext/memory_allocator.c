@@ -4,6 +4,11 @@
 #include "memory_allocator.h"
 #include "object.h"
 
+void MemoryAllocator_init(MemoryAllocator* memory_allocator) {
+  memory_allocator->log_gc = false;
+  memory_allocator->stress_gc = false;
+}
+
 void *MemoryAllocator_reallocate(void *array, size_t old_size, size_t new_size) {
   if (new_size == 0) {
     free(array);

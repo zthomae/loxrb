@@ -19,6 +19,12 @@ module Rblox
       ffi_lib File.join(File.dirname(__FILE__), "../../ext/vm.so")
     end
 
+    ### MEMORY ALLOCATOR ###
+
+    class MemoryAllocator < FFI::Struct
+      layout :log_gc, :bool, :stress_gc, :bool
+    end
+
     ### VALUES ###
 
     ValueType = enum :value_type, [:bool, :nil, :number, :obj]
@@ -200,10 +206,10 @@ module Rblox
       layout :obj, Obj, :location, Value.ptr, :closed, Value, :next, ObjUpvalue.ptr
     end
 
-    ### MEMORY MANAGEMENT ###
+    ### MEMORY MANAGER ###
 
     class MemoryManager < FFI::Struct
-      layout :strings, Table, :objects, Obj.ptr
+      layout :memory_allocator, MemoryAllocator, :strings, Table, :objects, Obj.ptr
     end
 
     attach_function :memory_manager_copy_string, :MemoryManager_copy_string, [MemoryManager.ptr, :pointer, :int], ObjString.ptr
@@ -225,9 +231,7 @@ module Rblox
         :stack_top, Value.ptr,
         :globals, Table,
         :open_upvalues, ObjUpvalue.ptr,
-        :memory_manager, MemoryManager,
-        :log_gc, :bool,
-        :stress_gc, :bool
+        :memory_manager, MemoryManager
 
       def self.with_new
         FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1) do |p|

@@ -33,7 +33,6 @@ static Value vm_clock_native(int arg_count, Value* args) {
 
 void Vm_init(Vm* vm) {
   vm_reset_stack(vm);
-  vm->stress_gc = false;
   Table_init(&vm->globals);
   MemoryManager_init(&vm->memory_manager);
 

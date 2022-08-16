@@ -13,8 +13,8 @@ module Rblox
         @vm_options = vm_options || VmOptions.default
         @vm = Rblox::Bytecode::VM.new(FFI::MemoryPointer.new(Rblox::Bytecode::VM, 1)[0])
         Rblox::Bytecode.vm_init(@vm)
-        @vm[:log_gc] = @vm_options.log_gc
-        @vm[:stress_gc] = @vm_options.stress_gc
+        @vm[:memory_manager][:memory_allocator][:log_gc] = @vm_options.log_gc
+        @vm[:memory_manager][:memory_allocator][:stress_gc] = @vm_options.stress_gc
         if @vm_options.log_disassembly
           @disassembler = Rblox::Bytecode::Disassembler.new($stdout)
         end
