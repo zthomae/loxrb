@@ -16,7 +16,7 @@ void ValueArray_write(ValueArray* array, Value value) {
   if (array->capacity < array->count + 1) {
     int old_capacity = array->capacity;
     array->capacity = MemoryAllocator_get_increased_capacity(old_capacity);
-    array->values = (Value*) MemoryAllocator_grow_array(array->values, sizeof(Value), old_capacity, array->capacity);
+    array->values = (Value*) MemoryAllocator_grow_array(array->memory_allocator, array->values, sizeof(Value), old_capacity, array->capacity);
   }
 
   array->values[array->count] = value;
@@ -24,7 +24,7 @@ void ValueArray_write(ValueArray* array, Value value) {
 }
 
 void ValueArray_free(ValueArray* array) {
-  MemoryAllocator_free_array(array->values, sizeof(Value), array->capacity);
+  MemoryAllocator_free_array(array->memory_allocator, array->values, sizeof(Value), array->capacity);
   ValueArray_init(array, array->memory_allocator);
 }
 

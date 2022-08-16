@@ -19,7 +19,7 @@ void Table_init(Table* table, MemoryAllocator* memory_allocator) {
 }
 
 void Table_free(Table* table) {
-  MemoryAllocator_free_array(table->entries, sizeof(Entry), table->capacity);
+  MemoryAllocator_free_array(table->memory_allocator, table->entries, sizeof(Entry), table->capacity);
   Table_init(table, table->memory_allocator);
 }
 
@@ -133,7 +133,7 @@ static Entry* table_find_entry(Entry* entries, int capacity, ObjString* key) {
 }
 
 static void table_adjust_capacity(Table* table, int new_capacity) {
-  Entry* new_entries = MemoryAllocator_allocate(sizeof(Entry), new_capacity);
+  Entry* new_entries = MemoryAllocator_allocate(table->memory_allocator, sizeof(Entry), new_capacity);
   for (int i = 0; i < new_capacity; i++) {
     new_entries[i].key = NULL;
     new_entries[i].value = Value_make_nil();
@@ -154,7 +154,7 @@ static void table_adjust_capacity(Table* table, int new_capacity) {
     table->count++;
   }
 
-  MemoryAllocator_free_array(table->entries, sizeof(Entry), table->capacity);
+  MemoryAllocator_free_array(table->memory_allocator, table->entries, sizeof(Entry), table->capacity);
   table->entries = new_entries;
   table->capacity = new_capacity;
 }

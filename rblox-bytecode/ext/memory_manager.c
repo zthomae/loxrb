@@ -46,7 +46,7 @@ ObjNative* MemoryManager_allocate_new_native(MemoryManager* memory_manager, Nati
 }
 
 ObjClosure* MemoryManager_allocate_new_closure(MemoryManager* memory_manager, ObjFunction* function) {
-  ObjUpvalue** upvalues = MemoryAllocator_allocate(sizeof(ObjUpvalue*), function->upvalue_count);
+  ObjUpvalue** upvalues = MemoryAllocator_allocate(&memory_manager->memory_allocator, sizeof(ObjUpvalue*), function->upvalue_count);
   for (int i = 0; i < function->upvalue_count; i++) {
     upvalues[i] = NULL;
   }
@@ -64,7 +64,7 @@ ObjString* MemoryManager_copy_string(MemoryManager* memory_manager, char* chars,
     return interned;
   }
 
-  char* heap_chars = MemoryAllocator_allocate_chars(length + 1);
+  char* heap_chars = MemoryAllocator_allocate_chars(&memory_manager->memory_allocator, length + 1);
   memcpy(heap_chars, chars, length);
   heap_chars[length] = '\0';
   return MemoryManager_allocate_string(memory_manager, heap_chars, length, hash);
@@ -74,7 +74,7 @@ ObjString* MemoryManager_take_string(MemoryManager* memory_manager, char* chars,
   uint32_t hash = memorymanager_hash_string(chars, length);
   ObjString* interned = Table_find_string(&memory_manager->strings, chars, length, hash);
   if (interned != NULL) {
-    MemoryAllocator_free_array(chars, sizeof(char), length + 1);
+    MemoryAllocator_free_array(&memory_manager->memory_allocator, chars, sizeof(char), length + 1);
     return interned;
   }
 
@@ -86,29 +86,29 @@ void MemoryManager_free_object(MemoryManager* memory_manager, Obj* object) {
     case OBJ_CLOSURE: {
       ObjClosure* closure = (ObjClosure*)object;
       // Don't free the upvalues themselves, because the closure doesn't own them
-      MemoryAllocator_free_array(closure->upvalues, sizeof(ObjUpvalue*), closure->upvalue_count);
+      MemoryAllocator_free_array(&memory_manager->memory_allocator, closure->upvalues, sizeof(ObjUpvalue*), closure->upvalue_count);
       // Don't free function, because the closure doesn't own this either
-      MemoryAllocator_free(object, sizeof(ObjClosure));
+      MemoryAllocator_free(&memory_manager->memory_allocator, object, sizeof(ObjClosure));
       break;
     }
     case OBJ_FUNCTION: {
       ObjFunction* function = (ObjFunction*)object;
       Chunk_free(&function->chunk);
-      MemoryAllocator_free(function, sizeof(ObjFunction));
+      MemoryAllocator_free(&memory_manager->memory_allocator, function, sizeof(ObjFunction));
       // function name is an ObjString, so we leave it for the garbage collector
       break;
     }
     case OBJ_NATIVE:
-      MemoryAllocator_free(object, sizeof(ObjNative));
+      MemoryAllocator_free(&memory_manager->memory_allocator, object, sizeof(ObjNative));
       break;
     case OBJ_STRING: {
       ObjString* string = (ObjString*)object;
-      MemoryAllocator_free_array(string->chars, sizeof(char), string->length + 1);
-      MemoryAllocator_free(object, sizeof(ObjString));
+      MemoryAllocator_free_array(&memory_manager->memory_allocator, string->chars, sizeof(char), string->length + 1);
+      MemoryAllocator_free(&memory_manager->memory_allocator, object, sizeof(ObjString));
       break;
     }
     case OBJ_UPVALUE: {
-      MemoryAllocator_free(object, sizeof(ObjUpvalue));
+      MemoryAllocator_free(&memory_manager->memory_allocator, object, sizeof(ObjUpvalue));
       break;
     }
   }
@@ -126,7 +126,7 @@ void MemoryManager_free(MemoryManager* memory_manager) {
 }
 
 Obj* memorymanager_allocate_new(MemoryManager* memory_manager, size_t size, ObjType type) {
-  Obj* object = (Obj*)MemoryAllocator_reallocate(NULL, 0, size);
+  Obj* object = (Obj*)MemoryAllocator_reallocate(&memory_manager->memory_allocator, NULL, 0, size);
   object->type = type;
 
   object->next = memory_manager->objects;

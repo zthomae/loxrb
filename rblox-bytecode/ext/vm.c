@@ -409,7 +409,7 @@ static void vm_concatenate(Vm* vm) {
   ObjString* a = Object_as_string(vm_pop(vm));
 
   int length = a->length + b->length;
-  char* chars = MemoryAllocator_allocate_chars(length + 1);
+  char* chars = MemoryAllocator_allocate_chars(&vm->memory_manager.memory_allocator, length + 1);
   memcpy(chars, a->chars, a->length);
   memcpy(chars + a->length, b->chars, b->length);
   chars[length] = '\0';

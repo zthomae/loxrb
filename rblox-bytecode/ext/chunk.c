@@ -17,8 +17,8 @@ void Chunk_write(Chunk* chunk, uint8_t byte, int line) {
   if (chunk->capacity < chunk->count + 1) {
     int old_capacity = chunk->capacity;
     chunk->capacity = MemoryAllocator_get_increased_capacity(old_capacity);
-    chunk->code = (uint8_t*) MemoryAllocator_grow_array(chunk->code, sizeof(uint8_t), old_capacity, chunk->capacity);
-    chunk->lines = (int*) MemoryAllocator_grow_array(chunk->lines, sizeof(int), old_capacity, chunk->capacity);
+    chunk->code = (uint8_t*) MemoryAllocator_grow_array(chunk->memory_allocator, chunk->code, sizeof(uint8_t), old_capacity, chunk->capacity);
+    chunk->lines = (int*) MemoryAllocator_grow_array(chunk->memory_allocator, chunk->lines, sizeof(int), old_capacity, chunk->capacity);
   }
 
   chunk->code[chunk->count] = byte;
@@ -27,8 +27,8 @@ void Chunk_write(Chunk* chunk, uint8_t byte, int line) {
 }
 
 void Chunk_free(Chunk* chunk) {
-  MemoryAllocator_free_array(chunk->code, sizeof(uint8_t), chunk->capacity);
-  MemoryAllocator_free_array(chunk->lines, sizeof(int), chunk->capacity);
+  MemoryAllocator_free_array(chunk->memory_allocator, chunk->code, sizeof(uint8_t), chunk->capacity);
+  MemoryAllocator_free_array(chunk->memory_allocator, chunk->lines, sizeof(int), chunk->capacity);
   ValueArray_free(&chunk->constants);
   Chunk_init(chunk, chunk->memory_allocator);
 }
