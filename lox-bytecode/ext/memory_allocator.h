@@ -4,15 +4,24 @@
 #include "common.h"
 #include "object_types.h"
 
+typedef void (*HandleNewObject)(void* callback_target, Obj* object);
+typedef void (*CollectGarbage)(void* callback_target);
+
+typedef struct {
+  HandleNewObject handle_new_object;
+  CollectGarbage collect_garbage;
+} MemoryCallbacks;
+
 typedef struct {
   uint8_t min_increased_capacity;
   uint8_t increased_capacity_scaling_factor;
   bool log_gc;
   bool stress_gc;
-  Obj* objects;
+  void* callback_target;
+  MemoryCallbacks callbacks;
 } MemoryAllocator;
 
-void MemoryAllocator_init(MemoryAllocator* memory_allocator);
+void MemoryAllocator_init(MemoryAllocator* memory_allocator, void* callback_target, MemoryCallbacks memory_callbacks);
 void* MemoryAllocator_reallocate(MemoryAllocator* memory_allocator, void* array, size_t old_size, size_t new_size);
 void MemoryAllocator_free(MemoryAllocator* memory_allocator, void* ptr, size_t size);
 int MemoryAllocator_get_increased_capacity(MemoryAllocator* memory_allocator, int old_capacity);

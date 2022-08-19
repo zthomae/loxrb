@@ -7,12 +7,13 @@
 #define DEFAULT_MIN_INCREASED_CAPACITY 8
 #define DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR 2
 
-void MemoryAllocator_init(MemoryAllocator* memory_allocator) {
+void MemoryAllocator_init(MemoryAllocator* memory_allocator, void* callback_target, MemoryCallbacks callbacks) {
   memory_allocator->min_increased_capacity = DEFAULT_MIN_INCREASED_CAPACITY;
   memory_allocator->increased_capacity_scaling_factor = DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR;
   memory_allocator->log_gc = false;
   memory_allocator->stress_gc = false;
-  memory_allocator->objects = NULL;
+  memory_allocator->callback_target = callback_target;
+  memory_allocator->callbacks = callbacks;
 }
 
 void* MemoryAllocator_reallocate(MemoryAllocator* memory_allocator, void* array, size_t old_size, size_t new_size) {
@@ -64,6 +65,8 @@ void MemoryAllocator_collect_garbage(MemoryAllocator* memory_allocator) {
   if (print_log_messages) {
     Logger_debug("-- start gc --");
   }
+
+  (*memory_allocator->callbacks.collect_garbage)(memory_allocator->callback_target);
 
   if (print_log_messages) {
     Logger_debug("-- end gc --");

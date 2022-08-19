@@ -119,8 +119,7 @@ Obj* object_allocate_new(MemoryAllocator* memory_allocator, size_t size, ObjType
   Obj* object = (Obj*)MemoryAllocator_reallocate(memory_allocator, NULL, 0, size);
   object->type = type;
 
-  object->next = memory_allocator->objects;
-  memory_allocator->objects = object;
+  (*memory_allocator->callbacks.handle_new_object)(memory_allocator->callback_target, object);
 
   if (memory_allocator->log_gc) {
     Logger_debug("%p allocate %zu for %d", (void*)object, size, type);

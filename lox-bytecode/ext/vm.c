@@ -27,14 +27,28 @@ static void vm_define_native(Vm* vm, char* name, NativeFn function);
 static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local);
 static void vm_close_upvalues(Vm* vm, Value* last);
 
+void vm_handle_new_object(void* callback_target, Obj* object) {
+  Vm* vm = (Vm*) callback_target;
+  object->next = vm->objects;
+  vm->objects = object;
+}
+
+void vm_collect_garbage(void* callback_target) {
+}
+
 static Value vm_clock_native(int arg_count, Value* args) {
   return Value_make_number((double)clock() / CLOCKS_PER_SEC);
 }
 
 void Vm_init(Vm* vm) {
   vm_reset_stack(vm);
+  vm->objects = NULL;
+  MemoryCallbacks memory_callbacks = {
+    .handle_new_object = vm_handle_new_object,
+    .collect_garbage = vm_collect_garbage
+  };
+  MemoryAllocator_init(&vm->memory_allocator, vm, memory_callbacks);
   Table_init(&vm->globals, &vm->memory_allocator);
-  MemoryAllocator_init(&vm->memory_allocator);
   Table_init(&vm->strings, &vm->memory_allocator);
 
   vm_define_native(vm, "clock", vm_clock_native);
@@ -106,7 +120,7 @@ ObjString* Vm_take_string(Vm* vm, char* chars, int length) {
 
 void Vm_free(Vm* vm) {
   Table_free(&vm->globals);
-  Obj* object = vm->memory_allocator.objects;
+  Obj* object = vm->objects;
   while (object != NULL) {
     Obj* next = object->next;
     Object_free(&vm->memory_allocator, object);

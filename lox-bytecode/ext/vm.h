@@ -23,6 +23,7 @@ typedef struct {
   Value* stack_top;
   Table globals;
   ObjUpvalue* open_upvalues;
+  Obj* objects;
   Table strings;
   MemoryAllocator memory_allocator;
 } Vm;

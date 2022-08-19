@@ -21,8 +21,17 @@ module Lox
 
     ### MEMORY ALLOCATOR ###
 
+    class MemoryCallbacks < FFI::Struct
+      layout :handle_new_object, :pointer, :collect_garbage, :pointer
+    end
+
     class MemoryAllocator < FFI::Struct
-      layout :min_increased_capacity, :uint8, :increased_capacity_scaling_factor, :uint8, :log_gc, :bool, :stress_gc, :bool, :objects, :pointer
+      layout :min_increased_capacity, :uint8,
+        :increased_capacity_scaling_factor, :uint8,
+        :log_gc, :bool,
+        :stress_gc, :bool,
+        :callback_target, :pointer,
+        :memory_callbacks, MemoryCallbacks
     end
 
     ### VALUES ###
@@ -209,6 +218,7 @@ module Lox
         :stack_top, Value.ptr,
         :globals, Table,
         :open_upvalues, ObjUpvalue.ptr,
+        :objects, Obj.ptr,
         :strings, Table,
         :memory_allocator, MemoryAllocator
 
