@@ -2,12 +2,14 @@
 #define clox_memory_allocator_h
 
 #include "common.h"
+#include "object_types.h"
 
 typedef struct {
   uint8_t min_increased_capacity;
   uint8_t increased_capacity_scaling_factor;
   bool log_gc;
   bool stress_gc;
+  Obj* objects;
 } MemoryAllocator;
 
 void MemoryAllocator_init(MemoryAllocator* memory_allocator);

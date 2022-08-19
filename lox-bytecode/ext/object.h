@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "object_types.h"
+#include "memory_allocator.h"
 #include "chunk.h"
 #include "value.h"
 
@@ -88,5 +89,14 @@ inline ObjClosure* Object_as_closure(Value value) {
 }
 
 void Object_print(Value value);
+
+ObjString* Object_allocate_string(MemoryAllocator* memory_allocator, char* chars, int length, uint32_t hash);
+ObjString* Object_allocate_new_string(MemoryAllocator* memory_allocator);
+ObjFunction* Object_allocate_new_function(MemoryAllocator* memory_allocator);
+ObjNative* Object_allocate_new_native(MemoryAllocator* memory_allocator, NativeFn function);
+ObjClosure* Object_allocate_new_closure(MemoryAllocator* memory_allocator, ObjFunction* function);
+ObjUpvalue* Object_allocate_new_upvalue(MemoryAllocator* memory_allocator, Value* local);
+
+void Object_free(MemoryAllocator* memory_allocator, Obj* object);
 
 #endif

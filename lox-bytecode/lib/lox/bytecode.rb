@@ -22,7 +22,7 @@ module Lox
     ### MEMORY ALLOCATOR ###
 
     class MemoryAllocator < FFI::Struct
-      layout :min_increased_capacity, :uint8, :increased_capacity_scaling_factor, :uint8, :log_gc, :bool, :stress_gc, :bool
+      layout :min_increased_capacity, :uint8, :increased_capacity_scaling_factor, :uint8, :log_gc, :bool, :stress_gc, :bool, :objects, :pointer
     end
 
     ### VALUES ###
@@ -71,6 +71,8 @@ module Lox
         end
       end
     end
+
+    attach_function :object_free, :Object_free, [MemoryAllocator.ptr, Obj.ptr], :void
 
     class ValueU < FFI::Union
       layout :boolean, :bool, :number, :double, :obj, Obj.ptr
@@ -195,11 +197,10 @@ module Lox
     ### MEMORY MANAGER ###
 
     class MemoryManager < FFI::Struct
-      layout :memory_allocator, MemoryAllocator, :strings, Table, :objects, Obj.ptr
+      layout :memory_allocator, MemoryAllocator, :strings, Table
     end
 
     attach_function :memory_manager_copy_string, :MemoryManager_copy_string, [MemoryManager.ptr, :pointer, :int], ObjString.ptr
-    attach_function :memory_manager_free_object, :MemoryManager_free_object, [MemoryManager.ptr, Obj.ptr], :void
 
     ### VM ###
 
@@ -224,7 +225,7 @@ module Lox
           yield function
         ensure
           if function
-            Lox::Bytecode.memory_manager_free_object(self[:memory_manager], Lox::Bytecode::Obj.new(function.to_ptr))
+            Lox::Bytecode.object_free(self[:memory_manager][:memory_allocator], Lox::Bytecode::Obj.new(function.to_ptr))
           end
         end
       end
