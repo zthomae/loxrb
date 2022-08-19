@@ -5,7 +5,7 @@
 #include "object.h"
 #include "table.h"
 #include "value.h"
-#include "memory_manager.h"
+#include "memory_allocator.h"
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * 256)
@@ -23,7 +23,8 @@ typedef struct {
   Value* stack_top;
   Table globals;
   ObjUpvalue* open_upvalues;
-  MemoryManager memory_manager;
+  Table strings;
+  MemoryAllocator memory_allocator;
 } Vm;
 
 typedef enum {
@@ -39,6 +40,9 @@ InterpretResult Vm_interpret(Vm* vm, ObjFunction* function);
 InterpretResult Vm_interpret_next_instruction(Vm* vm);
 
 ObjFunction* Vm_new_function(Vm* vm);
+
+ObjString* Vm_copy_string(Vm* vm, char* chars, int length);
+ObjString* Vm_take_string(Vm* vm, char* chars, int length);
 
 void Vm_free(Vm* vm);
 

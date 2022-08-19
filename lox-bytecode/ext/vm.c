@@ -9,8 +9,8 @@
 #include "table.h"
 #include "value.h"
 #include "vm.h"
-#include "memory_manager.h"
 
+static uint32_t vm_hash_string(char* chars, int length);
 static CallFrame* vm_current_frame(Vm* vm);
 static void vm_reset_stack(Vm* vm);
 static void vm_push(Vm* vm, Value value);
@@ -33,15 +33,16 @@ static Value vm_clock_native(int arg_count, Value* args) {
 
 void Vm_init(Vm* vm) {
   vm_reset_stack(vm);
-  Table_init(&vm->globals, &vm->memory_manager.memory_allocator);
-  MemoryManager_init(&vm->memory_manager);
+  Table_init(&vm->globals, &vm->memory_allocator);
+  MemoryAllocator_init(&vm->memory_allocator);
+  Table_init(&vm->strings, &vm->memory_allocator);
 
   vm_define_native(vm, "clock", vm_clock_native);
 }
 
 void Vm_init_function(Vm* vm, ObjFunction* function) {
   vm_push(vm, Value_make_obj((Obj*)function));
-  ObjClosure* closure = Object_allocate_new_closure(&vm->memory_manager.memory_allocator, function);
+  ObjClosure* closure = Object_allocate_new_closure(&vm->memory_allocator, function);
   vm_pop(vm);
   vm_push(vm, Value_make_obj((Obj*)closure));
   vm_call(vm, closure, 0);
@@ -67,18 +68,63 @@ static Value vm_pop(Vm* vm) {
 }
 
 ObjFunction* Vm_new_function(Vm* vm) {
-  ObjFunction* function = Object_allocate_new_function(&vm->memory_manager.memory_allocator);
+  ObjFunction* function = Object_allocate_new_function(&vm->memory_allocator);
   function->arity = 0;
   function->upvalue_count = 0;
   function->name = NULL;
-  Chunk_init(&function->chunk, &vm->memory_manager.memory_allocator);
+  Chunk_init(&function->chunk, &vm->memory_allocator);
   return function;
+}
+
+ObjString* Vm_copy_string(Vm* vm, char* chars, int length) {
+  uint32_t hash = vm_hash_string(chars, length);
+  ObjString* interned = Table_find_string(&vm->strings, chars, length, hash);
+  if (interned != NULL) {
+    return interned;
+  }
+
+  char* heap_chars = MemoryAllocator_allocate_chars(&vm->memory_allocator, length + 1);
+  memcpy(heap_chars, chars, length);
+  heap_chars[length] = '\0';
+  ObjString* string = Object_allocate_string(&vm->memory_allocator, heap_chars, length, hash);
+  Table_set(&vm->strings, string, Value_make_nil());
+  return string;
+}
+
+ObjString* Vm_take_string(Vm* vm, char* chars, int length) {
+  uint32_t hash = vm_hash_string(chars, length);
+  ObjString* interned = Table_find_string(&vm->strings, chars, length, hash);
+  if (interned != NULL) {
+    MemoryAllocator_free_array(&vm->memory_allocator, chars, sizeof(char), length + 1);
+    return interned;
+  }
+
+  ObjString* string = Object_allocate_string(&vm->memory_allocator, chars, length, hash);
+  Table_set(&vm->strings, string, Value_make_nil());
+  return string;
 }
 
 void Vm_free(Vm* vm) {
   Table_free(&vm->globals);
-  MemoryManager_free(&vm->memory_manager);
+  Obj* object = vm->memory_allocator.objects;
+  while (object != NULL) {
+    Obj* next = object->next;
+    Object_free(&vm->memory_allocator, object);
+    object = next;
+  }
+
+  Table_free(&vm->strings);
 }
+
+static uint32_t vm_hash_string(char* key, int length) {
+  uint32_t hash = 2166136261u;
+  for (int i = 0; i < length; i++) {
+    hash ^= (uint8_t)key[i];
+    hash *= 16777619;
+  }
+  return hash;
+}
+
 
 static CallFrame* vm_current_frame(Vm* vm) {
   return &vm->frames[vm->frame_count - 1];
@@ -283,7 +329,7 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
     }
     case OP_CLOSURE: {
       ObjFunction* function = Object_as_function(vm_read_constant(call_frame));
-      ObjClosure* closure = Object_allocate_new_closure(&vm->memory_manager.memory_allocator, function);
+      ObjClosure* closure = Object_allocate_new_closure(&vm->memory_allocator, function);
       vm_push(vm, Value_make_obj((Obj*)closure));
       for (int i = 0; i < closure->upvalue_count; i++) {
         uint8_t is_local = vm_read_byte(call_frame);
@@ -409,18 +455,18 @@ static void vm_concatenate(Vm* vm) {
   ObjString* a = Object_as_string(vm_pop(vm));
 
   int length = a->length + b->length;
-  char* chars = MemoryAllocator_allocate_chars(&vm->memory_manager.memory_allocator, length + 1);
+  char* chars = MemoryAllocator_allocate_chars(&vm->memory_allocator, length + 1);
   memcpy(chars, a->chars, a->length);
   memcpy(chars + a->length, b->chars, b->length);
   chars[length] = '\0';
 
-  ObjString* result = MemoryManager_take_string(&vm->memory_manager, chars, length);
+  ObjString* result = Vm_take_string(vm, chars, length);
   vm_push(vm, Value_make_obj((Obj*)result));
 }
 
 static void vm_define_native(Vm* vm, char* name, NativeFn function) {
-  vm_push(vm, Value_make_obj((Obj*)MemoryManager_copy_string(&vm->memory_manager, name, (int)strlen(name))));
-  vm_push(vm, Value_make_obj((Obj*)Object_allocate_new_native(&vm->memory_manager.memory_allocator, function)));
+  vm_push(vm, Value_make_obj((Obj*)Vm_copy_string(vm, name, (int)strlen(name))));
+  vm_push(vm, Value_make_obj((Obj*)Object_allocate_new_native(&vm->memory_allocator, function)));
   Table_set(&vm->globals, Object_as_string(vm_stack_peek(vm, 1)), vm_stack_peek(vm, 0));
   vm_pop(vm);
   vm_pop(vm);
@@ -437,7 +483,7 @@ static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local) {
     return upvalue;
   }
 
-  ObjUpvalue* created_upvalue = Object_allocate_new_upvalue(&vm->memory_manager.memory_allocator, local);
+  ObjUpvalue* created_upvalue = Object_allocate_new_upvalue(&vm->memory_allocator, local);
   created_upvalue->next = upvalue;
 
   if (previous_upvalue == NULL) {

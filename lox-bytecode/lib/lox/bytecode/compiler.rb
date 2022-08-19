@@ -375,7 +375,7 @@ module Lox
 
       def compile_function(stmt, function_type)
         function = Lox::Bytecode.vm_new_function(@vm)
-        function[:name] = Lox::Bytecode.memory_manager_copy_string(@vm[:memory_manager], stmt.name.lexeme, stmt.name.lexeme.bytesize)
+        function[:name] = Lox::Bytecode.vm_copy_string(@vm, stmt.name.lexeme, stmt.name.lexeme.bytesize)
         compiler = Compiler.new(@vm, function, function_type, @error_handler, self, @scope_depth + 1)
         stmt.params.each do |param|
           function[:arity] += 1
@@ -417,7 +417,7 @@ module Lox
       end
 
       def make_identifier_constant(token, value)
-        obj_string = Lox::Bytecode.memory_manager_copy_string(@vm[:memory_manager], value, value.bytesize)
+        obj_string = Lox::Bytecode.vm_copy_string(@vm, value, value.bytesize)
         [make_constant(:object, token, obj_string), obj_string]
       end
 

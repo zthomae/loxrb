@@ -194,14 +194,6 @@ module Lox
       layout :obj, Obj, :location, Value.ptr, :closed, Value, :next, ObjUpvalue.ptr
     end
 
-    ### MEMORY MANAGER ###
-
-    class MemoryManager < FFI::Struct
-      layout :memory_allocator, MemoryAllocator, :strings, Table
-    end
-
-    attach_function :memory_manager_copy_string, :MemoryManager_copy_string, [MemoryManager.ptr, :pointer, :int], ObjString.ptr
-
     ### VM ###
 
     class CallFrame < FFI::Struct
@@ -217,7 +209,8 @@ module Lox
         :stack_top, Value.ptr,
         :globals, Table,
         :open_upvalues, ObjUpvalue.ptr,
-        :memory_manager, MemoryManager
+        :strings, Table,
+        :memory_allocator, MemoryAllocator
 
       def with_new_function
         begin
@@ -225,7 +218,7 @@ module Lox
           yield function
         ensure
           if function
-            Lox::Bytecode.object_free(self[:memory_manager][:memory_allocator], Lox::Bytecode::Obj.new(function.to_ptr))
+            Lox::Bytecode.object_free(self[:memory_allocator], Lox::Bytecode::Obj.new(function.to_ptr))
           end
         end
       end
@@ -255,6 +248,7 @@ module Lox
     attach_function :vm_interpret, :Vm_interpret, [VM.ptr, ObjFunction.ptr], InterpretResult
     attach_function :vm_interpret_next_instruction, :Vm_interpret_next_instruction, [VM.ptr], InterpretResult
     attach_function :vm_new_function, :Vm_new_function, [VM.ptr], ObjFunction.ptr
+    attach_function :vm_copy_string, :Vm_copy_string, [VM.ptr, :pointer, :int], ObjString.ptr
     attach_function :vm_free, :Vm_free, [VM.ptr], :void
   end
 end

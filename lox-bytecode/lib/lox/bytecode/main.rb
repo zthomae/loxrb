@@ -13,8 +13,8 @@ module Lox
         @vm_options = vm_options || VmOptions.default
         @vm = Lox::Bytecode::VM.new(FFI::MemoryPointer.new(Lox::Bytecode::VM, 1)[0])
         Lox::Bytecode.vm_init(@vm)
-        @vm[:memory_manager][:memory_allocator][:log_gc] = @vm_options.log_gc
-        @vm[:memory_manager][:memory_allocator][:stress_gc] = @vm_options.stress_gc
+        @vm[:memory_allocator][:log_gc] = @vm_options.log_gc
+        @vm[:memory_allocator][:stress_gc] = @vm_options.stress_gc
         if @vm_options.log_disassembly
           @disassembler = Lox::Bytecode::Disassembler.new($stdout)
         end

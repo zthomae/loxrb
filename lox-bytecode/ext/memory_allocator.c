@@ -12,6 +12,7 @@ void MemoryAllocator_init(MemoryAllocator* memory_allocator) {
   memory_allocator->increased_capacity_scaling_factor = DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR;
   memory_allocator->log_gc = false;
   memory_allocator->stress_gc = false;
+  memory_allocator->objects = NULL;
 }
 
 void* MemoryAllocator_reallocate(MemoryAllocator* memory_allocator, void* array, size_t old_size, size_t new_size) {
