@@ -220,7 +220,10 @@ module Lox
         :open_upvalues, ObjUpvalue.ptr,
         :objects, Obj.ptr,
         :strings, Table,
-        :memory_allocator, MemoryAllocator
+        :memory_allocator, MemoryAllocator,
+        :gray_count, :int,
+        :gray_capacity, :int,
+        :gray_stack, :pointer
 
       def with_new_function
         begin

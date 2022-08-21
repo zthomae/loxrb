@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -46,6 +47,9 @@ static Value vm_clock_native(int arg_count, Value* args) {
 void Vm_init(Vm* vm) {
   vm_reset_stack(vm);
   vm->objects = NULL;
+  vm->gray_count = 0;
+  vm->gray_capacity = 0;
+  vm->gray_stack = NULL;
   MemoryCallbacks memory_callbacks = {
     .handle_new_object = vm_handle_new_object,
     .collect_garbage = vm_collect_garbage
@@ -131,6 +135,8 @@ void Vm_free(Vm* vm) {
   }
 
   Table_free(&vm->strings);
+
+  free(vm->gray_stack);
 }
 
 static uint32_t vm_hash_string(char* key, int length) {
