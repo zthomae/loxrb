@@ -474,8 +474,8 @@ static void vm_runtime_error(Vm* vm, const char* format, ...) {
 }
 
 static void vm_concatenate(Vm* vm) {
-  ObjString* b = Object_as_string(vm_pop(vm));
-  ObjString* a = Object_as_string(vm_pop(vm));
+  ObjString* b = Object_as_string(vm_stack_peek(vm, 0));
+  ObjString* a = Object_as_string(vm_stack_peek(vm, 1));
 
   int length = a->length + b->length;
   char* chars = MemoryAllocator_allocate_chars(&vm->memory_allocator, length + 1);
@@ -484,6 +484,8 @@ static void vm_concatenate(Vm* vm) {
   chars[length] = '\0';
 
   ObjString* result = Vm_take_string(vm, chars, length);
+  vm_pop(vm);
+  vm_pop(vm);
   vm_push(vm, Value_make_obj((Obj*)result));
 }
 
