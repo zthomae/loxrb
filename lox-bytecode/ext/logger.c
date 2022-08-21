@@ -20,3 +20,25 @@ void Logger_debug(const char* format, ...) {
 
   free(updated_format_string);
 }
+
+void Logger_write_multiline_string(const char* string) {
+  size_t string_length = strlen(string);
+  char* temp_string = malloc(string_length + 1);
+  strcpy(temp_string, string);
+
+  size_t line_start = 0;
+  while (line_start < string_length) {
+    size_t next_newline = line_start;
+    while (next_newline < string_length && string[next_newline] != '\n') {
+      next_newline++;
+    }
+    temp_string[next_newline] = '\0';
+    printf("%s", temp_string + line_start);
+    line_start = next_newline + 1;
+    if (string[next_newline] == '\n') {
+      printf("\n[DEBUG] ");
+    }
+  }
+
+  free(temp_string);
+}

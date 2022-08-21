@@ -18,6 +18,9 @@ static void gc_mark_array(Vm* vm, ValueArray* array);
 static void gc_trace_references(Vm* vm);
 static void gc_blacken_object(Vm* vm, Obj* object);
 
+static void gc_log_value(Value value);
+static void gc_log_function_name(ObjFunction* function);
+
 inline bool gc_logging_enabled(Vm* vm) {
   return vm->memory_allocator.log_gc;
 }
@@ -69,7 +72,7 @@ static void gc_mark_object(Vm* vm, Obj* object) {
     printf("%p mark ", (void*) object);
     // The forced Value construction here points to the quirkiness of the
     // Object_ interface
-    Value_print(Value_make_obj(object));
+    gc_log_value(Value_make_obj(object));
     printf("\n");
   }
 
@@ -113,7 +116,7 @@ static void gc_blacken_object(Vm* vm, Obj* object) {
   if (gc_logging_enabled(vm)) {
     Logger_debug_begin_line();
     printf("%p blacken ", (void*)object);
-    Value_print(Value_make_obj(object));
+    gc_log_value(Value_make_obj(object));
     printf("\n");
   }
 
@@ -138,5 +141,33 @@ static void gc_blacken_object(Vm* vm, Obj* object) {
       }
       break;
     }
+  }
+}
+
+static void gc_log_value(Value value) {
+  switch (Object_type(value)) {
+    case OBJ_CLOSURE:
+      gc_log_function_name(Object_as_closure(value)->function);
+      break;
+    case OBJ_FUNCTION:
+      gc_log_function_name(Object_as_function(value));
+      break;
+    case OBJ_NATIVE:
+      printf("<native fn>");
+      break;
+    case OBJ_STRING:
+      Logger_write_multiline_string(Object_as_cstring(value));
+      break;
+    case OBJ_UPVALUE:
+      printf("upvalue");
+      break;
+  }
+}
+
+static void gc_log_function_name(ObjFunction* function) {
+  if (function->name == NULL) {
+    printf("<script>");
+  } else {
+    Logger_write_multiline_string(function->name->chars);
   }
 }
