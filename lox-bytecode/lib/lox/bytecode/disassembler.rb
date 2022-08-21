@@ -106,6 +106,8 @@ module Lox
           io.puts "Unknown opcode #{instruction}\n"
           offset + 1
         end
+      ensure
+        io.flush
       end
 
       private
