@@ -81,8 +81,6 @@ module Lox
       end
     end
 
-    attach_function :object_free, :Object_free, [MemoryAllocator.ptr, Obj.ptr], :void
-
     class ValueU < FFI::Union
       layout :boolean, :bool, :number, :double, :obj, Obj.ptr
     end
@@ -226,14 +224,7 @@ module Lox
         :gray_stack, :pointer
 
       def with_new_function
-        begin
-          function = Lox::Bytecode.vm_new_function(self)
-          yield function
-        ensure
-          if function
-            Lox::Bytecode.object_free(self[:memory_allocator], Lox::Bytecode::Obj.new(function.to_ptr))
-          end
-        end
+        yield Lox::Bytecode.vm_new_function(self)
       end
 
       def current_frame

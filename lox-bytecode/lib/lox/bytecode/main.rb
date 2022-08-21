@@ -29,22 +29,21 @@ module Lox
 
         return if had_error?
 
-        @vm.with_new_function do |function|
-          compiler = Compiler.new(@vm, function, Compiler::FunctionType::SCRIPT, self)
-          compiler.compile(statements)
+        function = Lox::Bytecode.vm_new_function(@vm)
+        compiler = Compiler.new(@vm, function, Compiler::FunctionType::SCRIPT, self)
+        compiler.compile(statements)
 
-          return if had_error?
+        return if had_error?
 
-          if log_disassembly?
-            @disassembler.disassemble_function(function)
-            puts "[DEBUG] "
-          end
+        if log_disassembly?
+          @disassembler.disassemble_function(function)
+          puts "[DEBUG] "
+        end
 
-          interpreter = Interpreter.new(@vm, disassembler: @disassembler)
-          interpret_result = interpreter.interpret(function)
-          if interpret_result != :ok
-            @had_runtime_error = true
-          end
+        interpreter = Interpreter.new(@vm, disassembler: @disassembler)
+        interpret_result = interpreter.interpret(function)
+        if interpret_result != :ok
+          @had_runtime_error = true
         end
       end
 
