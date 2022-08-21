@@ -21,6 +21,7 @@ module Lox
       end
 
       def run(source)
+        @vm[:memory_allocator][:gc_enabled] = false
         scanner = Lox::Parser::Scanner.new(source, self)
         tokens = scanner.scan_tokens
 
@@ -40,6 +41,7 @@ module Lox
           puts "[DEBUG] "
         end
 
+        @vm[:memory_allocator][:gc_enabled] = true
         interpreter = Interpreter.new(@vm, disassembler: @disassembler)
         interpret_result = interpreter.interpret(function)
         if interpret_result != :ok

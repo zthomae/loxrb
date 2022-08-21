@@ -28,10 +28,12 @@ module Lox
     class MemoryAllocator < FFI::Struct
       layout :min_increased_capacity, :uint8,
         :increased_capacity_scaling_factor, :uint8,
+        :gc_enabled, :bool,
         :log_gc, :bool,
         :stress_gc, :bool,
         :callback_target, :pointer,
-        :memory_callbacks, MemoryCallbacks
+        :memory_callbacks, MemoryCallbacks,
+        :protected_object, :pointer
     end
 
     ### VALUES ###

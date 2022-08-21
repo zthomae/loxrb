@@ -9,6 +9,7 @@
 #include "vm.h"
 #include "gc.h"
 
+static void gc_mark_protected_objects(Vm* vm);
 static void gc_mark_roots(Vm* vm);
 static void gc_mark_value(Vm* vm, Value value);
 static void gc_mark_object(Vm* vm, Obj* object);
@@ -18,26 +19,45 @@ static void gc_mark_array(Vm* vm, ValueArray* array);
 static void gc_trace_references(Vm* vm);
 static void gc_blacken_object(Vm* vm, Obj* object);
 
+static void gc_remove_white_entries(Table* table);
+
+static void gc_sweep(Vm* vm);
+
 static void gc_log_value(Value value);
 static void gc_log_function_name(ObjFunction* function);
+
+inline bool gc_enabled(Vm* vm) {
+  return vm->memory_allocator.gc_enabled;
+}
 
 inline bool gc_logging_enabled(Vm* vm) {
   return vm->memory_allocator.log_gc;
 }
 
 void Gc_collect(Vm* vm) {
+  if (!gc_enabled(vm)) {
+    return;
+  }
+
   bool print_log_messages = gc_logging_enabled(vm);
 
   if (print_log_messages) {
     Logger_debug("-- start gc --");
   }
 
+  gc_mark_protected_objects(vm);
   gc_mark_roots(vm);
   gc_trace_references(vm);
+  gc_remove_white_entries(&vm->strings);
+  gc_sweep(vm);
 
   if (print_log_messages) {
     Logger_debug("-- end gc --");
   }
+}
+
+static void gc_mark_protected_objects(Vm* vm) {
+  gc_mark_object(vm, vm->memory_allocator.protected_object);
 }
 
 static void gc_mark_roots(Vm* vm) {
@@ -74,6 +94,7 @@ static void gc_mark_object(Vm* vm, Obj* object) {
     // Object_ interface
     gc_log_value(Value_make_obj(object));
     printf("\n");
+    fflush(stdout);
   }
 
   object->is_marked = true;
@@ -118,6 +139,7 @@ static void gc_blacken_object(Vm* vm, Obj* object) {
     printf("%p blacken ", (void*)object);
     gc_log_value(Value_make_obj(object));
     printf("\n");
+    fflush(stdout);
   }
 
   switch (object->type) {
@@ -140,6 +162,41 @@ static void gc_blacken_object(Vm* vm, Obj* object) {
         gc_mark_object(vm, (Obj*)closure->upvalues[i]);
       }
       break;
+    }
+  }
+}
+
+static void gc_remove_white_entries(Table* table) {
+  for (int i = 0; i < table->capacity; i++) {
+    Entry* entry = &table->entries[i];
+    if (entry->key != NULL && !entry->key->obj.is_marked) {
+      Table_delete(table, entry->key);
+    }
+  }
+}
+
+static void gc_sweep(Vm* vm) {
+  Obj* previous = NULL;
+  Obj* object = vm->objects;
+  while (object != NULL) {
+    if (object->is_marked) {
+      object->is_marked = false;
+      previous = object;
+      object = object->next;
+    } else {
+      Obj* unreached = object;
+      if (object == object->next) {
+        fprintf(stderr, "Mid-sweep object cycle!\n");
+        exit(1);
+      }
+      object = object->next;
+      if (previous != NULL) {
+        previous->next = object;
+      } else {
+        vm->objects = object;
+      }
+
+      Object_free(&vm->memory_allocator, unreached);
     }
   }
 }

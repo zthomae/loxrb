@@ -41,6 +41,8 @@ int Chunk_add_number(Chunk* chunk, double number) {
 }
 
 int Chunk_add_object(Chunk* chunk, Obj* object) {
+  chunk->memory_allocator->protected_object = object;
   ValueArray_write(&chunk->constants, Value_make_obj(object));
+  chunk->memory_allocator->protected_object = NULL;
   return chunk->constants.count - 1;
 }

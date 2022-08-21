@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "object_types.h"
+#include "value.h"
 
 typedef void (*HandleNewObject)(void* callback_target, Obj* object);
 typedef void (*CollectGarbage)(void* callback_target);
@@ -15,10 +16,12 @@ typedef struct {
 typedef struct {
   uint8_t min_increased_capacity;
   uint8_t increased_capacity_scaling_factor;
+  bool gc_enabled;
   bool log_gc;
   bool stress_gc;
   void* callback_target;
   MemoryCallbacks callbacks;
+  Obj* protected_object;
 } MemoryAllocator;
 
 void MemoryAllocator_init(MemoryAllocator* memory_allocator, void* callback_target, MemoryCallbacks memory_callbacks);

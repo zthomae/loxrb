@@ -9,6 +9,7 @@
 void MemoryAllocator_init(MemoryAllocator* memory_allocator, void* callback_target, MemoryCallbacks callbacks) {
   memory_allocator->min_increased_capacity = DEFAULT_MIN_INCREASED_CAPACITY;
   memory_allocator->increased_capacity_scaling_factor = DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR;
+  memory_allocator->gc_enabled = false;
   memory_allocator->log_gc = false;
   memory_allocator->stress_gc = false;
   memory_allocator->callback_target = callback_target;

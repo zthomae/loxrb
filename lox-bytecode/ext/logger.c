@@ -19,6 +19,8 @@ void Logger_debug(const char* format, ...) {
   va_end(format_args);
 
   free(updated_format_string);
+
+  fflush(stdout);
 }
 
 void Logger_write_multiline_string(const char* string) {

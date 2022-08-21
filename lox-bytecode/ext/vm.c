@@ -108,7 +108,9 @@ ObjString* Vm_copy_string(Vm* vm, char* chars, int length) {
   memcpy(heap_chars, chars, length);
   heap_chars[length] = '\0';
   ObjString* string = Object_allocate_string(&vm->memory_allocator, heap_chars, length, hash);
+  vm->memory_allocator.protected_object = (Obj*)string;
   Table_set(&vm->strings, string, Value_make_nil());
+  vm->memory_allocator.protected_object = NULL;
   return string;
 }
 
@@ -121,7 +123,9 @@ ObjString* Vm_take_string(Vm* vm, char* chars, int length) {
   }
 
   ObjString* string = Object_allocate_string(&vm->memory_allocator, chars, length, hash);
+  vm->memory_allocator.protected_object = (Obj*)string;
   Table_set(&vm->strings, string, Value_make_nil());
+  vm->memory_allocator.protected_object = NULL;
   return string;
 }
 
