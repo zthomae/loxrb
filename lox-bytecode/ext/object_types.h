@@ -1,6 +1,8 @@
 #ifndef clox_object_types_h
 #define clox_object_types_h
 
+#include "common.h"
+
 // This file is broken out from object.h to avoid circular dependencies
 
 typedef enum {
@@ -19,6 +21,7 @@ typedef enum {
 struct Obj {
   ObjType type;
   struct Obj* next;
+  bool is_marked;
 };
 typedef struct Obj Obj;
 

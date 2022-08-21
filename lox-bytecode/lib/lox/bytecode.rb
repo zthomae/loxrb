@@ -41,7 +41,7 @@ module Lox
     ObjType = enum :obj_type, [:closure, :function, :native, :string, :upvalue]
 
     class Obj < FFI::Struct
-      layout :type, ObjType, :next, Obj.ptr
+      layout :type, ObjType, :next, Obj.ptr, :is_marked, :bool
 
       def as_closure
         ObjClosure.new(self.to_ptr)

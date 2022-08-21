@@ -118,6 +118,7 @@ static void object_print_function(ObjFunction* function) {
 Obj* object_allocate_new(MemoryAllocator* memory_allocator, size_t size, ObjType type) {
   Obj* object = (Obj*)MemoryAllocator_reallocate(memory_allocator, NULL, 0, size);
   object->type = type;
+  object->is_marked = false;
 
   (*memory_allocator->callbacks.handle_new_object)(memory_allocator->callback_target, object);
 
