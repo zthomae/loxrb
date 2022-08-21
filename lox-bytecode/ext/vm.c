@@ -9,6 +9,7 @@
 #include "table.h"
 #include "value.h"
 #include "vm.h"
+#include "gc.h"
 
 static uint32_t vm_hash_string(char* chars, int length);
 static CallFrame* vm_current_frame(Vm* vm);
@@ -34,6 +35,8 @@ void vm_handle_new_object(void* callback_target, Obj* object) {
 }
 
 void vm_collect_garbage(void* callback_target) {
+  Vm* vm = (Vm*) callback_target;
+  Gc_collect(vm);
 }
 
 static Value vm_clock_native(int arg_count, Value* args) {

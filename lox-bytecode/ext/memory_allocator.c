@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "memory_allocator.h"
-#include "logger.h"
 
 #define DEFAULT_MIN_INCREASED_CAPACITY 8
 #define DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR 2
@@ -60,15 +59,5 @@ char* MemoryAllocator_allocate_chars(MemoryAllocator* memory_allocator, size_t c
 }
 
 void MemoryAllocator_collect_garbage(MemoryAllocator* memory_allocator) {
-  bool print_log_messages = memory_allocator->log_gc;
-
-  if (print_log_messages) {
-    Logger_debug("-- start gc --");
-  }
-
   (*memory_allocator->callbacks.collect_garbage)(memory_allocator->callback_target);
-
-  if (print_log_messages) {
-    Logger_debug("-- end gc --");
-  }
 }
