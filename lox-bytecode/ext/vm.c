@@ -28,6 +28,7 @@ static bool vm_call_value(Vm* vm, Value callee, int arg_count);
 static void vm_define_native(Vm* vm, char* name, NativeFn function);
 static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local);
 static void vm_close_upvalues(Vm* vm, Value* last);
+static ObjString* vm_allocate_string(Vm* vm, char* chars, int length, uint32_t hash);
 
 void vm_handle_new_object(void* callback_target, Obj* object) {
   Vm* vm = (Vm*) callback_target;
@@ -107,11 +108,7 @@ ObjString* Vm_copy_string(Vm* vm, char* chars, int length) {
   char* heap_chars = MemoryAllocator_allocate_chars(&vm->memory_allocator, length + 1);
   memcpy(heap_chars, chars, length);
   heap_chars[length] = '\0';
-  ObjString* string = Object_allocate_string(&vm->memory_allocator, heap_chars, length, hash);
-  vm->memory_allocator.protected_object = (Obj*)string;
-  Table_set(&vm->strings, string, Value_make_nil());
-  vm->memory_allocator.protected_object = NULL;
-  return string;
+  return vm_allocate_string(vm, heap_chars, length, hash);
 }
 
 ObjString* Vm_take_string(Vm* vm, char* chars, int length) {
@@ -122,11 +119,7 @@ ObjString* Vm_take_string(Vm* vm, char* chars, int length) {
     return interned;
   }
 
-  ObjString* string = Object_allocate_string(&vm->memory_allocator, chars, length, hash);
-  vm->memory_allocator.protected_object = (Obj*)string;
-  Table_set(&vm->strings, string, Value_make_nil());
-  vm->memory_allocator.protected_object = NULL;
-  return string;
+  return vm_allocate_string(vm, chars, length, hash);
 }
 
 void Vm_free(Vm* vm) {
@@ -531,4 +524,12 @@ static void vm_close_upvalues(Vm* vm, Value* last) {
     upvalue->location = &upvalue->closed;
     vm->open_upvalues = upvalue->next;
   }
+}
+
+static ObjString* vm_allocate_string(Vm* vm, char* chars, int length, uint32_t hash) {
+  ObjString* string = Object_allocate_string(&vm->memory_allocator, chars, length, hash);
+  vm->memory_allocator.protected_object = (Obj*)string;
+  Table_set(&vm->strings, string, Value_make_nil());
+  vm->memory_allocator.protected_object = NULL;
+  return string;
 }
