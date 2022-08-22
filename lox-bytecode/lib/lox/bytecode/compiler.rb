@@ -7,6 +7,7 @@ module Lox
 
       module FunctionType
         FUNCTION = :FUNCTION
+        INITIALIZER = :INITIALIZER
         METHOD = :METHOD
         SCRIPT = :SCRIPT
       end
@@ -20,7 +21,7 @@ module Lox
         @scope_depth = scope_depth
 
         @locals = []
-        if function_type == FunctionType::METHOD
+        if [FunctionType::INITIALIZER, FunctionType::METHOD].include?(function_type)
           @locals << Local.new("this", 0, false)
         else
           @locals << Local.new("", 0, false)
@@ -65,7 +66,8 @@ module Lox
 
         stmt.methods.each do |method|
           arg, _ = make_identifier_constant(method.name, method.name.lexeme)
-          compile_function(method, FunctionType::METHOD)
+          function_type = method.name.lexeme == "init" ? FunctionType::INITIALIZER : FunctionType::METHOD
+          compile_function(method, function_type)
           emit_bytes(:method, arg, method.bounding_lines.first)
         end
 
@@ -113,6 +115,8 @@ module Lox
       def visit_return_stmt(stmt)
         if @function_type == FunctionType::SCRIPT
           @error_handler.compile_error(stmt.keyword, "Can't return from top-level code.")
+        elsif @function_type == FunctionType::INITIALIZER
+          @error_handler.compile_error(stmt.keyword, "Can't return a value from an initializer.")
         end
 
         emit_return(stmt.value, stmt.keyword.line)
@@ -507,7 +511,11 @@ module Lox
 
       def emit_return(value, line)
         if value.nil?
-          emit_byte(:nil, line)
+          if @function_type == FunctionType::INITIALIZER
+            emit_bytes(:get_local, 0, line)
+          else
+            emit_byte(:nil, line)
+          end
         else
           value.accept(self)
         end

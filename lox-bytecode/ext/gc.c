@@ -85,6 +85,8 @@ static void gc_mark_roots(Vm* vm) {
   }
 
   gc_mark_table(vm, &vm->globals);
+
+  gc_mark_object(vm, vm->init_string);
 }
 
 static void gc_mark_value(Vm* vm, Value value) {

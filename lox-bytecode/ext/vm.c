@@ -61,6 +61,9 @@ void Vm_init(Vm* vm) {
   Table_init(&vm->globals, &vm->memory_allocator);
   Table_init(&vm->strings, &vm->memory_allocator);
 
+  vm->init_string = NULL; // Protect GC if it runs while allocating this
+  vm->init_string = Vm_copy_string(vm, "init", 4);
+
   vm_define_native(vm, "clock", vm_clock_native);
 }
 
@@ -134,6 +137,8 @@ void Vm_free(Vm* vm) {
   }
 
   Table_free(&vm->strings);
+
+  Object_free(&vm->memory_allocator, (Obj*)vm->init_string);
 
   free(vm->gray_stack);
 }
@@ -475,6 +480,13 @@ static bool vm_call_value(Vm* vm, Value callee, int arg_count) {
       case OBJ_CLASS: {
         ObjClass* klass = Object_as_class(callee);
         vm->stack_top[-arg_count - 1] = Value_make_obj((Obj*)Object_allocate_new_instance(&vm->memory_allocator, klass));
+        Value initializer;
+        if (Table_get(&klass->methods, vm->init_string, &initializer)) {
+          return vm_call(vm, Object_as_closure(initializer), arg_count);
+        } else if (arg_count != 0) {
+          vm_runtime_error(vm, "Expected 0 arguments but got %d.", arg_count);
+          return false;
+        }
         return true;
       }
       case OBJ_CLOSURE:

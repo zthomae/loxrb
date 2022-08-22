@@ -25,6 +25,7 @@ typedef struct {
   ObjUpvalue* open_upvalues;
   Obj* objects;
   Table strings;
+  ObjString* init_string;
   MemoryAllocator memory_allocator;
   int gray_count;
   int gray_capacity;
