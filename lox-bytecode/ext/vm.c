@@ -239,6 +239,35 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
       *call_frame->closure->upvalues[slot]->location = vm_stack_peek(vm, 0);
       break;
     }
+    case OP_GET_PROPERTY: {
+      if (!Object_is_instance(vm_stack_peek(vm, 0))) {
+        vm_runtime_error(vm, "Only instances have properties.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      ObjInstance* instance = Object_as_instance(vm_stack_peek(vm, 0));
+      ObjString* name = vm_read_string(call_frame);
+
+      Value value;
+      if (Table_get(&instance->fields, name, &value)) {
+        vm_stack_pop(vm); // Pop off the instance
+        vm_stack_push(vm, value);
+        break;
+      }
+      vm_runtime_error(vm, "Undefined property '%s'.", name->chars);
+      return INTERPRET_RUNTIME_ERROR;
+    }
+    case OP_SET_PROPERTY: {
+      if (!Object_is_instance(vm_stack_peek(vm, 1))) {
+        vm_runtime_error(vm, "Only instances have fields.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      ObjInstance* instance = Object_as_instance(vm_stack_peek(vm, 1));
+      Table_set(&instance->fields, vm_read_string(call_frame), vm_stack_peek(vm, 0));
+      Value value = vm_stack_pop(vm);
+      vm_stack_pop(vm);
+      vm_stack_push(vm, value);
+      break;
+    }
     case OP_EQUAL: {
       Value b = vm_stack_pop(vm);
       Value a = vm_stack_pop(vm);

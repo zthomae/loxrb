@@ -182,6 +182,12 @@ module Lox
         emit_bytes(:call, arg_count, expr.bounding_lines.first)
       end
 
+      def visit_get_expr(expr)
+        expr.object.accept(self)
+        arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
+        emit_bytes(:get_property, arg, expr.name.line)
+      end
+
       def visit_grouping_expr(expr)
         add_expression_to_chunk(expr.expression)
       end
@@ -220,6 +226,13 @@ module Lox
           expr.right.accept(self)
           patch_jump(end_jump, expr.operator.line)
         end
+      end
+
+      def visit_set_expr(expr)
+        expr.object.accept(self)
+        arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
+        expr.value.accept(self)
+        emit_bytes(:set_property, arg, expr.name.line)
       end
 
       def visit_unary_expr(expr)

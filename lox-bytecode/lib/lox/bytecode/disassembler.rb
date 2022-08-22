@@ -55,6 +55,10 @@ module Lox
           byte_instruction("OP_GET_UPVALUE", chunk, offset)
         when Opcode[:set_upvalue]
           byte_instruction("OP_SET_UPVALUE", chunk, offset)
+        when Opcode[:get_property]
+          constant_instruction("OP_GET_PROPERTY", chunk, offset)
+        when Opcode[:set_property]
+          constant_instruction("OP_SET_PROPERTY", chunk, offset)
         when Opcode[:equal]
           simple_instruction("OP_EQUAL", offset)
         when Opcode[:greater]
