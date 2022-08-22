@@ -58,7 +58,7 @@ void Gc_collect(Vm* vm) {
   if (print_log_messages) {
     Logger_debug("-- end gc --");
     Logger_debug(
-      "   collected %zu bytes (from %zu to %zu) next at %zu\n",
+      "   collected %zu bytes (from %zu to %zu) next at %zu",
       before - memory_allocator->bytes_allocated,
       before,
       memory_allocator->bytes_allocated,
