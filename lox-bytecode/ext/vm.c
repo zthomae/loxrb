@@ -469,6 +469,7 @@ static bool vm_call_value(Vm* vm, Value callee, int arg_count) {
     switch (Object_type(callee)) {
       case OBJ_BOUND_METHOD: {
         ObjBoundMethod* bound_method = Object_as_bound_method(callee);
+        vm->stack_top[-arg_count - 1] = bound_method->receiver;
         return vm_call(vm, bound_method->method, arg_count);
       }
       case OBJ_CLASS: {

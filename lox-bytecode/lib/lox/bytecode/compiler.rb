@@ -19,7 +19,13 @@ module Lox
         @enclosing = enclosing
         @scope_depth = scope_depth
 
-        @locals = [Local.new("", 0, false)]
+        @locals = []
+        if function_type == FunctionType::METHOD
+          @locals << Local.new("this", 0, false)
+        else
+          @locals << Local.new("", 0, false)
+        end
+
         @upvalues = []
       end
 
@@ -245,6 +251,10 @@ module Lox
         arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
         expr.value.accept(self)
         emit_bytes(:set_property, arg, expr.name.line)
+      end
+
+      def visit_this_expr(expr)
+        named_variable(expr.keyword)
       end
 
       def visit_unary_expr(expr)
