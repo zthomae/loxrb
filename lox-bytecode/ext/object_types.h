@@ -6,6 +6,7 @@
 // This file is broken out from object.h to avoid circular dependencies
 
 typedef enum {
+  OBJ_CLASS,
   OBJ_CLOSURE,
   OBJ_FUNCTION,
   OBJ_NATIVE,
@@ -30,5 +31,6 @@ typedef struct ObjFunction ObjFunction;
 typedef struct ObjNative ObjNative;
 typedef struct ObjUpvalue ObjUpvalue;
 typedef struct ObjClosure ObjClosure;
+typedef struct ObjClass ObjClass;
 
 #endif

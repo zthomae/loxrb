@@ -380,6 +380,11 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
       vm_stack_push(vm, result);
       break;
     }
+    case OP_CLASS: {
+      ObjClass* klass = Object_allocate_new_class(&vm->memory_allocator, vm_read_string(call_frame));
+      vm_stack_push(vm, Value_make_obj((Obj*)klass));
+      break;
+    }
     default:
       return INTERPRET_RUNTIME_ERROR;
   }

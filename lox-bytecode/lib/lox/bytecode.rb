@@ -43,7 +43,7 @@ module Lox
 
     ValueType = enum :value_type, [:bool, :nil, :number, :obj]
 
-    ObjType = enum :obj_type, [:closure, :function, :native, :string, :upvalue]
+    ObjType = enum :obj_type, [:class, :closure, :function, :native, :string, :upvalue]
 
     class Obj < FFI::Struct
       layout :type, ObjType, :next, Obj.ptr, :is_marked, :bool
@@ -164,7 +164,8 @@ module Lox
       :call,
       :closure,
       :close_upvalue,
-      :return
+      :return,
+      :class
     ]
 
     class Chunk < FFI::Struct
@@ -204,6 +205,12 @@ module Lox
 
     class ObjUpvalue < FFI::Struct
       layout :obj, Obj, :location, Value.ptr, :closed, Value, :next, ObjUpvalue.ptr
+    end
+
+    ### OOP ###
+
+    class ObjClass < FFI::Struct
+      layout :obj, Obj, :name, ObjString.ptr
     end
 
     ### VM ###

@@ -43,6 +43,11 @@ struct ObjClosure {
   int upvalue_count;
 };
 
+struct ObjClass {
+  Obj obj;
+  ObjString* name;
+};
+
 inline ObjType Object_type(Value value) {
   return Value_as_obj(value)->type;
 }
@@ -67,6 +72,10 @@ inline bool Object_is_closure(Value value) {
   return Object_is_type(value, OBJ_CLOSURE);
 }
 
+inline bool Object_is_class(Value value) {
+  return Object_is_type(value, OBJ_CLASS);
+}
+
 inline ObjFunction* Object_as_function(Value value) {
   return (ObjFunction*)Value_as_obj(value);
 }
@@ -88,6 +97,10 @@ inline ObjClosure* Object_as_closure(Value value) {
   return (ObjClosure*)Value_as_obj(value);
 }
 
+inline ObjClass* Object_as_class(Value value) {
+  return (ObjClass*)Value_as_obj(value);
+}
+
 void Object_print(Value value);
 
 ObjString* Object_allocate_string(MemoryAllocator* memory_allocator, char* chars, int length, uint32_t hash);
@@ -96,6 +109,7 @@ ObjFunction* Object_allocate_new_function(MemoryAllocator* memory_allocator);
 ObjNative* Object_allocate_new_native(MemoryAllocator* memory_allocator, NativeFn function);
 ObjClosure* Object_allocate_new_closure(MemoryAllocator* memory_allocator, ObjFunction* function);
 ObjUpvalue* Object_allocate_new_upvalue(MemoryAllocator* memory_allocator, Value* local);
+ObjClass* Object_allocate_new_class(MemoryAllocator* memory_allocator, ObjString* name);
 
 void Object_free(MemoryAllocator* memory_allocator, Obj* object);
 

@@ -41,6 +41,19 @@ module Lox
         end_scope(stmt.bounding_lines.last)
       end
 
+      def visit_class_stmt(stmt)
+        if global_scope?
+          global = declare_global(stmt.name)
+          emit_bytes(:class, global, stmt.bounding_lines.first)
+          define_global(global, stmt.bounding_lines.first)
+        else
+          declare_local(stmt.name)
+          arg, _ = make_identifier_constant(stmt.name, stmt.name.lexeme)
+          emit_bytes(:class, arg, stmt.bounding_lines.first)
+          mark_new_local_initialized
+        end
+      end
+
       def visit_expression_stmt(stmt)
         stmt.expression.accept(self)
         emit_byte(:pop, stmt.bounding_lines.last)

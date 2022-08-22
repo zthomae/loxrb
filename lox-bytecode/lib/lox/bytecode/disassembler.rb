@@ -102,6 +102,8 @@ module Lox
           simple_instruction("OP_CLOSE_UPVALUE", offset)
         when Opcode[:return]
           simple_instruction("OP_RETURN", offset)
+        when Opcode[:class]
+          constant_instruction("OP_CLASS", chunk, offset)
         else
           io.puts "Unknown opcode #{instruction}\n"
           offset + 1

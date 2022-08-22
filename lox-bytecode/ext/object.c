@@ -10,6 +10,9 @@ static void object_print_function(ObjFunction* function);
 
 void Object_print(Value value) {
   switch (Object_type(value)) {
+    case OBJ_CLASS:
+      printf("%s", Object_as_class(value)->name->chars);
+      break;
     case OBJ_CLOSURE:
       object_print_function(Object_as_closure(value)->function);
       break;
@@ -70,12 +73,22 @@ ObjClosure* Object_allocate_new_closure(MemoryAllocator* memory_allocator, ObjFu
   return closure;
 }
 
+ObjClass* Object_allocate_new_class(MemoryAllocator* memory_allocator, ObjString* name) {
+  ObjClass* klass = (ObjClass*)object_allocate_new(memory_allocator, sizeof(ObjClass), OBJ_CLASS);
+  klass->name = name;
+  return klass;
+}
+
 void Object_free(MemoryAllocator* memory_allocator, Obj* object) {
   if (memory_allocator->log_gc) {
     Logger_debug("%p free type %d", (void*)object, object->type);
   }
 
   switch (object->type) {
+    case OBJ_CLASS: {
+      MemoryAllocator_free(memory_allocator, object, sizeof(ObjClass));
+      break;
+    }
     case OBJ_CLOSURE: {
       ObjClosure* closure = (ObjClosure*)object;
       // Don't free the upvalues themselves, because the closure doesn't own them
