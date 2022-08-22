@@ -5,10 +5,14 @@
 
 #define DEFAULT_MIN_INCREASED_CAPACITY 8
 #define DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR 2
+#define DEFAULT_GC_HEAP_GROW_FACTOR 2
 
 void MemoryAllocator_init(MemoryAllocator* memory_allocator, void* callback_target, MemoryCallbacks callbacks) {
+  memory_allocator->bytes_allocated = 0;
+  memory_allocator->next_gc = 1024 * 1024;
   memory_allocator->min_increased_capacity = DEFAULT_MIN_INCREASED_CAPACITY;
   memory_allocator->increased_capacity_scaling_factor = DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR;
+  memory_allocator->gc_heap_grow_factor = DEFAULT_GC_HEAP_GROW_FACTOR;
   memory_allocator->gc_enabled = false;
   memory_allocator->log_gc = false;
   memory_allocator->stress_gc = false;
@@ -17,8 +21,11 @@ void MemoryAllocator_init(MemoryAllocator* memory_allocator, void* callback_targ
 }
 
 void* MemoryAllocator_reallocate(MemoryAllocator* memory_allocator, void* array, size_t old_size, size_t new_size) {
-  if (new_size > old_size && memory_allocator->stress_gc) {
-    MemoryAllocator_collect_garbage(memory_allocator);
+  memory_allocator->bytes_allocated += new_size - old_size;
+  if (new_size > old_size) {
+    if ((memory_allocator->stress_gc || (memory_allocator->bytes_allocated > memory_allocator->next_gc))) {
+      MemoryAllocator_collect_garbage(memory_allocator);
+    }
   }
 
   if (new_size == 0) {

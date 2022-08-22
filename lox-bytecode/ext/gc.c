@@ -44,6 +44,8 @@ void Gc_collect(Vm* vm) {
   if (print_log_messages) {
     Logger_debug("-- start gc --");
   }
+  MemoryAllocator* memory_allocator = &vm->memory_allocator;
+  size_t before = memory_allocator->bytes_allocated;
 
   gc_mark_protected_objects(vm);
   gc_mark_roots(vm);
@@ -51,8 +53,17 @@ void Gc_collect(Vm* vm) {
   gc_remove_white_entries(&vm->strings);
   gc_sweep(vm);
 
+  memory_allocator->next_gc = memory_allocator->bytes_allocated * memory_allocator->gc_heap_grow_factor;
+
   if (print_log_messages) {
     Logger_debug("-- end gc --");
+    Logger_debug(
+      "   collected %zu bytes (from %zu to %zu) next at %zu\n",
+      before - memory_allocator->bytes_allocated,
+      before,
+      memory_allocator->bytes_allocated,
+      memory_allocator->next_gc
+    );
   }
 }
 
