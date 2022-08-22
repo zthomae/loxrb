@@ -11,6 +11,9 @@ static void object_print_function(ObjFunction* function);
 
 void Object_print(Value value) {
   switch (Object_type(value)) {
+    case OBJ_BOUND_METHOD:
+      object_print_function(Object_as_bound_method(value)->method);
+      break;
     case OBJ_CLASS:
       printf("%s", Object_as_class(value)->name->chars);
       break;
@@ -91,12 +94,23 @@ ObjInstance* Object_allocate_new_instance(MemoryAllocator* memory_allocator, Obj
   return instance;
 }
 
+ObjBoundMethod* Object_allocate_new_bound_method(MemoryAllocator* memory_allocator, Value receiver, ObjClosure* method) {
+  ObjBoundMethod* bound_method = (ObjBoundMethod*)object_allocate_new(memory_allocator, sizeof(ObjBoundMethod), OBJ_BOUND_METHOD);
+  bound_method->receiver = receiver;
+  bound_method->method = method;
+  return bound_method;
+}
+
 void Object_free(MemoryAllocator* memory_allocator, Obj* object) {
   if (memory_allocator->log_gc) {
     Logger_debug("%p free type %d", (void*)object, object->type);
   }
 
   switch (object->type) {
+    case OBJ_BOUND_METHOD: {
+      MemoryAllocator_free(memory_allocator, object, sizeof(ObjBoundMethod));
+      break;
+    }
     case OBJ_CLASS: {
       ObjClass* klass = (ObjClass*)object;
       Table_free(&klass->methods);

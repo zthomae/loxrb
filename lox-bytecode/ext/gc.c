@@ -186,6 +186,12 @@ static void gc_blacken_object(Vm* vm, Obj* object) {
       gc_mark_table(vm, &instance->fields);
       break;
     }
+    case OBJ_BOUND_METHOD: {
+      ObjBoundMethod* bound_method = (ObjBoundMethod*)object;
+      gc_mark_value(vm, bound_method->receiver);
+      gc_mark_object(vm, (Obj*)bound_method->method);
+      break;
+    }
   }
 }
 

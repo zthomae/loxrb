@@ -27,6 +27,7 @@ static bool vm_call(Vm* vm, ObjClosure* closure, int arg_count);
 static bool vm_call_value(Vm* vm, Value callee, int arg_count);
 static void vm_define_native(Vm* vm, char* name, NativeFn function);
 static void vm_define_method(Vm* vm, ObjString* name);
+static bool vm_bind_method(Vm* vm, ObjClass* klass, ObjString* name);
 static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local);
 static void vm_close_upvalues(Vm* vm, Value* last);
 static ObjString* vm_allocate_string(Vm* vm, char* chars, int length, uint32_t hash);
@@ -254,8 +255,11 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
         vm_stack_push(vm, value);
         break;
       }
-      vm_runtime_error(vm, "Undefined property '%s'.", name->chars);
-      return INTERPRET_RUNTIME_ERROR;
+
+      if (!vm_bind_method(vm, instance->klass, name)) {
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      break;
     }
     case OP_SET_PROPERTY: {
       if (!Object_is_instance(vm_stack_peek(vm, 1))) {
@@ -463,6 +467,10 @@ static bool vm_call(Vm* vm, ObjClosure* closure, int arg_count) {
 static bool vm_call_value(Vm* vm, Value callee, int arg_count) {
   if (Value_is_obj(callee)) {
     switch (Object_type(callee)) {
+      case OBJ_BOUND_METHOD: {
+        ObjBoundMethod* bound_method = Object_as_bound_method(callee);
+        return vm_call(vm, bound_method->method, arg_count);
+      }
       case OBJ_CLASS: {
         ObjClass* klass = Object_as_class(callee);
         vm->stack_top[-arg_count - 1] = Value_make_obj((Obj*)Object_allocate_new_instance(&vm->memory_allocator, klass));
@@ -543,6 +551,23 @@ static void vm_define_method(Vm* vm, ObjString* name) {
   ObjClass* klass = Object_as_class(vm_stack_peek(vm, 1));
   Table_set(&klass->methods, name, method);
   vm_stack_pop(vm);
+}
+
+static bool vm_bind_method(Vm* vm, ObjClass* klass, ObjString* name) {
+  Value method;
+  if (!Table_get(&klass->methods, name, &method)) {
+    vm_runtime_error(vm, "Undefined property '%s'.", name->chars);
+    return false;
+  }
+
+  ObjBoundMethod* bound_method = Object_allocate_new_bound_method(
+    &vm->memory_allocator,
+    vm_stack_peek(vm, 0),
+    Object_as_closure(method)
+  );
+  vm_stack_pop(vm);
+  vm_stack_push(vm, Value_make_obj((Obj*)bound_method));
+  return true;
 }
 
 static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local) {

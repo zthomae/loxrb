@@ -56,6 +56,12 @@ struct ObjInstance {
   Table fields;
 };
 
+struct ObjBoundMethod {
+  Obj obj;
+  Value receiver;
+  ObjClosure* method;
+};
+
 inline ObjType Object_type(Value value) {
   return Value_as_obj(value)->type;
 }
@@ -88,6 +94,10 @@ inline bool Object_is_instance(Value value) {
   return Object_is_type(value, OBJ_INSTANCE);
 }
 
+inline bool Object_is_bound_method(Value value) {
+  return Object_is_type(value, OBJ_BOUND_METHOD);
+}
+
 inline ObjFunction* Object_as_function(Value value) {
   return (ObjFunction*)Value_as_obj(value);
 }
@@ -117,6 +127,10 @@ inline ObjInstance* Object_as_instance(Value value) {
   return (ObjInstance*)Value_as_obj(value);
 }
 
+inline ObjBoundMethod* Object_as_bound_method(Value value) {
+  return (ObjBoundMethod*)Value_as_obj(value);
+}
+
 void Object_print(Value value);
 
 ObjString* Object_allocate_string(MemoryAllocator* memory_allocator, char* chars, int length, uint32_t hash);
@@ -127,6 +141,7 @@ ObjClosure* Object_allocate_new_closure(MemoryAllocator* memory_allocator, ObjFu
 ObjUpvalue* Object_allocate_new_upvalue(MemoryAllocator* memory_allocator, Value* local);
 ObjClass* Object_allocate_new_class(MemoryAllocator* memory_allocator, ObjString* name);
 ObjInstance* Object_allocate_new_instance(MemoryAllocator* memory_allocator, ObjClass* klass);
+ObjBoundMethod* Object_allocate_new_bound_method(MemoryAllocator* memory_allocator, Value receiver, ObjClosure* method);
 
 void Object_free(MemoryAllocator* memory_allocator, Obj* object);
 
