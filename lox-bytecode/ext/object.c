@@ -12,7 +12,7 @@ static void object_print_function(ObjFunction* function);
 void Object_print(Value value) {
   switch (Object_type(value)) {
     case OBJ_BOUND_METHOD:
-      object_print_function(Object_as_bound_method(value)->method);
+      object_print_function(Object_as_bound_method(value)->method->function);
       break;
     case OBJ_CLASS:
       printf("%s", Object_as_class(value)->name->chars);
