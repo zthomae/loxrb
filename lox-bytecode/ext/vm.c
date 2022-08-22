@@ -25,6 +25,8 @@ static void vm_runtime_error(Vm* vm, const char* format, ...);
 static void vm_concatenate(Vm* vm);
 static bool vm_call(Vm* vm, ObjClosure* closure, int arg_count);
 static bool vm_call_value(Vm* vm, Value callee, int arg_count);
+static bool vm_invoke(Vm* vm, ObjString* name, int arg_count);
+static bool vm_invoke_from_class(Vm* vm, ObjClass* klass, ObjString* name, int arg_count);
 static void vm_define_native(Vm* vm, char* name, NativeFn function);
 static void vm_define_method(Vm* vm, ObjString* name);
 static bool vm_bind_method(Vm* vm, ObjClass* klass, ObjString* name);
@@ -386,6 +388,14 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
       }
       break;
     }
+    case OP_INVOKE: {
+      ObjString* method = vm_read_string(call_frame);
+      int arg_count = vm_read_byte(call_frame);
+      if (!vm_invoke(vm, method, arg_count)) {
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      break;
+    }
     case OP_CLOSURE: {
       ObjFunction* function = Object_as_function(vm_read_constant(call_frame));
       ObjClosure* closure = Object_allocate_new_closure(&vm->memory_allocator, function);
@@ -504,6 +514,28 @@ static bool vm_call_value(Vm* vm, Value callee, int arg_count) {
   }
   vm_runtime_error(vm, "Can only call functions and classes.");
   return false;
+}
+
+static bool vm_invoke(Vm* vm, ObjString* name, int arg_count) {
+  Value receiver = vm_stack_peek(vm, arg_count);
+  ObjInstance* instance = Object_as_instance(receiver);
+
+  Value value;
+  if (Table_get(&instance->fields, name, &value)) {
+    vm->stack_top[-arg_count - 1] = value;
+    return vm_call_value(vm, value, arg_count);
+  }
+
+  return vm_invoke_from_class(vm, instance->klass, name, arg_count);
+}
+
+static bool vm_invoke_from_class(Vm* vm, ObjClass* klass, ObjString* name, int arg_count) {
+  Value method;
+  if (!Table_get(&klass->methods, name, &method)) {
+    vm_runtime_error(vm, "Undefined property '%s'.", name->chars);
+    return false;
+  }
+  return vm_call(vm, Object_as_closure(method), arg_count);
 }
 
 static void vm_runtime_error(Vm* vm, const char* format, ...) {

@@ -87,6 +87,8 @@ module Lox
           jump_instruction("OP_LOOP", -1, chunk, offset)
         when Opcode[:call]
           byte_instruction("OP_CALL", chunk, offset)
+        when Opcode[:invoke]
+          invoke_instruction("OP_INVOKE", chunk, offset)
         when Opcode[:closure]
           constant_index = chunk.contents_at(offset + 1)
           offset += 2
@@ -149,6 +151,14 @@ module Lox
       def jump_instruction(name, sign, chunk, offset)
         jump = (chunk.contents_at(offset + 1) << 8) | chunk.contents_at(offset + 2)
         io.puts "%-16s %4d -> %d\n" % [name, offset, offset + 3 + sign * jump]
+        offset + 3
+      end
+
+      def invoke_instruction(name, chunk, offset)
+        constant = chunk.contents_at(offset + 1)
+        arg_count = chunk.contents_at(offset + 2)
+        value = chunk.constant_at(constant)
+        io.puts "%-16s (%d args) %4d '%s'" % [name, arg_count, constant, constant.to_s]
         offset + 3
       end
     end

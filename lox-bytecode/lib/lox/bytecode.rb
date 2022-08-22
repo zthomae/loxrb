@@ -182,6 +182,7 @@ module Lox
       :jump_if_false,
       :loop,
       :call,
+      :invoke,
       :closure,
       :close_upvalue,
       :return,

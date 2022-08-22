@@ -200,16 +200,17 @@ module Lox
       end
 
       def visit_call_expr(expr)
-        expr.callee.accept(self)
-        arg_count = 0
-        expr.arguments.each do |argument|
-          argument.accept(self)
-          if arg_count == 255
-            @error_handler.compile_error(argument, "Can't have more than 255 arguments.")
-          end
-          arg_count += 1
+        if expr.callee.is_a?(Lox::Parser::Expr::Get)
+          expr.callee.object.accept(self)
+          arg, _ = make_identifier_constant(expr.callee.name, expr.callee.name.lexeme)
+          arg_count = argument_list(expr.arguments)
+          emit_bytes(:invoke, arg, expr.callee.name.line)
+          emit_byte(arg_count, expr.callee.name.line)
+        else
+          expr.callee.accept(self)
+          arg_count = argument_list(expr.arguments)
+          emit_bytes(:call, arg_count, expr.bounding_lines.first)
         end
-        emit_bytes(:call, arg_count, expr.bounding_lines.first)
       end
 
       def visit_get_expr(expr)
@@ -439,6 +440,18 @@ module Lox
         end
 
         local.depth = @scope_depth
+      end
+
+      def argument_list(arguments)
+        arg_count = 0
+        arguments.each do |argument|
+          argument.accept(self)
+          if arg_count == 255
+            @error_handler.compile_error(argument, "Can't have more than 255 arguments.")
+          end
+          arg_count += 1
+        end
+        arg_count
       end
 
       def compile_function(stmt, function_type)
