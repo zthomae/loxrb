@@ -43,7 +43,7 @@ module Lox
 
     ValueType = enum :value_type, [:bool, :nil, :number, :obj]
 
-    ObjType = enum :obj_type, [:class, :closure, :function, :native, :string, :upvalue]
+    ObjType = enum :obj_type, [:class, :closure, :function, :instance, :native, :string, :upvalue]
 
     class Obj < FFI::Struct
       layout :type, ObjType, :next, Obj.ptr, :is_marked, :bool
@@ -58,6 +58,14 @@ module Lox
 
       def as_string
         ObjString.new(self.to_ptr)
+      end
+
+      def as_class
+        ObjClass.new(self.to_ptr)
+      end
+
+      def as_instance
+        ObjInstance.new(self.to_ptr)
       end
 
       def to_s
@@ -80,6 +88,10 @@ module Lox
           "<native fn>"
         when :string
           self.as_string[:chars]
+        when :class
+          self.as_class[:name][:chars]
+        when :instance
+          self.as_instance[:klass][:name][:chars]
         else
           raise "Unsupported object type #{self[:type]}"
         end
@@ -211,6 +223,10 @@ module Lox
 
     class ObjClass < FFI::Struct
       layout :obj, Obj, :name, ObjString.ptr
+    end
+
+    class ObjInstance < FFI::Struct
+      layout :obj, Obj, :klass, ObjClass.ptr, :fields, Table
     end
 
     ### VM ###

@@ -4,6 +4,7 @@
 #include "logger.h"
 #include "object.h"
 #include "value.h"
+#include "table.h"
 
 Obj* object_allocate_new(MemoryAllocator* memory_allocator, size_t size, ObjType type);
 static void object_print_function(ObjFunction* function);
@@ -18,6 +19,9 @@ void Object_print(Value value) {
       break;
     case OBJ_FUNCTION:
       object_print_function(Object_as_function(value));
+      break;
+    case OBJ_INSTANCE:
+      printf("%s instance", Object_as_instance(value)->klass->name->chars);
       break;
     case OBJ_NATIVE:
       printf("<native fn>");
@@ -79,6 +83,13 @@ ObjClass* Object_allocate_new_class(MemoryAllocator* memory_allocator, ObjString
   return klass;
 }
 
+ObjInstance* Object_allocate_new_instance(MemoryAllocator* memory_allocator, ObjClass* klass) {
+  ObjInstance* instance = (ObjInstance*)object_allocate_new(memory_allocator, sizeof(ObjInstance), OBJ_INSTANCE);
+  instance->klass = klass;
+  Table_init(&instance->fields, memory_allocator);
+  return instance;
+}
+
 void Object_free(MemoryAllocator* memory_allocator, Obj* object) {
   if (memory_allocator->log_gc) {
     Logger_debug("%p free type %d", (void*)object, object->type);
@@ -102,6 +113,12 @@ void Object_free(MemoryAllocator* memory_allocator, Obj* object) {
       Chunk_free(&function->chunk);
       MemoryAllocator_free(memory_allocator, function, sizeof(ObjFunction));
       // function name is an ObjString, so we leave it for the garbage collector
+      break;
+    }
+    case OBJ_INSTANCE: {
+      ObjInstance* instance = (ObjInstance*)object;
+      Table_free(&instance->fields);
+      MemoryAllocator_free(memory_allocator, instance, sizeof(ObjInstance));
       break;
     }
     case OBJ_NATIVE:

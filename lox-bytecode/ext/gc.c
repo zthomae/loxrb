@@ -179,6 +179,12 @@ static void gc_blacken_object(Vm* vm, Obj* object) {
       gc_mark_object(vm, (Obj*)klass->name);
       break;
     }
+    case OBJ_INSTANCE: {
+      ObjInstance* instance = (ObjInstance*)object;
+      gc_mark_object(vm, (Obj*)instance->klass);
+      gc_mark_table(vm, &instance->fields);
+      break;
+    }
   }
 }
 
@@ -219,12 +225,17 @@ static void gc_sweep(Vm* vm) {
 
 static void gc_log_value(Value value) {
   switch (Object_type(value)) {
+    case OBJ_CLASS:
+      printf("%s", Object_as_class(value)->name->chars);
+      break;
     case OBJ_CLOSURE:
       gc_log_function_name(Object_as_closure(value)->function);
       break;
     case OBJ_FUNCTION:
       gc_log_function_name(Object_as_function(value));
       break;
+    case OBJ_INSTANCE:
+      printf("%s instance", Object_as_instance(value)->klass->name->chars);
     case OBJ_NATIVE:
       printf("<native fn>");
       break;

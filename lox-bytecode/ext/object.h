@@ -6,6 +6,7 @@
 #include "memory_allocator.h"
 #include "chunk.h"
 #include "value.h"
+#include "table.h"
 
 struct ObjString {
   Obj obj;
@@ -48,6 +49,12 @@ struct ObjClass {
   ObjString* name;
 };
 
+struct ObjInstance {
+  Obj obj;
+  ObjClass* klass;
+  Table fields;
+};
+
 inline ObjType Object_type(Value value) {
   return Value_as_obj(value)->type;
 }
@@ -76,6 +83,10 @@ inline bool Object_is_class(Value value) {
   return Object_is_type(value, OBJ_CLASS);
 }
 
+inline bool Object_is_instance(Value value) {
+  return Object_is_type(value, OBJ_INSTANCE);
+}
+
 inline ObjFunction* Object_as_function(Value value) {
   return (ObjFunction*)Value_as_obj(value);
 }
@@ -101,6 +112,10 @@ inline ObjClass* Object_as_class(Value value) {
   return (ObjClass*)Value_as_obj(value);
 }
 
+inline ObjInstance* Object_as_instance(Value value) {
+  return (ObjInstance*)Value_as_obj(value);
+}
+
 void Object_print(Value value);
 
 ObjString* Object_allocate_string(MemoryAllocator* memory_allocator, char* chars, int length, uint32_t hash);
@@ -110,6 +125,7 @@ ObjNative* Object_allocate_new_native(MemoryAllocator* memory_allocator, NativeF
 ObjClosure* Object_allocate_new_closure(MemoryAllocator* memory_allocator, ObjFunction* function);
 ObjUpvalue* Object_allocate_new_upvalue(MemoryAllocator* memory_allocator, Value* local);
 ObjClass* Object_allocate_new_class(MemoryAllocator* memory_allocator, ObjString* name);
+ObjInstance* Object_allocate_new_instance(MemoryAllocator* memory_allocator, ObjClass* klass);
 
 void Object_free(MemoryAllocator* memory_allocator, Obj* object);
 

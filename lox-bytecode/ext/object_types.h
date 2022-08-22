@@ -9,6 +9,7 @@ typedef enum {
   OBJ_CLASS,
   OBJ_CLOSURE,
   OBJ_FUNCTION,
+  OBJ_INSTANCE,
   OBJ_NATIVE,
   OBJ_STRING,
   OBJ_UPVALUE,
@@ -32,5 +33,6 @@ typedef struct ObjNative ObjNative;
 typedef struct ObjUpvalue ObjUpvalue;
 typedef struct ObjClosure ObjClosure;
 typedef struct ObjClass ObjClass;
+typedef struct ObjInstance ObjInstance;
 
 #endif

@@ -429,6 +429,11 @@ static bool vm_call(Vm* vm, ObjClosure* closure, int arg_count) {
 static bool vm_call_value(Vm* vm, Value callee, int arg_count) {
   if (Value_is_obj(callee)) {
     switch (Object_type(callee)) {
+      case OBJ_CLASS: {
+        ObjClass* klass = Object_as_class(callee);
+        vm->stack_top[-arg_count - 1] = Value_make_obj((Obj*)Object_allocate_new_instance(&vm->memory_allocator, klass));
+        return true;
+      }
       case OBJ_CLOSURE:
         return vm_call(vm, Object_as_closure(callee), arg_count);
       case OBJ_NATIVE: {
