@@ -7,6 +7,7 @@ module Lox
 
       module FunctionType
         FUNCTION = :FUNCTION
+        METHOD = :METHOD
         SCRIPT = :SCRIPT
       end
 
@@ -52,6 +53,17 @@ module Lox
           emit_bytes(:class, arg, stmt.bounding_lines.first)
           mark_new_local_initialized
         end
+
+        # Put the class back on the stack
+        named_variable(stmt.name)
+
+        stmt.methods.each do |method|
+          arg, _ = make_identifier_constant(method.name, method.name.lexeme)
+          compile_function(method, FunctionType::METHOD)
+          emit_bytes(:method, arg, method.bounding_lines.first)
+        end
+
+        emit_byte(:pop, stmt.bounding_lines.last)
       end
 
       def visit_expression_stmt(stmt)
@@ -247,19 +259,7 @@ module Lox
       end
 
       def visit_variable_expr(expr)
-        line = expr.name.bounding_lines.first
-        variable_depth = resolve_local(expr.name, expr.name.lexeme)
-        if variable_depth != -1
-          emit_bytes(:get_local, variable_depth, line)
-        else
-          upvalue = resolve_upvalue(expr.name, expr.name.lexeme)
-          if upvalue != -1
-            emit_bytes(:get_upvalue, upvalue, line)
-          else
-            arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
-            emit_bytes(:get_global, arg, line)
-          end
-        end
+        named_variable(expr.name)
       end
 
       def declare_local(name)
@@ -356,6 +356,22 @@ module Lox
 
       def global_scope?
         @scope_depth == 0
+      end
+
+      def named_variable(token)
+        line = token.line
+        variable_depth = resolve_local(token, token.lexeme)
+        if variable_depth != -1
+          emit_bytes(:get_local, variable_depth, line)
+        else
+          upvalue = resolve_upvalue(token, token.lexeme)
+          if upvalue != -1
+            emit_bytes(:get_upvalue, upvalue, line)
+          else
+            arg, _ = make_identifier_constant(token, token.lexeme)
+            emit_bytes(:get_global, arg, line)
+          end
+        end
       end
 
       def declare_global(name)

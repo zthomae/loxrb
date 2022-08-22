@@ -26,6 +26,7 @@ static void vm_concatenate(Vm* vm);
 static bool vm_call(Vm* vm, ObjClosure* closure, int arg_count);
 static bool vm_call_value(Vm* vm, Value callee, int arg_count);
 static void vm_define_native(Vm* vm, char* name, NativeFn function);
+static void vm_define_method(Vm* vm, ObjString* name);
 static ObjUpvalue* vm_capture_upvalue(Vm* vm, Value* local);
 static void vm_close_upvalues(Vm* vm, Value* last);
 static ObjString* vm_allocate_string(Vm* vm, char* chars, int length, uint32_t hash);
@@ -414,6 +415,10 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
       vm_stack_push(vm, Value_make_obj((Obj*)klass));
       break;
     }
+    case OP_METHOD: {
+      vm_define_method(vm, vm_read_string(call_frame));
+      break;
+    }
     default:
       return INTERPRET_RUNTIME_ERROR;
   }
@@ -530,6 +535,13 @@ static void vm_define_native(Vm* vm, char* name, NativeFn function) {
   vm_stack_push(vm, Value_make_obj((Obj*)Object_allocate_new_native(&vm->memory_allocator, function)));
   Table_set(&vm->globals, Object_as_string(vm_stack_peek(vm, 1)), vm_stack_peek(vm, 0));
   vm_stack_pop(vm);
+  vm_stack_pop(vm);
+}
+
+static void vm_define_method(Vm* vm, ObjString* name) {
+  Value method = vm_stack_peek(vm, 0);
+  ObjClass* klass = Object_as_class(vm_stack_peek(vm, 1));
+  Table_set(&klass->methods, name, method);
   vm_stack_pop(vm);
 }
 

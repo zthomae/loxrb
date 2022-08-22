@@ -108,6 +108,8 @@ module Lox
           simple_instruction("OP_RETURN", offset)
         when Opcode[:class]
           constant_instruction("OP_CLASS", chunk, offset)
+        when Opcode[:method]
+          constant_instruction("OP_METHOD", chunk, offset)
         else
           io.puts "Unknown opcode #{instruction}\n"
           offset + 1

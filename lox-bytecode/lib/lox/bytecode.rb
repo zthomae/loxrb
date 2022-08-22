@@ -179,7 +179,8 @@ module Lox
       :closure,
       :close_upvalue,
       :return,
-      :class
+      :class,
+      :method
     ]
 
     class Chunk < FFI::Struct
@@ -224,7 +225,7 @@ module Lox
     ### OOP ###
 
     class ObjClass < FFI::Struct
-      layout :obj, Obj, :name, ObjString.ptr
+      layout :obj, Obj, :name, ObjString.ptr, :methods, Table
     end
 
     class ObjInstance < FFI::Struct

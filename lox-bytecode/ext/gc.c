@@ -177,6 +177,7 @@ static void gc_blacken_object(Vm* vm, Obj* object) {
     case OBJ_CLASS: {
       ObjClass* klass = (ObjClass*)object;
       gc_mark_object(vm, (Obj*)klass->name);
+      gc_mark_table(vm, &klass->methods);
       break;
     }
     case OBJ_INSTANCE: {

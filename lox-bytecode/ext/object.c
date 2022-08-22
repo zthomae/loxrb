@@ -80,6 +80,7 @@ ObjClosure* Object_allocate_new_closure(MemoryAllocator* memory_allocator, ObjFu
 ObjClass* Object_allocate_new_class(MemoryAllocator* memory_allocator, ObjString* name) {
   ObjClass* klass = (ObjClass*)object_allocate_new(memory_allocator, sizeof(ObjClass), OBJ_CLASS);
   klass->name = name;
+  Table_init(&klass->methods, memory_allocator);
   return klass;
 }
 
@@ -97,6 +98,8 @@ void Object_free(MemoryAllocator* memory_allocator, Obj* object) {
 
   switch (object->type) {
     case OBJ_CLASS: {
+      ObjClass* klass = (ObjClass*)object;
+      Table_free(&klass->methods);
       MemoryAllocator_free(memory_allocator, object, sizeof(ObjClass));
       break;
     }
