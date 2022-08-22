@@ -5,6 +5,8 @@ module Lox
 
       Upvalue = Struct.new(:index, :is_local)
 
+      ClassDeclaration = Struct.new(:enclosing)
+
       module FunctionType
         FUNCTION = :FUNCTION
         INITIALIZER = :INITIALIZER
@@ -12,13 +14,14 @@ module Lox
         SCRIPT = :SCRIPT
       end
 
-      def initialize(vm, function, function_type, error_handler, enclosing = nil, scope_depth = 0)
+      def initialize(vm, function, function_type, error_handler, enclosing = nil, scope_depth = 0, current_class = nil)
         @vm = vm
         @function = function
         @function_type = function_type
         @error_handler = error_handler
         @enclosing = enclosing
         @scope_depth = scope_depth
+        @current_class = current_class
 
         @locals = []
         if [FunctionType::INITIALIZER, FunctionType::METHOD].include?(function_type)
@@ -61,6 +64,9 @@ module Lox
           mark_new_local_initialized
         end
 
+        original_current_class = @current_class
+        @current_class = ClassDeclaration.new(original_current_class)
+
         # Put the class back on the stack
         named_variable(stmt.name)
 
@@ -72,6 +78,8 @@ module Lox
         end
 
         emit_byte(:pop, stmt.bounding_lines.last)
+
+        @current_class = original_current_class
       end
 
       def visit_expression_stmt(stmt)
@@ -115,7 +123,7 @@ module Lox
       def visit_return_stmt(stmt)
         if @function_type == FunctionType::SCRIPT
           @error_handler.compile_error(stmt.keyword, "Can't return from top-level code.")
-        elsif @function_type == FunctionType::INITIALIZER
+        elsif @function_type == FunctionType::INITIALIZER && !stmt.value.nil?
           @error_handler.compile_error(stmt.keyword, "Can't return a value from an initializer.")
         end
 
@@ -258,6 +266,10 @@ module Lox
       end
 
       def visit_this_expr(expr)
+        if @current_class.nil?
+          @error_handler.compile_error(expr.keyword, "Can't use 'this' outside of a class.")
+          return
+        end
         named_variable(expr.keyword)
       end
 
@@ -432,7 +444,7 @@ module Lox
       def compile_function(stmt, function_type)
         function = Lox::Bytecode.vm_new_function(@vm)
         function[:name] = Lox::Bytecode.vm_copy_string(@vm, stmt.name.lexeme, stmt.name.lexeme.bytesize)
-        compiler = Compiler.new(@vm, function, function_type, @error_handler, self, @scope_depth + 1)
+        compiler = Compiler.new(@vm, function, function_type, @error_handler, self, @scope_depth + 1, @current_class)
         stmt.params.each do |param|
           function[:arity] += 1
           if function[:arity] > 255
