@@ -25,9 +25,9 @@ module Lox
 
         @locals = []
         if [FunctionType::INITIALIZER, FunctionType::METHOD].include?(function_type)
-          @locals << Local.new("this", 0, false)
+          @locals << Local.new("this", scope_depth, false)
         else
-          @locals << Local.new("", 0, false)
+          @locals << Local.new("", scope_depth, false)
         end
 
         @upvalues = []
