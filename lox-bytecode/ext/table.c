@@ -54,7 +54,7 @@ ObjString* Table_find_string(Table* table, char* chars, int length, uint32_t has
     return NULL;
   }
 
-  uint32_t index = hash % table->capacity;
+  uint32_t index = hash & (table->capacity - 1);
 
   // This function will not be called unless the load factor is less than
   // TABLE_MAX_LOAD. Under this condition the for loop below is guaranteed to
@@ -73,7 +73,7 @@ ObjString* Table_find_string(Table* table, char* chars, int length, uint32_t has
       return entry->key;
     }
 
-    index = (index + 1) % table->capacity;
+    index = (index + 1) & (table->capacity - 1);
   }
 }
 
@@ -106,7 +106,7 @@ bool Table_delete(Table* table, ObjString* key) {
 }
 
 static Entry* table_find_entry(Entry* entries, int capacity, ObjString* key) {
-  uint32_t index = key->hash % capacity;
+  uint32_t index = key->hash & (capacity - 1);
   Entry* tombstone = NULL;
 
   // This function will not be called unless the load factor is less than
@@ -128,7 +128,7 @@ static Entry* table_find_entry(Entry* entries, int capacity, ObjString* key) {
       return entry;
     }
 
-    index = (index + 1) % capacity;
+    index = (index + 1) & (capacity - 1);
   }
 }
 
