@@ -59,6 +59,8 @@ module Lox
           constant_instruction("OP_GET_PROPERTY", chunk, offset)
         when Opcode[:set_property]
           constant_instruction("OP_SET_PROPERTY", chunk, offset)
+        when Opcode[:get_super]
+          constant_instruction("OP_GET_SUPER", chunk, offset)
         when Opcode[:equal]
           simple_instruction("OP_EQUAL", offset)
         when Opcode[:greater]
@@ -110,6 +112,8 @@ module Lox
           simple_instruction("OP_RETURN", offset)
         when Opcode[:class]
           constant_instruction("OP_CLASS", chunk, offset)
+        when Opcode[:inherit]
+          simple_instruction("OP_INHERIT", offset)
         when Opcode[:method]
           constant_instruction("OP_METHOD", chunk, offset)
         else

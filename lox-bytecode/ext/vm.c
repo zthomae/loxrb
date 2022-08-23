@@ -280,6 +280,15 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
       vm_stack_push(vm, value);
       break;
     }
+    case OP_GET_SUPER: {
+      ObjString* name = vm_read_string(call_frame);
+      ObjClass* superclass = Object_as_class(vm_stack_pop(vm));
+
+      if (!vm_bind_method(vm, superclass, name)) {
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      break;
+    }
     case OP_EQUAL: {
       Value b = vm_stack_pop(vm);
       Value a = vm_stack_pop(vm);
@@ -432,6 +441,18 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
     case OP_CLASS: {
       ObjClass* klass = Object_allocate_new_class(&vm->memory_allocator, vm_read_string(call_frame));
       vm_stack_push(vm, Value_make_obj((Obj*)klass));
+      break;
+    }
+    case OP_INHERIT: {
+      Value superclass = vm_stack_peek(vm, 1);
+      if (!Object_is_class(superclass)) {
+        vm_runtime_error(vm, "Superclass must be a class.");
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      ObjClass* subclass = Object_as_class(vm_stack_peek(vm, 0));
+      Table_add_all(&Object_as_class(superclass)->methods, &subclass->methods);
+      vm_stack_pop(vm); // subclass
+      // Note: Intentionally leaving the superclass on the stack
       break;
     }
     case OP_METHOD: {

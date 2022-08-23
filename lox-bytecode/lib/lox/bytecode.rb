@@ -168,6 +168,7 @@ module Lox
       :set_upvalue,
       :get_property,
       :set_property,
+      :get_super,
       :equal,
       :greater,
       :less,
@@ -187,6 +188,7 @@ module Lox
       :close_upvalue,
       :return,
       :class,
+      :inherit,
       :method
     ]
 

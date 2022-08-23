@@ -5,7 +5,9 @@ module Lox
 
       Upvalue = Struct.new(:index, :is_local)
 
-      ClassDeclaration = Struct.new(:enclosing)
+      ClassDeclaration = Struct.new(:enclosing, :has_superclass)
+
+      SyntheticToken = Struct.new(:lexeme, :line)
 
       module FunctionType
         FUNCTION = :FUNCTION
@@ -65,7 +67,26 @@ module Lox
         end
 
         original_current_class = @current_class
-        @current_class = ClassDeclaration.new(original_current_class)
+        @current_class = ClassDeclaration.new(original_current_class, false)
+
+        if !stmt.superclass.nil?
+          if stmt.superclass.name.lexeme == stmt.name.lexeme
+            @error_handler.compile_error(stmt.superclass.name, "A class can't inherit from itself.")
+          end
+
+          named_variable(stmt.superclass.name)
+          begin_scope
+          @locals << Local.new("super", -1, false)
+          if global_scope?
+            define_global(0, stmt.superclass.name.line)
+          else
+            mark_new_local_initialized
+          end
+
+          named_variable(stmt.name)
+          emit_byte(:inherit, stmt.superclass.name.line)
+          @current_class.has_superclass = true
+        end
 
         # Put the class back on the stack
         named_variable(stmt.name)
@@ -78,6 +99,8 @@ module Lox
         end
 
         emit_byte(:pop, stmt.bounding_lines.last)
+
+        end_scope(stmt.bounding_lines.last) if @current_class.has_superclass
 
         @current_class = original_current_class
       end
@@ -264,6 +287,20 @@ module Lox
         arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
         expr.value.accept(self)
         emit_bytes(:set_property, arg, expr.name.line)
+      end
+
+      def visit_super_expr(expr)
+        if @current_class.nil?
+          @error_handler.compile_error(expr.keyword, "Can't use 'super' outside of a class.")
+        elsif !@current_class.has_superclass
+          @error_handler.compile_error(expr.keyword, "Can't use 'super' in a class with no superclass.")
+        end
+
+        arg, _ = make_identifier_constant(expr.method, expr.method.lexeme)
+
+        named_variable(SyntheticToken.new("this", expr.method.line))
+        named_variable(SyntheticToken.new("super", expr.method.line))
+        emit_bytes(:get_super, arg, expr.method.line)
       end
 
       def visit_this_expr(expr)
