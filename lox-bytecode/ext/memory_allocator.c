@@ -3,16 +3,12 @@
 #include "common.h"
 #include "memory_allocator.h"
 
-#define DEFAULT_MIN_INCREASED_CAPACITY 8
-#define DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR 2
-#define DEFAULT_GC_HEAP_GROW_FACTOR 2
+#define MIN_INCREASED_CAPACITY 8
+#define INCREASED_CAPACITY_SCALING_FACTOR 2
 
 void MemoryAllocator_init(MemoryAllocator* memory_allocator, void* callback_target, MemoryCallbacks callbacks) {
   memory_allocator->bytes_allocated = 0;
   memory_allocator->next_gc = 1024 * 1024;
-  memory_allocator->min_increased_capacity = DEFAULT_MIN_INCREASED_CAPACITY;
-  memory_allocator->increased_capacity_scaling_factor = DEFAULT_INCREASED_CAPACITY_SCALING_FACTOR;
-  memory_allocator->gc_heap_grow_factor = DEFAULT_GC_HEAP_GROW_FACTOR;
   memory_allocator->gc_enabled = false;
   memory_allocator->log_gc = false;
   memory_allocator->stress_gc = false;
@@ -43,8 +39,8 @@ void MemoryAllocator_free(MemoryAllocator* memory_allocator, void* ptr, size_t s
 }
 
 int MemoryAllocator_get_increased_capacity(MemoryAllocator* memory_allocator, int old_capacity) {
-  uint8_t min_capacity = memory_allocator->min_increased_capacity;
-  uint8_t scaling_factor = memory_allocator->increased_capacity_scaling_factor;
+  uint8_t min_capacity = MIN_INCREASED_CAPACITY;
+  uint8_t scaling_factor = INCREASED_CAPACITY_SCALING_FACTOR;
   return old_capacity < min_capacity ? min_capacity : old_capacity * scaling_factor;
 }
 

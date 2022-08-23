@@ -16,9 +16,6 @@ typedef struct {
 typedef struct {
   size_t bytes_allocated;
   size_t next_gc;
-  uint8_t min_increased_capacity;
-  uint8_t increased_capacity_scaling_factor;
-  uint8_t gc_heap_grow_factor;
   bool gc_enabled;
   bool log_gc;
   bool stress_gc;

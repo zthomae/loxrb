@@ -28,9 +28,6 @@ module Lox
     class MemoryAllocator < FFI::Struct
       layout :bytes_allocated, :size_t,
         :next_gc, :size_t,
-        :min_increased_capacity, :uint8,
-        :increased_capacity_scaling_factor, :uint8,
-        :gc_heap_grow_factor, :uint8,
         :gc_enabled, :bool,
         :log_gc, :bool,
         :stress_gc, :bool,

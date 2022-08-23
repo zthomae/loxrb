@@ -9,6 +9,8 @@
 #include "vm.h"
 #include "gc.h"
 
+#define GC_HEAP_GROW_FACTOR 2
+
 static void gc_mark_protected_objects(Vm* vm);
 static void gc_mark_roots(Vm* vm);
 static void gc_mark_value(Vm* vm, Value value);
@@ -53,7 +55,7 @@ void Gc_collect(Vm* vm) {
   gc_remove_white_entries(&vm->strings);
   gc_sweep(vm);
 
-  memory_allocator->next_gc = memory_allocator->bytes_allocated * memory_allocator->gc_heap_grow_factor;
+  memory_allocator->next_gc = memory_allocator->bytes_allocated * GC_HEAP_GROW_FACTOR;
 
   if (print_log_messages) {
     Logger_debug("-- end gc --");
