@@ -184,6 +184,7 @@ module Lox
       :loop,
       :call,
       :invoke,
+      :super_invoke,
       :closure,
       :close_upvalue,
       :return,

@@ -405,6 +405,15 @@ static inline InterpretResult vm_run_instruction(Vm* vm) {
       }
       break;
     }
+    case OP_SUPER_INVOKE: {
+      ObjString* method = vm_read_string(call_frame);
+      int arg_count = vm_read_byte(call_frame);
+      ObjClass* superclass = Object_as_class(vm_stack_pop(vm));
+      if (!vm_invoke_from_class(vm, superclass, method, arg_count)) {
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      break;
+    }
     case OP_CLOSURE: {
       ObjFunction* function = Object_as_function(vm_read_constant(call_frame));
       ObjClosure* closure = Object_allocate_new_closure(&vm->memory_allocator, function);

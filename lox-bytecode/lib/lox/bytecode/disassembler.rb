@@ -91,6 +91,8 @@ module Lox
           byte_instruction("OP_CALL", chunk, offset)
         when Opcode[:invoke]
           invoke_instruction("OP_INVOKE", chunk, offset)
+        when Opcode[:super_invoke]
+          invoke_instruction("OP_SUPER_INVOKE", chunk, offset)
         when Opcode[:closure]
           constant_index = chunk.contents_at(offset + 1)
           offset += 2

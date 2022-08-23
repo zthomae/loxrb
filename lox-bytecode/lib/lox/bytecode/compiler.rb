@@ -229,6 +229,15 @@ module Lox
           arg_count = argument_list(expr.arguments)
           emit_bytes(:invoke, arg, expr.callee.name.line)
           emit_byte(arg_count, expr.callee.name.line)
+        elsif expr.callee.is_a?(Lox::Parser::Expr::Super)
+          validate_super_call(expr.callee.keyword)
+
+          named_variable(SyntheticToken.new("this", expr.callee.method.line))
+          arg, _ = make_identifier_constant(expr.callee.method, expr.callee.method.lexeme)
+          arg_count = argument_list(expr.arguments)
+          named_variable(SyntheticToken.new("super", expr.callee.method.line))
+          emit_bytes(:super_invoke, arg, expr.callee.method.line)
+          emit_byte(arg_count, expr.callee.method.line)
         else
           expr.callee.accept(self)
           arg_count = argument_list(expr.arguments)
@@ -290,11 +299,7 @@ module Lox
       end
 
       def visit_super_expr(expr)
-        if @current_class.nil?
-          @error_handler.compile_error(expr.keyword, "Can't use 'super' outside of a class.")
-        elsif !@current_class.has_superclass
-          @error_handler.compile_error(expr.keyword, "Can't use 'super' in a class with no superclass.")
-        end
+        validate_super_call(expr.keyword)
 
         arg, _ = make_identifier_constant(expr.method, expr.method.lexeme)
 
@@ -508,6 +513,14 @@ module Lox
         (0...function[:upvalue_count]).each do |i|
           emit_byte(compiler.upvalues[i].is_local ? 1 : 0, stmt.name.line)
           emit_byte(compiler.upvalues[i].index, stmt.name.line)
+        end
+      end
+
+      def validate_super_call(keyword)
+        if @current_class.nil?
+          @error_handler.compile_error(keyword, "Can't use 'super' outside of a class.")
+        elsif !@current_class.has_superclass
+          @error_handler.compile_error(keyword, "Can't use 'super' in a class with no superclass.")
         end
       end
 
