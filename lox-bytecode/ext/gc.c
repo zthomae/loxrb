@@ -234,6 +234,9 @@ static void gc_sweep(Vm* vm) {
 
 static void gc_log_value(Value value) {
   switch (Object_type(value)) {
+    case OBJ_BOUND_METHOD:
+      gc_log_function_name(Object_as_bound_method(value)->method->function);
+      break;
     case OBJ_CLASS:
       printf("%s", Object_as_class(value)->name->chars);
       break;
