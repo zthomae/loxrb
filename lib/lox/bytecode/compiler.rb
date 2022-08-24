@@ -26,10 +26,10 @@ module Lox
         @current_class = current_class
 
         @locals = []
-        if [FunctionType::INITIALIZER, FunctionType::METHOD].include?(function_type)
-          @locals << Local.new("this", scope_depth, false)
+        @locals << if [FunctionType::INITIALIZER, FunctionType::METHOD].include?(function_type)
+          Local.new("this", scope_depth, false)
         else
-          @locals << Local.new("", scope_depth, false)
+          Local.new("", scope_depth, false)
         end
 
         @upvalues = []
@@ -264,9 +264,9 @@ module Lox
         else
           case expr.value.type
           when Lox::Parser::TokenType::TRUE
-            emit_byte(:true, expr.value.line)
+            emit_byte(:true, expr.value.line) # standard:disable Lint/BooleanSymbol
           when Lox::Parser::TokenType::FALSE
-            emit_byte(:false, expr.value.line)
+            emit_byte(:false, expr.value.line) # standard:disable Lint/BooleanSymbol
           when Lox::Parser::TokenType::NIL
             emit_byte(:nil, expr.value.line)
           end
@@ -277,17 +277,14 @@ module Lox
         expr.left.accept(self)
         if expr.operator.type == Lox::Parser::TokenType::AND
           end_jump = emit_jump(:jump_if_false, expr.operator.line)
-          emit_byte(:pop, expr.operator.line)
-          expr.right.accept(self)
-          patch_jump(end_jump, expr.operator.line)
         else
           else_jump = emit_jump(:jump_if_false, expr.operator.line)
           end_jump = emit_jump(:jump, expr.operator.line)
           patch_jump(else_jump, expr.operator.line)
-          emit_byte(:pop, expr.operator.line)
-          expr.right.accept(self)
-          patch_jump(end_jump, expr.operator.line)
         end
+        emit_byte(:pop, expr.operator.line)
+        expr.right.accept(self)
+        patch_jump(end_jump, expr.operator.line)
       end
 
       def visit_set_expr(expr)
@@ -336,7 +333,7 @@ module Lox
           return
         end
 
-        @locals.reverse.each do |local|
+        @locals.reverse_each do |local|
           if local.depth != -1 && local.depth < @scope_depth
             break
           end
@@ -412,7 +409,7 @@ module Lox
       def end_scope(line)
         @scope_depth -= 1
         locals_to_remove, locals_to_keep = @locals.partition { |local| local.depth > @scope_depth }
-        locals_to_remove.reverse.each do |local|
+        locals_to_remove.reverse_each do |local|
           if local.is_captured
             emit_byte(:close_upvalue, line)
           else

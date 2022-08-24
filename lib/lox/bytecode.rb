@@ -45,40 +45,40 @@ module Lox
       layout :type, ObjType, :next, Obj.ptr, :is_marked, :bool
 
       def as_closure
-        ObjClosure.new(self.to_ptr)
+        ObjClosure.new(to_ptr)
       end
 
       def as_function
-        ObjFunction.new(self.to_ptr)
+        ObjFunction.new(to_ptr)
       end
 
       def as_string
-        ObjString.new(self.to_ptr)
+        ObjString.new(to_ptr)
       end
 
       def as_class
-        ObjClass.new(self.to_ptr)
+        ObjClass.new(to_ptr)
       end
 
       def as_instance
-        ObjInstance.new(self.to_ptr)
+        ObjInstance.new(to_ptr)
       end
 
       def as_bound_method
-        ObjBoundMethod.new(self.to_ptr)
+        ObjBoundMethod.new(to_ptr)
       end
 
       def to_s
         case self[:type]
         when :closure
-          function_name = self.as_closure[:function][:name][:chars]
+          function_name = as_closure[:function][:name][:chars]
           if function_name
             "<fn #{function_name}>"
           else
             "<script>"
           end
         when :function
-          function_name = self.as_function[:name][:chars]
+          function_name = as_function[:name][:chars]
           if function_name
             "<fn #{function_name}>"
           else
@@ -87,13 +87,13 @@ module Lox
         when :native
           "<native fn>"
         when :string
-          self.as_string[:chars]
+          as_string[:chars]
         when :class
-          self.as_class[:name][:chars]
+          as_class[:name][:chars]
         when :instance
-          self.as_instance[:klass][:name][:chars]
+          as_instance[:klass][:name][:chars]
         when :bound_method
-          self.as_bound_method[:method].to_s
+          as_bound_method[:method].to_s
         else
           raise "Unsupported object type #{self[:type]}"
         end
@@ -152,8 +152,10 @@ module Lox
     Opcode = enum :opcode, [
       :constant,
       :nil,
+      # standard:disable Lint/BooleanSymbol
       :true,
       :false,
+      # standard:enable Lint/BooleanSymbol
       :pop,
       :get_local,
       :set_local,

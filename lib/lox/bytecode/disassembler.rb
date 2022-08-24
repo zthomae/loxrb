@@ -35,9 +35,9 @@ module Lox
           constant_instruction("OP_CONSTANT", chunk, offset)
         when Opcode[:nil]
           simple_instruction("OP_NIL", offset)
-        when Opcode[:true]
+        when Opcode[:true] # standard:disable Lint/BooleanSymbol
           simple_instruction("OP_TRUE", offset)
-        when Opcode[:false]
+        when Opcode[:false] # standard:disable Lint/BooleanSymbol
           simple_instruction("OP_FALSE", offset)
         when Opcode[:pop]
           simple_instruction("OP_POP", offset)
@@ -164,7 +164,7 @@ module Lox
         constant = chunk.contents_at(offset + 1)
         arg_count = chunk.contents_at(offset + 2)
         value = chunk.constant_at(constant)
-        io.puts "%-16s (%d args) %4d '%s'" % [name, arg_count, constant, constant.to_s]
+        io.puts "%-16s (%d args) %4d '%s'" % [name, arg_count, constant, value.to_s]
         offset + 3
       end
     end

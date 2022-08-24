@@ -24,9 +24,7 @@ module Lox
       def call(interpreter, arguments)
         instance = UserDefinedClassInstance.new(self)
         initializer = find_method("init")
-        if !initializer.nil?
-          initializer.bind(instance).call(interpreter, arguments)
-        end
+        initializer&.bind(instance)&.call(interpreter, arguments)
 
         instance
       end
