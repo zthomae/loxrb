@@ -32,8 +32,7 @@ module Lox
 
       def define_test_suites
         c = ->(name, tests) do
-          executable = name == "clox" ? "build/cloxd" : "build/#{name}"
-          @all_suites[name] = Suite.new(name, "c", executable, [], tests)
+          @all_suites[name] = Suite.new(name, "c", "exe/lox-bytecode", [], tests)
           @c_suites.append(name)
         end
 
@@ -215,9 +214,6 @@ module Lox
         }))
         java.call("chap13", {"test" => "pass"}.merge(early_chapters, java_nan_equality, no_java_limits))
 
-        c_hacks = {
-          "test/limit/loop_too_large.lox" => "skip",
-        }
         c.call("clox", {"test" => "pass"}.merge(early_chapters))
         c.call("chap17", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
         c.call("chap18", {"test" => "skip", "test/expressions/evaluate.lox" => "pass"})
@@ -244,8 +240,8 @@ module Lox
           "test/variable/use_local_in_initializer.lox" => "skip"
         ))
         c.call("chap22", {"test" => "pass"}.merge(early_chapters, no_c_control_flow, no_c_functions, no_c_classes))
-        c.call("chap23", {"test" => "pass"}.merge(early_chapters, c_hacks, no_c_functions, no_c_classes))
-        c.call("chap24", {"test" => "pass"}.merge(early_chapters, c_hacks, no_c_classes, {
+        c.call("chap23", {"test" => "pass"}.merge(early_chapters, no_c_functions, no_c_classes))
+        c.call("chap24", {"test" => "pass"}.merge(early_chapters, no_c_classes, {
           # No closures.
           "test/closure" => "skip",
           "test/for/closure_in_body.lox" => "skip",
@@ -256,9 +252,9 @@ module Lox
           "test/while/closure_in_body.lox" => "skip",
           "test/while/return_closure.lox" => "skip"
         }))
-        c.call("chap25", {"test" => "pass"}.merge(early_chapters, c_hacks, no_c_classes))
-        c.call("chap26", {"test" => "pass"}.merge(early_chapters, c_hacks, no_c_classes))
-        c.call("chap27", {"test" => "pass"}.merge(early_chapters, c_hacks, no_c_inheritance, {
+        c.call("chap25", {"test" => "pass"}.merge(early_chapters, no_c_classes))
+        c.call("chap26", {"test" => "pass"}.merge(early_chapters, no_c_classes))
+        c.call("chap27", {"test" => "pass"}.merge(early_chapters, no_c_inheritance, {
           # No methods.
           "test/assignment/to_this.lox" => "skip",
           "test/class/local_reference_self.lox" => "skip",
@@ -275,9 +271,9 @@ module Lox
           "test/this" => "skip",
           "test/variable/local_from_method.lox" => "skip"
         }))
-        c.call("chap28", {"test" => "pass"}.merge(early_chapters, c_hacks, no_c_inheritance))
-        c.call("chap29", {"test" => "pass"}.merge(early_chapters, c_hacks))
-        c.call("chap30", {"test" => "pass"}.merge(early_chapters, c_hacks))
+        c.call("chap28", {"test" => "pass"}.merge(early_chapters, no_c_inheritance))
+        c.call("chap29", {"test" => "pass"}.merge(early_chapters))
+        c.call("chap30", {"test" => "pass"}.merge(early_chapters))
       end
     end
   end

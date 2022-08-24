@@ -172,8 +172,7 @@ module Lox
         exit_jump = emit_jump(:jump_if_false, stmt.condition.bounding_lines.last)
         emit_byte(:pop, stmt.condition.bounding_lines.last)
         stmt.body.accept(self)
-        emit_loop(loop_start, stmt.condition.bounding_lines.first)
-        patch_jump(exit_jump, stmt.condition.bounding_lines.last)
+        emit_loop(loop_start, stmt, exit_jump)
         emit_byte(:pop, stmt.bounding_lines.last)
       end
 
@@ -571,17 +570,20 @@ module Lox
         current_chunk.patch_contents_at(offset + 1, jump & 0xff)
       end
 
-      def emit_loop(loop_start, line)
-        emit_byte(:loop, line)
+      def emit_loop(loop_start, stmt, exit_jump)
+        loop_line = stmt.condition.bounding_lines.first
+        emit_byte(:loop, loop_line)
 
         offset = current_chunk[:count] - loop_start + 2
 
         if offset > 0xffff
-          @error_handler.tokenless_compile_error(line, "Loop body too large.")
-        end
+          @error_handler.tokenless_compile_error(stmt.body.bounding_lines.last, "Loop body too large.")
+        else
+          emit_byte((offset >> 8) & 0xff, loop_line)
+          emit_byte(offset & 0xff, loop_line)
 
-        emit_byte((offset >> 8) & 0xff, line)
-        emit_byte(offset & 0xff, line)
+          patch_jump(exit_jump, stmt.condition.bounding_lines.last)
+        end
       end
 
       def emit_return(value, line)
