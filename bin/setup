@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+cd $(dirname "$0")/..
+bundle install
+bin/compile-native
