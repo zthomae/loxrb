@@ -74,7 +74,7 @@ module Lox
             @error_handler.compile_error(stmt.superclass.name, "A class can't inherit from itself.")
           end
 
-          named_variable(stmt.superclass.name)
+          get_named_variable(stmt.superclass.name)
           begin_scope
           @locals << Local.new("super", -1, false)
           if global_scope?
@@ -83,13 +83,13 @@ module Lox
             mark_new_local_initialized
           end
 
-          named_variable(stmt.name)
+          get_named_variable(stmt.name)
           emit_byte(:inherit, stmt.superclass.name.line)
           @current_class.has_superclass = true
         end
 
         # Put the class back on the stack
-        named_variable(stmt.name)
+        get_named_variable(stmt.name)
 
         stmt.methods.each do |method|
           arg, _ = make_identifier_constant(method.name, method.name.lexeme)
@@ -232,10 +232,10 @@ module Lox
         elsif expr.callee.is_a?(Lox::Parser::Expr::Super)
           validate_super_call(expr.callee.keyword)
 
-          named_variable(SyntheticToken.new("this", expr.callee.method.line))
+          get_named_variable(SyntheticToken.new("this", expr.callee.method.line))
           arg, _ = make_identifier_constant(expr.callee.method, expr.callee.method.lexeme)
           arg_count = argument_list(expr.arguments)
-          named_variable(SyntheticToken.new("super", expr.callee.method.line))
+          get_named_variable(SyntheticToken.new("super", expr.callee.method.line))
           emit_bytes(:super_invoke, arg, expr.callee.method.line)
           emit_byte(arg_count, expr.callee.method.line)
         else
@@ -303,8 +303,8 @@ module Lox
 
         arg, _ = make_identifier_constant(expr.method, expr.method.lexeme)
 
-        named_variable(SyntheticToken.new("this", expr.method.line))
-        named_variable(SyntheticToken.new("super", expr.method.line))
+        get_named_variable(SyntheticToken.new("this", expr.method.line))
+        get_named_variable(SyntheticToken.new("super", expr.method.line))
         emit_bytes(:get_super, arg, expr.method.line)
       end
 
@@ -313,7 +313,7 @@ module Lox
           @error_handler.compile_error(expr.keyword, "Can't use 'this' outside of a class.")
           return
         end
-        named_variable(expr.keyword)
+        get_named_variable(expr.keyword)
       end
 
       def visit_unary_expr(expr)
@@ -328,7 +328,7 @@ module Lox
       end
 
       def visit_variable_expr(expr)
-        named_variable(expr.name)
+        get_named_variable(expr.name)
       end
 
       def declare_local(name)
@@ -427,7 +427,7 @@ module Lox
         @scope_depth == 0
       end
 
-      def named_variable(token)
+      def get_named_variable(token)
         line = token.line
         variable_depth = resolve_local(token, token.lexeme)
         if variable_depth != -1
