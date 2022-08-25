@@ -250,7 +250,7 @@ module Lox
       layout :closure, ObjClosure.ptr, :ip, :pointer, :slots, Value.ptr
     end
 
-    InterpretResult = enum :interpret_result, [:incomplete, :ok, :compile_error, :runtime_error]
+    InterpretResult = enum :interpret_result, [:incomplete, :ok, :runtime_error]
 
     class VM < FFI::Struct
       layout :frames, [CallFrame, 64],
