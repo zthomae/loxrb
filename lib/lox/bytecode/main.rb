@@ -31,7 +31,12 @@ module Lox
         return if had_error?
 
         function = Lox::Bytecode.vm_new_function(@vm)
-        compiler = Compiler.new(@vm, function, Compiler::FunctionType::SCRIPT, self)
+        compiler = Compiler.new(
+          vm: @vm,
+          function: function,
+          function_type: Compiler::FunctionType::SCRIPT,
+          error_handler: self
+        )
         compiler.compile(statements)
 
         return if had_error?

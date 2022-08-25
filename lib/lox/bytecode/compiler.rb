@@ -16,7 +16,7 @@ module Lox
         SCRIPT = :SCRIPT
       end
 
-      def initialize(vm, function, function_type, error_handler, enclosing = nil, scope_depth = 0, current_class = nil)
+      def initialize(vm:, function:, function_type:, error_handler:, enclosing: nil, scope_depth: 0, current_class: nil)
         @vm = vm
         @function = function
         @function_type = function_type
@@ -496,7 +496,15 @@ module Lox
       def compile_function(stmt, function_type)
         function = Lox::Bytecode.vm_new_function(@vm)
         function[:name] = Lox::Bytecode.vm_copy_string(@vm, stmt.name.lexeme, stmt.name.lexeme.bytesize)
-        compiler = Compiler.new(@vm, function, function_type, @error_handler, self, @scope_depth + 1, @current_class)
+        compiler = Compiler.new(
+          vm: @vm,
+          function: function,
+          function_type: function_type,
+          error_handler: @error_handler,
+          enclosing: self,
+          scope_depth: @scope_depth + 1,
+          current_class: @current_class
+        )
         stmt.params.each do |param|
           function[:arity] += 1
           if function[:arity] > 255
