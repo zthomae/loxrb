@@ -35,16 +35,12 @@ module Lox
           vm: @vm,
           function: function,
           function_type: Compiler::FunctionType::SCRIPT,
-          error_handler: self
+          error_handler: self,
+          disassembler: @disassembler
         )
         compiler.compile(statements)
 
         return if had_error?
-
-        if log_disassembly?
-          @disassembler.disassemble_function(function)
-          puts "[DEBUG] "
-        end
 
         @vm[:memory_allocator][:gc_enabled] = true
         interpreter = Interpreter.new(@vm, disassembler: @disassembler)
@@ -92,10 +88,6 @@ module Lox
 
       def clear_error!
         @had_error = false
-      end
-
-      def log_disassembly?
-        @vm_options.log_disassembly
       end
 
       private

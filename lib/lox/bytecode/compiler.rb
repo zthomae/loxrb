@@ -16,7 +16,7 @@ module Lox
         SCRIPT = :SCRIPT
       end
 
-      def initialize(vm:, function:, function_type:, error_handler:, enclosing: nil, scope_depth: 0, current_class: nil)
+      def initialize(vm:, function:, function_type:, error_handler:, enclosing: nil, scope_depth: 0, current_class: nil, disassembler: nil)
         @vm = vm
         @function = function
         @function_type = function_type
@@ -24,6 +24,7 @@ module Lox
         @enclosing = enclosing
         @scope_depth = scope_depth
         @current_class = current_class
+        @disassembler = disassembler
 
         @locals = []
         @locals << if [FunctionType::INITIALIZER, FunctionType::METHOD].include?(function_type)
@@ -42,6 +43,8 @@ module Lox
 
         # Since this is synthetic, we make it appear as if it comes from the previous line
         emit_return(nil, statements.last&.bounding_lines&.last || 0)
+
+        @disassembler&.disassemble_function(@function)
 
         @function
       end
@@ -503,7 +506,8 @@ module Lox
           error_handler: @error_handler,
           enclosing: self,
           scope_depth: @scope_depth + 1,
-          current_class: @current_class
+          current_class: @current_class,
+          disassembler: @disassembler
         )
         stmt.params.each do |param|
           function[:arity] += 1

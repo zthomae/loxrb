@@ -142,10 +142,6 @@ This is for a few reasons:
 1. I basically don't use macros for anything more complex than constant definitions.
    This just reinforces that C is not my favorite programming language.
 
-## Known Issues
-
-- The disassembler only prints the program listing for the main chunk before execution begins.
-
 ## Notable Omissions
 
 There are a few features from the book that have not been implemented here.
