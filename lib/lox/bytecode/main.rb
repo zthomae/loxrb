@@ -21,6 +21,10 @@ module Lox
       end
 
       def run(source)
+        # Because the compiler is creating objects on behalf of the native
+        # extension without the native extension maintaining references to
+        # all of these objects, doing garbage collection during compilation
+        # is rather unsafe. So we don't!
         @vm[:memory_allocator][:gc_enabled] = false
         scanner = Lox::Parser::Scanner.new(source, self)
         tokens = scanner.scan_tokens
