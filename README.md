@@ -144,9 +144,6 @@ This is for a few reasons:
 
 ## Known Issues
 
-- [`cases/field/many.lox`](cases/field/many.lox) currently fails with `lox-bytecode` because it causes my implementation to define too many constants.
-  Reusing constants within a chunk would be the easiest way to make this work, but this would case [another test case to fail](cases/limit/no_reuse_constants.lox).
-  I haven't decided what to do about this, but I would like to understand how `clox` avoids defining too many constants, as I believe my mistake is relatively subtle.
 - The disassembler only prints the program listing for the main chunk before execution begins.
 
 ## Notable Omissions

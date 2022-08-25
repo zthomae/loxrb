@@ -61,8 +61,8 @@ module Lox
           define_global(global, stmt.bounding_lines.first)
         else
           declare_local(stmt.name)
-          arg, _ = make_identifier_constant(stmt.name, stmt.name.lexeme)
-          emit_bytes(:class, arg, stmt.bounding_lines.first)
+          constant = make_identifier_constant(stmt.name, stmt.name.lexeme)
+          emit_bytes(:class, constant, stmt.bounding_lines.first)
           mark_new_local_initialized
         end
 
@@ -92,10 +92,10 @@ module Lox
         get_named_variable(stmt.name)
 
         stmt.methods.each do |method|
-          arg, _ = make_identifier_constant(method.name, method.name.lexeme)
+          constant = make_identifier_constant(method.name, method.name.lexeme)
           function_type = method.name.lexeme == "init" ? FunctionType::INITIALIZER : FunctionType::METHOD
           compile_function(method, function_type)
-          emit_bytes(:method, arg, method.bounding_lines.first)
+          emit_bytes(:method, constant, method.bounding_lines.first)
         end
 
         emit_byte(:pop, stmt.bounding_lines.last)
@@ -187,8 +187,8 @@ module Lox
           if upvalue != -1
             emit_bytes(:set_upvalue, upvalue, line)
           else
-            arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
-            emit_bytes(:set_global, arg, line)
+            constant = make_identifier_constant(expr.name, expr.name.lexeme)
+            emit_bytes(:set_global, constant, line)
           end
         end
       end
@@ -224,18 +224,18 @@ module Lox
       def visit_call_expr(expr)
         if expr.callee.is_a?(Lox::Parser::Expr::Get)
           expr.callee.object.accept(self)
-          arg, _ = make_identifier_constant(expr.callee.name, expr.callee.name.lexeme)
+          constant = make_identifier_constant(expr.callee.name, expr.callee.name.lexeme)
           arg_count = argument_list(expr.arguments)
-          emit_bytes(:invoke, arg, expr.callee.name.line)
+          emit_bytes(:invoke, constant, expr.callee.name.line)
           emit_byte(arg_count, expr.callee.name.line)
         elsif expr.callee.is_a?(Lox::Parser::Expr::Super)
           validate_super_call(expr.callee.keyword)
 
           get_named_variable(SyntheticToken.new("this", expr.callee.method.line))
-          arg, _ = make_identifier_constant(expr.callee.method, expr.callee.method.lexeme)
+          constant = make_identifier_constant(expr.callee.method, expr.callee.method.lexeme)
           arg_count = argument_list(expr.arguments)
           get_named_variable(SyntheticToken.new("super", expr.callee.method.line))
-          emit_bytes(:super_invoke, arg, expr.callee.method.line)
+          emit_bytes(:super_invoke, constant, expr.callee.method.line)
           emit_byte(arg_count, expr.callee.method.line)
         else
           expr.callee.accept(self)
@@ -246,8 +246,8 @@ module Lox
 
       def visit_get_expr(expr)
         expr.object.accept(self)
-        arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
-        emit_bytes(:get_property, arg, expr.name.line)
+        constant = make_identifier_constant(expr.name, expr.name.lexeme)
+        emit_bytes(:get_property, constant, expr.name.line)
       end
 
       def visit_grouping_expr(expr)
@@ -257,10 +257,11 @@ module Lox
       def visit_literal_expr(expr)
         case expr.value.literal
         when Float
-          emit_constant(:number, expr.value, expr.value.literal, expr.value.line)
+          constant = make_constant(:number, expr.value, expr.value.literal)
+          emit_bytes(:constant, constant, expr.value.line)
         when String
-          _, obj_string = make_identifier_constant(expr.value, expr.value.literal)
-          emit_constant(:object, expr.value, obj_string, expr.value.line)
+          constant = make_identifier_constant(expr.value, expr.value.literal)
+          emit_bytes(:constant, constant, expr.value.line)
         else
           case expr.value.type
           when Lox::Parser::TokenType::TRUE
@@ -289,19 +290,19 @@ module Lox
 
       def visit_set_expr(expr)
         expr.object.accept(self)
-        arg, _ = make_identifier_constant(expr.name, expr.name.lexeme)
+        constant = make_identifier_constant(expr.name, expr.name.lexeme)
         expr.value.accept(self)
-        emit_bytes(:set_property, arg, expr.name.line)
+        emit_bytes(:set_property, constant, expr.name.line)
       end
 
       def visit_super_expr(expr)
         validate_super_call(expr.keyword)
 
-        arg, _ = make_identifier_constant(expr.method, expr.method.lexeme)
+        constant = make_identifier_constant(expr.method, expr.method.lexeme)
 
         get_named_variable(SyntheticToken.new("this", expr.method.line))
         get_named_variable(SyntheticToken.new("super", expr.method.line))
-        emit_bytes(:get_super, arg, expr.method.line)
+        emit_bytes(:get_super, constant, expr.method.line)
       end
 
       def visit_this_expr(expr)
@@ -433,14 +434,14 @@ module Lox
           if upvalue != -1
             emit_bytes(:get_upvalue, upvalue, line)
           else
-            arg, _ = make_identifier_constant(token, token.lexeme)
-            emit_bytes(:get_global, arg, line)
+            constant = make_identifier_constant(token, token.lexeme)
+            emit_bytes(:get_global, constant, line)
           end
         end
       end
 
       def declare_global(name)
-        make_identifier_constant(name, name.lexeme)[0]
+        make_identifier_constant(name, name.lexeme)
       end
 
       def define_global(global, line)
@@ -529,12 +530,6 @@ module Lox
         emit_byte(byte2, line)
       end
 
-      def emit_constant(type, token, value, line)
-        make_constant(type, token, value).tap do |constant|
-          emit_bytes(:constant, constant, line)
-        end
-      end
-
       def make_constant(type, token, value)
         constant = Lox::Bytecode.public_send("chunk_add_#{type}", current_chunk, value)
         if constant > 255
@@ -545,7 +540,7 @@ module Lox
 
       def make_identifier_constant(token, value)
         obj_string = Lox::Bytecode.vm_copy_string(@vm, value, value.bytesize)
-        [make_constant(:object, token, obj_string), obj_string]
+        make_constant(:object, token, obj_string)
       end
 
       def emit_jump(instruction, line)
