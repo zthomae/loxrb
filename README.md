@@ -171,4 +171,6 @@ This is admittedly a very debatable decision, but I've made it for the following
 
 My new contributions to this project are [under the MIT license](LICENSE).
 
-This project also contains files that are directly translated from those in the original Crafting Interpreters repository. These are also [under the MIT license, copyright 2015 Robert Nystrom](https://github.com/munificent/craftinginterpreters/blob/master/LICENSE).
+This project also contains derivative works of the original Crafting Interpreters project.
+These include .lox source files (most of which have not been modified at all), the `Lox::Test` module that is derived from the original `test.dart` utility, and the interpreters themselves that are ultimately derived from jlox and clox.
+These are also [under the MIT license, copyright 2015 Robert Nystrom](https://github.com/munificent/craftinginterpreters/blob/master/LICENSE).
